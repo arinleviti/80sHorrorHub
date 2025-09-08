@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "prisma generate && next dev",
+    "build": "prisma generate && next build",
+    "start": "prisma generate && next start",
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.8",
     "next": "15.5.2",
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@prisma/client": "^6.15.0",
     "@types/node": "^20",
     "@types/qs": "^6.14.0",
     "@types/react": "^19",

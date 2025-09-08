@@ -10,6 +10,99 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model YouTubeQuery {
+  id        String   @id @default(cuid()) //Nightmare on Elm Street 1984 trailer
+  query     String   @unique
+  videos    YouTubeVideo[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model YouTubeVideo {
+  id        String   @id @default(cuid())
+  youtubeId String   // actual YouTube videoId
+  title     String
+  thumbnail String
+  url       String
+  query     YouTubeQuery @relation(fields: [queryId], references: [id]) //the relation field
+  queryId   String //YouTubeVideo.queryId = YouTubeQuery.id
+}
+
+model EbayQuery {
+  id         String      @id @default(cuid())
+  query      String      @unique
+  items      EbayItem[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model EbayItem {
+  id         String     @id @default(cuid())
+  title      String
+  priceValue String
+  priceCurrency String
+  imageUrl   String
+  itemUrl    String
+  query      EbayQuery  @relation(fields: [queryId], references: [id])
+  queryId    String
+}
+
+model Movie {
+  id           String      @id @default(cuid())
+  tmdbId       Int         @unique
+  title        String
+  releaseDate  DateTime?
+  overview     String
+  posterPath   String?
+  popularity   Float
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  castMembers  CastMember[]
+  crewMembers  CrewMember[]
+}
+
+model CastMember {
+  id        String   @id @default(cuid())
+  castId    Int
+  name      String
+  character String
+  profilePath String?
+  movie     Movie    @relation(fields: [movieId], references: [id])
+  movieId   String
+}
+
+model CrewMember {
+  id        String   @id @default(cuid())
+  name      String
+  job       String
+  movie     Movie    @relation(fields: [movieId], references: [id])
+  movieId   String
+}
+
+model StreamingQuery {
+  id           String                  @id @default(cuid())
+  title        String
+  releaseYear  Int
+  country      String                  // e.g., "us", "uk"
+  options      StreamingOption[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  @@unique([title, releaseYear, country])
+}
+
+model StreamingOption {
+  id          String   @id @default(cuid())
+  type        String   // subscription, rent, buy
+  quality     String?  // HD, SD
+  link        String?  // optional URL
+  serviceName String?  // e.g., Netflix, Prime Video
+
+  query       StreamingQuery @relation(fields: [queryId], references: [id])
+  queryId     String
 }

@@ -8,7 +8,7 @@ export default function VideoList({ videos, title }: { videos: YouTubeVideo[]; t
       <h2>{title}</h2>
       <div style={{ display: "flex", gap: "1rem", overflowX: "auto" }}>
         {videos.map(v => (
-          <div key={v.id} style={{ minWidth: "300px" }}>
+          <div key={v.youtubeId} style={{ minWidth: "300px" }}>
             <h3>{v.title}</h3>
             {v.url && v.thumbnail ? (  // <-- only render if both exist
               <a href={v.url} target="_blank" rel="noopener noreferrer">
