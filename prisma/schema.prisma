@@ -55,7 +55,7 @@ model Movie {
   id           String      @id @default(cuid())
   tmdbId       Int         @unique
   title        String
-  releaseDate  DateTime?
+  releaseDate  String?
   overview     String
   posterPath   String?
   popularity   Float

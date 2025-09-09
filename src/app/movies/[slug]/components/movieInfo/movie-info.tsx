@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { getYouTubeVideos, YouTubeVideo} from "@/app/services/youtube";
+import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
-import { Movie, TMDBImageConfig, MovieCredits} from "@/app/services/tmdb";
+import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
-import { getStreamingAvailability,  GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
+import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 /* interface Movie {
   title: string;
   release_date: string;
@@ -25,26 +25,26 @@ interface MovieInfoProps {
 
 
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
-const posterUrl = movie.poster_path
+  const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-const [trailers , behindTheScenes, topMoments, ebayItems, streamingAvailability]:[
-  YouTubeVideo[],
-  YouTubeVideo[],
-  YouTubeVideo[],
-  EbaySearchResponse,
-  GetStreamingAvailabilityReturn
-] = await Promise.all([
-  getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
-  getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
-  getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} top moments`),
-  getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`),
-  getStreamingAvailability(
-    movie.title,
-    "us",
-    movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
-  )
-]);
+  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability]: [
+    YouTubeVideo[],
+    YouTubeVideo[],
+    YouTubeVideo[],
+    EbaySearchResponse,
+    GetStreamingAvailabilityReturn
+  ] = await Promise.all([
+    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
+    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
+    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} top moments`),
+    getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`),
+    getStreamingAvailability(
+      movie.title,
+      "us",
+      movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
+    )
+  ]);
   return (
     <div>
       <h1>
@@ -59,14 +59,15 @@ const [trailers , behindTheScenes, topMoments, ebayItems, streamingAvailability]
         height={750}
         priority
       />
-       <p>{movie.overview}</p>
-        <p>Popularity: {movie.popularity}</p>
- <h2>Cast</h2>
-        {credits.cast.length > 0 ? (
-          <ul>
-            {credits.cast.map((member) => (
-              <li key={member.cast_id}> {member.character}: {member.name}
-              { member.profile_path && (
+      <p>{movie.overview}</p>
+      <p>Popularity: {movie.popularity}</p>
+      <h2>Cast</h2>
+      {credits.cast.length > 0 ? (
+        <ul>
+          {credits.cast.map((member, index) => (
+            <li key={`${member.cast_id}-${index}`}>
+              {member.character}: {member.name}
+              {member.profile_path && (
                 <Image
                   src={`${config.secure_base_url}w185${member.profile_path}`}
                   alt={member.name}
@@ -80,19 +81,19 @@ const [trailers , behindTheScenes, topMoments, ebayItems, streamingAvailability]
       ) : (
         <p>No cast information available</p>
       )}
-     
 
-        {credits.crew.length > 0 && (
-          <div>
-            <h2>Crew</h2>
-            <ul>
-              {credits.crew.map((member, index) => (
-                <li key={index}> {member.job}: {member.name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-       
+
+      {credits.crew.length > 0 && (
+        <div>
+          <h2>Crew</h2>
+          <ul>
+            {credits.crew.map((member, index) => (
+              <li key={index}> {member.job}: {member.name}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
 
       {trailers.length > 0 ? (
         <VideoList videos={trailers} title="Trailers" />
@@ -109,7 +110,7 @@ const [trailers , behindTheScenes, topMoments, ebayItems, streamingAvailability]
       ) : (
         <p>No top moments videos available</p>
       )}
-       {ebayItems.itemSummaries.length > 0 ? (
+      {ebayItems.itemSummaries.length > 0 ? (
         <div>
           <h2>eBay Items</h2>
           <ul>
@@ -130,7 +131,7 @@ const [trailers , behindTheScenes, topMoments, ebayItems, streamingAvailability]
         </div>
       ) : (
         <p>No eBay items available</p>
-      )} 
+      )}
       {streamingAvailability && !('error' in streamingAvailability) ? (
         <div>
           <h2>Streaming Availability in the US</h2>

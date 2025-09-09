@@ -2,7 +2,7 @@ import styles from './movies.module.css';
 import MovieInfo from './components/movieInfo/movie-info';
 import {  slugToIdMap } from '@/app/services/movies';
 
-import { getMovie, getConfiguration, getCredits } from '@/app/services/tmdb';
+import { getMovie, getConfiguration} from '@/app/services/tmdb';
 
 interface MoviePageProps {
   params: {
@@ -18,13 +18,17 @@ export default async function MoviePage({ params }: MoviePageProps) {
   }
 
   try {
-    // fetch both movie and config in parallel
-    const [movie, config, credits] = await Promise.all([
+     // Fetch movie (includes cast/crew) and config in parallel
+    const [movie, config] = await Promise.all([
       getMovie(movieId),
       getConfiguration(),
-      getCredits(movieId)
     ]);
-
+ // Extract credits from movie
+    const credits = {
+      id: movieId,
+      cast: movie.cast ?? [],
+      crew: movie.crew ?? [],
+    };
     return <MovieInfo movie={movie} config={config} credits={credits} />;
   } catch (err) {
     console.error(err);
