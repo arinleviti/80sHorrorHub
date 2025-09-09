@@ -4,19 +4,7 @@ import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
-/* interface Movie {
-  title: string;
-  release_date: string;
-  overview: string;
-  poster_path: string | null;
-  popularity: number;
-}
 
-interface TMDBImageConfig {
-  secure_base_url: string;
-  poster_sizes: string[];
-}
-*/
 interface MovieInfoProps {
   movie: Movie;
   config: TMDBImageConfig;
@@ -65,12 +53,12 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       {credits.cast.length > 0 ? (
         <ul>
           {credits.cast.map((member, index) => (
-            <li key={`${member.cast_id}-${index}`}>
-              {member.character}: {member.name}
+            <li key={`${member.actorName}-${index}`}>
+              {member.character}: {member.actorName}
               {member.profile_path && (
                 <Image
                   src={`${config.secure_base_url}w185${member.profile_path}`}
-                  alt={member.name}
+                  alt={member.actorName}
                   width={50}
                   height={70}
                 />

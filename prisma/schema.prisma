@@ -58,6 +58,7 @@ model Movie {
   releaseDate  String?
   overview     String
   posterPath   String?
+  imagekitPosterPath String?
   popularity   Float
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -65,15 +66,22 @@ model Movie {
   castMembers  CastMember[]
   crewMembers  CrewMember[]
 }
+model Actor {
+  id                 Int           @id @default(autoincrement())
+  name               String        @unique
+  profilePath        String?
+  imagekitProfilePath String?
+  actorNameSanitized String @unique
+  castMembers        CastMember[]
+}
 
 model CastMember {
-  id        String   @id @default(cuid())
-  castId    Int
-  name      String
+  id        Int     @id @default(autoincrement())
   character String
-  profilePath String?
-  movie     Movie    @relation(fields: [movieId], references: [id])
-  movieId   String
+  movieId   String  // must match Movie.id type
+  actorId   Int
+  movie     Movie   @relation(fields: [movieId], references: [id])
+  actor     Actor   @relation(fields: [actorId], references: [id])
 }
 
 model CrewMember {

@@ -7,6 +7,7 @@ export const slugToIdMap: Record<string, number> = {
   "the-thing": 1091,
   "sleepaway-camp": 13567,
   "fright-night": 11797,
+  "the-fog": 790
 };
 
 export interface Movie {

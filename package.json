@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@imagekit/react": "^5.0.1",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.8",
+    "imagekit": "^6.0.0",
     "next": "15.5.2",
     "qs": "^6.14.0",
     "react": "19.1.0",
