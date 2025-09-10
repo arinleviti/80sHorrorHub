@@ -114,3 +114,8 @@ model StreamingOption {
   query       StreamingQuery @relation(fields: [queryId], references: [id])
   queryId     String
 }
+model EbayToken {
+  id        Int      @id @default(autoincrement())
+  token     String
+  expiresAt DateTime
+}

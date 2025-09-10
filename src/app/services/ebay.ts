@@ -1,8 +1,9 @@
 import axios from 'axios';
 import qs from 'qs';
+import { PrismaClient } from '../../generated/prisma/client';
 
-let cachedToken: string | null = null;
-let tokenExpiry: number | null = null;
+const TWELVE_HOURS_MS = 1000 * 60 * 60 * 12; // 43,200,000 ms
+const prisma = new PrismaClient();
 export interface EbayItemPrice {
     value: string;      // Price as a string
     currency: string;   // Currency code, e.g., "USD"
@@ -67,6 +68,24 @@ function mapEbayItem(item: RawEbayItem): EbayItemSummary {
 }
 export async function getEbayItems(query: string): Promise<EbaySearchResponse> {
     /* console.log("Starting getEbayItems with query:", query); */
+    const cached = await prisma.ebayQuery.findUnique({
+        where: { query },
+        include: { items: true },
+    });
+
+    if (cached && Date.now() - cached.updatedAt.getTime() < TWELVE_HOURS_MS) {
+        // return cached data
+        console.log("Using cached eBay data for query:", query);
+        const mappedData: EbaySearchResponse = {
+            itemSummaries: cached.items.map(i => ({
+                title: i.title,
+                price: { value: i.priceValue, currency: i.priceCurrency },
+                image: { imageUrl: i.imageUrl },
+                itemAffiliateWebUrl: i.itemUrl
+            }))
+        };
+        return mappedData;
+    }
 
     let accessToken: string | null = null;
     try {
@@ -97,20 +116,54 @@ export async function getEbayItems(query: string): Promise<EbaySearchResponse> {
         return mockEbayResponse;
     }
     const data: RawEbaySearchResponse = await res.json();
+
+
     // Map raw data to your strict interface
     const mappedData: EbaySearchResponse = {
         itemSummaries: data.itemSummaries.map(mapEbayItem)
     };
 
+    // ✅ Log that this data comes from the eBay API
+    console.log(`Fetched fresh eBay data for query: "${query}" from the eBay API.`);
+
+    await prisma.ebayQuery.upsert({
+        where: { query }, // Look for EbayQuery WHERE query == query (variable)
+        create: {       // If no record is found
+            query,   // create one with this query value. It's shorthand for query: query
+            items: {
+                create: mappedData.itemSummaries.map(i => ({
+                    title: i.title,
+                    priceValue: i.price.value,
+                    priceCurrency: i.price.currency,
+                    imageUrl: i.image.imageUrl,
+                    itemUrl: i.itemAffiliateWebUrl
+                }))
+            }
+        },
+        update: {
+            items: {
+                deleteMany: {},
+                create: mappedData.itemSummaries.map(i => ({
+                    title: i.title,
+                    priceValue: i.price.value,
+                    priceCurrency: i.price.currency,
+                    imageUrl: i.image.imageUrl,
+                    itemUrl: i.itemAffiliateWebUrl
+                }))
+            }
+        }
+    });
     return mappedData;
 
 }
 async function getEbayAccessToken(): Promise<string | null> {
-    if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
+    const record = await prisma.ebayToken.findFirst();
+    if (record && record.expiresAt.getTime() > Date.now()) {
         console.log("Using cached eBay token.");
-        return cachedToken;
+        return record.token;
     }
-     console.log("No valid cached token. Requesting new eBay token...");
+
+    console.log("No valid cached token. Requesting new eBay token...");
     const clientId = process.env.EBAY_CLIENT_ID!;
     const clientSecret = process.env.EBAY_CLIENT_SECRET!;
 
@@ -128,8 +181,14 @@ async function getEbayAccessToken(): Promise<string | null> {
             }
         }
     );
-    cachedToken = tokenResponse.data.access_token;
-    tokenExpiry = Date.now() + (tokenResponse.data.expires_in * 1000) - 60000; // 1 min buffer
-    return cachedToken;
-    /* return tokenResponse.data.access_token; */
+    const token = tokenResponse.data.access_token;
+    const expiresIn = tokenResponse.data.expires_in * 1000; // lifespan in ms
+    // Upsert into SQLite
+    await prisma.ebayToken.upsert({
+        where: { id: 1 },
+        update: { token, expiresAt: new Date(Date.now() + expiresIn - 60000) },
+        create: { id: 1, token, expiresAt: new Date(Date.now() + expiresIn - 60000) }
+    });
+
+    return token;
 }

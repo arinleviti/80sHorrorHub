@@ -145,6 +145,8 @@ for (const c of creditsDataRaw.cast) {
   await prisma.castMember.create({
     data: {
        character: c.character,
+       //actorId: actor.id This ensures all cast members referring to the same actor use the same actor.id.
+       //So Actor is created only once, and multiple CastMembers can point to it.
         actorId: actor.id,
         movieId: movieRecord.id,
     },
@@ -226,6 +228,7 @@ function isTMDBCrewMember(data: unknown): data is TMDBCrewMember {
   const obj = data as Record<string, unknown>;
   return typeof obj.job === 'string' && typeof obj.name === 'string';
 }
+//If this function returns true, then data should be treated as a TMDBCredits object.
 function isTMDBCredits(data: unknown): data is TMDBCredits {
   if (typeof data !== 'object' || data === null) return false;
   const obj = data as Record<string, unknown>;

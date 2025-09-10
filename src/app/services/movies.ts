@@ -7,7 +7,13 @@ export const slugToIdMap: Record<string, number> = {
   "the-thing": 1091,
   "sleepaway-camp": 13567,
   "fright-night": 11797,
-  "the-fog": 790
+  "the-fog": 790,
+  "A-Nightmare-on-Elm-Street-Part-2:Freddy's-Revenge": 10014,
+  "swamp-thing": 17918,
+  "aliens": 679,
+  "re-animator": 1694,
+  "the-return-of-the-living-dead": 10925,
+  "ghostbusters": 620,
 };
 
 export interface Movie {
