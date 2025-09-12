@@ -141,6 +141,7 @@ export async function getEbayItems(query: string): Promise<EbaySearchResponse> {
             }
         },
         update: {
+            updatedAt: new Date(), // <-- force the parent updatedAt to now
             items: {
                 deleteMany: {},
                 create: mappedData.itemSummaries.map(i => ({

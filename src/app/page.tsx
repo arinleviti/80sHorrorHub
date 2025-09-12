@@ -2,7 +2,7 @@
 import Styles from './page.module.css';
 import {slugToIdMap} from '@/app/services/movies';
 import { useState} from 'react';
-import {Button, Form, Container, } from 'react-bootstrap';
+import {Button, Container, } from 'react-bootstrap';
 import React from 'react';
 
 
