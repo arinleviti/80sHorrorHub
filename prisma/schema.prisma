@@ -15,16 +15,16 @@ datasource db {
 }
 
 model YouTubeQuery {
-  id        String   @id @default(cuid()) //Nightmare on Elm Street 1984 trailer
-  query     String   @unique
+  id        String         @id @default(cuid()) //Nightmare on Elm Street 1984 trailer
+  query     String         @unique
   videos    YouTubeVideo[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model YouTubeVideo {
-  id        String   @id @default(cuid())
-  youtubeId String   // actual YouTube videoId
+  id        String       @id @default(cuid())
+  youtubeId String // actual YouTube videoId
   title     String
   thumbnail String
   url       String
@@ -33,89 +33,102 @@ model YouTubeVideo {
 }
 
 model EbayQuery {
-  id         String      @id @default(cuid())
-  query      String      @unique
-  items      EbayItem[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime    @updatedAt
+  id        String     @id @default(cuid())
+  query     String     @unique
+  items     EbayItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model EbayItem {
-  id         String     @id @default(cuid())
-  title      String
-  priceValue String
+  id            String    @id @default(cuid())
+  title         String
+  priceValue    String
   priceCurrency String
-  imageUrl   String
-  itemUrl    String
-  query      EbayQuery  @relation(fields: [queryId], references: [id])
-  queryId    String
+  imageUrl      String
+  itemUrl       String
+  query         EbayQuery @relation(fields: [queryId], references: [id])
+  queryId       String
 }
 
 model Movie {
-  id           String      @id @default(cuid())
-  tmdbId       Int         @unique
-  title        String
-  releaseDate  String?
-  overview     String
-  posterPath   String?
+  id                 String   @id @default(cuid())
+  tmdbId             Int      @unique
+  title              String
+  releaseDate        String?
+  overview           String
+  posterPath         String?
   imagekitPosterPath String?
-  popularity   Float
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  popularity         Float
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  castMembers  CastMember[]
-  crewMembers  CrewMember[]
+  castMembers   CastMember[]
+  crewMembers   CrewMember[]
+  hfSuggestions HFSuggestion?  @relation("SourceMovie") // This movie HAS a suggestion record
+  suggestedIn   HFSuggestion[] @relation("SuggestedMovies") // Add this for the suggestions relation
 }
+
 model Actor {
-  id                 Int           @id @default(autoincrement())
-  name               String        @unique
-  profilePath        String?
+  id                  Int          @id @default(autoincrement())
+  name                String       @unique
+  profilePath         String?
   imagekitProfilePath String?
-  actorNameSanitized String @unique
-  castMembers        CastMember[]
+  actorNameSanitized  String       @unique
+  castMembers         CastMember[]
 }
 
 model CastMember {
-  id        Int     @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   character String
-  movieId   String  // must match Movie.id type
+  movieId   String // must match Movie.id type
   actorId   Int
-  movie     Movie   @relation(fields: [movieId], references: [id])
-  actor     Actor   @relation(fields: [actorId], references: [id])
+  movie     Movie  @relation(fields: [movieId], references: [id])
+  actor     Actor  @relation(fields: [actorId], references: [id])
 }
 
 model CrewMember {
-  id        String   @id @default(cuid())
-  name      String
-  job       String
-  movie     Movie    @relation(fields: [movieId], references: [id])
-  movieId   String
+  id      String @id @default(cuid())
+  name    String
+  job     String
+  movie   Movie  @relation(fields: [movieId], references: [id])
+  movieId String
 }
 
 model StreamingQuery {
-  id           String                  @id @default(cuid())
-  title        String
-  releaseYear  Int
-  country      String                  // e.g., "us", "uk"
-  options      StreamingOption[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime                @updatedAt
+  id          String            @id @default(cuid())
+  title       String
+  releaseYear Int
+  country     String // e.g., "us", "uk"
+  options     StreamingOption[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@unique([title, releaseYear, country])
 }
 
 model StreamingOption {
-  id          String   @id @default(cuid())
-  type        String   // subscription, rent, buy
-  quality     String?  // HD, SD
-  link        String?  // optional URL
-  serviceName String?  // e.g., Netflix, Prime Video
+  id          String  @id @default(cuid())
+  type        String // subscription, rent, buy
+  quality     String? // HD, SD
+  link        String? // optional URL
+  serviceName String? // e.g., Netflix, Prime Video
 
-  query       StreamingQuery @relation(fields: [queryId], references: [id])
-  queryId     String
+  query   StreamingQuery @relation(fields: [queryId], references: [id])
+  queryId String
 }
+
 model EbayToken {
   id        Int      @id @default(autoincrement())
   token     String
   expiresAt DateTime
+}
+
+model HFSuggestion {
+  id          String   @id @default(cuid())
+  movieId     String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  movie       Movie    @relation("SourceMovie", fields: [movieId], references: [id]) // Add the relation name here
+  suggestions Movie[]  @relation("SuggestedMovies") // <-- give it a relation name
 }

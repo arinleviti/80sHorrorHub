@@ -2,6 +2,7 @@ import { PrismaClient } from '../../generated/prisma/client';
 import { imagekit } from './imagekit';
 const prisma = new PrismaClient();
 export interface Movie {
+  id: string;
   title: string;
   release_date: string | null;
   overview: string;
@@ -77,6 +78,7 @@ export async function getMovie(movieId: number): Promise<Movie> {
   });
   if (cached) {
     const data: Movie = {
+       id: cached.id,
       title: cached.title,
       release_date: cached.releaseDate,
       overview: cached.overview,
@@ -173,6 +175,7 @@ for (const c of creditsDataRaw.cast) {
 
   // Return consistent Movie object
   return {
+    id: movieRecord.id,
     title: movieRecord.title,
     release_date: movieRecord.releaseDate,
     overview: movieRecord.overview,

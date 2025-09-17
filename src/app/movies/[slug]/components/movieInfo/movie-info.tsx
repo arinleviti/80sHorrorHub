@@ -4,6 +4,7 @@ import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
+import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -16,12 +17,13 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability]: [
+  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions]: [
     YouTubeVideo[],
     YouTubeVideo[],
     YouTubeVideo[],
     EbaySearchResponse,
-    GetStreamingAvailabilityReturn
+    GetStreamingAvailabilityReturn,
+    HFSuggestionItem[] | null
   ] = await Promise.all([
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
@@ -31,7 +33,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       movie.title,
       "us",
       movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
-    )
+    ),
+    getHFSuggestions(movie.id.toString(), movie.release_date ? movie.release_date.slice(0, 4) : '')
   ]);
   return (
     <div>
@@ -81,7 +84,18 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           </ul>
         </div>
       )}
-
+{hfSuggestions && hfSuggestions.length > 0 && (
+  <div>
+    <h2>AI Suggested Movies</h2>
+    <ul>
+      {hfSuggestions.map(s => (
+        <li key={s.title}>
+          {s.title} ({s.year})
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
 
       {trailers.length > 0 ? (
         <VideoList videos={trailers} title="Trailers" />
