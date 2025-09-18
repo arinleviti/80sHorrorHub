@@ -17,6 +17,11 @@ export const slugToIdMap: Record<string, number> = {
   "the-howling": 11298,
   "an-american-werewolf-in-london": 814,
   "the-lost-boys": 1547,
+  "hellraiser": 9003,
+  "the-shining": 694,
+  "the-beyond":19204,
+  "the-initiation":63360,
+  "the-fly":9426
 };
 
 export interface Movie {

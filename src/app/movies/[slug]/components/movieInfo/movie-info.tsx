@@ -5,6 +5,11 @@ import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
+import CastList from "./components/castList/cast-list";
+import CrewList from "./components/crewList/crew-list";
+import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
+import EbayItemsList from "./components/ebaySearchResponse/ebay-response";
+import StreamingAvailabilityList from "./components/streaming-avail/streaming-avail";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -52,50 +57,10 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       />
       <p>{movie.overview}</p>
       <p>Popularity: {movie.popularity}</p>
-      <h2>Cast</h2>
-      {credits.cast.length > 0 ? (
-        <ul>
-          {credits.cast.map((member, index) => (
-            <li key={`${member.actorName}-${index}`}>
-              {member.character}: {member.actorName}
-              {member.profile_path && (
-                <Image
-                  src={`${config.secure_base_url}w185${member.profile_path}`}
-                  alt={member.actorName}
-                  width={50}
-                  height={70}
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No cast information available</p>
-      )}
 
-
-      {credits.crew.length > 0 && (
-        <div>
-          <h2>Crew</h2>
-          <ul>
-            {credits.crew.map((member, index) => (
-              <li key={index}> {member.job}: {member.name}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-{hfSuggestions && hfSuggestions.length > 0 && (
-  <div>
-    <h2>AI Suggested Movies</h2>
-    <ul>
-      {hfSuggestions.map(s => (
-        <li key={s.title}>
-          {s.title} ({s.year})
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+      <CastList cast={credits.cast} config={config} />
+      <CrewList crew={credits.crew} />
+      <HFSuggestionsList suggestions={hfSuggestions || []} />
 
       {trailers.length > 0 ? (
         <VideoList videos={trailers} title="Trailers" />
@@ -112,47 +77,10 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       ) : (
         <p>No top moments videos available</p>
       )}
-      {ebayItems.itemSummaries.length > 0 ? (
-        <div>
-          <h2>eBay Items</h2>
-          <ul>
-            {ebayItems.itemSummaries.map((item) => (
-              <li key={item.itemAffiliateWebUrl}>
-                <a href={item.itemAffiliateWebUrl} target="_blank" rel="noopener noreferrer">
-                  {item.title} - {item.price.value} {item.price.currency}
-                </a>
-                <Image
-                  src={item.image.imageUrl}
-                  alt={item.title}
-                  width={80}
-                  height={100}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p>No eBay items available</p>
-      )}
-      {streamingAvailability && !('error' in streamingAvailability) ? (
-        <div>
-          <h2>Streaming Availability in the US</h2>
-          <ul>
-            {streamingAvailability.streamingOptions.map((option, i) => (
-              <li key={`${option.serviceName}-${option.type}-${option.quality || "NA"}-${i}`}>
-                {option.serviceName}: {option.type} ({option.quality})
-                {option.link && (
-                  <a href={option.link} target="_blank" rel="noopener noreferrer">
-                    Watch
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p>No streaming availability information available</p>
-      )}
+      
+      <EbayItemsList ebayItems={ebayItems} />
+      <StreamingAvailabilityList streamingAvailability={streamingAvailability} />
+
     </div>
   );
 }

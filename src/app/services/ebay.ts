@@ -118,11 +118,12 @@ export async function getEbayItems(query: string): Promise<EbaySearchResponse> {
     const data: RawEbaySearchResponse = await res.json();
 
 
-    // Map raw data to your strict interface
-    const mappedData: EbaySearchResponse = {
-        itemSummaries: data.itemSummaries.map(mapEbayItem)
-    };
-
+   const mappedData: EbaySearchResponse = {
+    itemSummaries: (data.itemSummaries || []).map(mapEbayItem)
+};
+if (!data.itemSummaries) {
+    console.warn(`eBay response for query "${query}" has no itemSummaries`, data);
+}
     // ✅ Log that this data comes from the eBay API
     console.log(`Fetched fresh eBay data for query: "${query}" from the eBay API.`);
 
