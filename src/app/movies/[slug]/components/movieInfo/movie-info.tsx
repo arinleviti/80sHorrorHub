@@ -3,6 +3,7 @@ import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
+import {fetchVynils} from "@/app/services/discogs";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 import CastList from "./components/castList/cast-list";
@@ -10,6 +11,7 @@ import CrewList from "./components/crewList/crew-list";
 import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
 import EbayItemsList from "./components/ebaySearchResponse/ebay-response";
 import StreamingAvailabilityList from "./components/streaming-avail/streaming-avail";
+import { DiscogsList, ReturnedResult } from "./components/discogs/discogs-list";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -22,13 +24,14 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions]: [
+  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions, discogsList]: [
     YouTubeVideo[],
     YouTubeVideo[],
     YouTubeVideo[],
     EbaySearchResponse,
     GetStreamingAvailabilityReturn,
-    HFSuggestionItem[] | null
+    HFSuggestionItem[] | null,
+    ReturnedResult[] | null,
   ] = await Promise.all([
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
@@ -39,7 +42,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       "us",
       movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
     ),
-    getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : '')
+    getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
+    fetchVynils(movie.title, movie.release_date ? movie.release_date.slice(0, 4) : '')
   ]);
   return (
     <div>
@@ -77,7 +81,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       ) : (
         <p>No top moments videos available</p>
       )}
-      
+      <DiscogsList results={discogsList} />
       <EbayItemsList ebayItems={ebayItems} />
       <StreamingAvailabilityList streamingAvailability={streamingAvailability} />
 
