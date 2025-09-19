@@ -42,14 +42,14 @@ interface HFDBSuggestionItem {
   movieId: string; // required because this comes from the DB
 }
 
-export async function getHFSuggestions(movieId: string, year: string): Promise<HFSuggestionItem[] | null> {
+export async function getHFSuggestions(movieId: string, title: string, year: string): Promise<HFSuggestionItem[] | null> {
   console.log("HF API Key loaded:", HUGGING_FACE_KEY?.slice(0, 5) + "…"); // ✅ check if key is loaded
   //check if we have it cached
   const cached = await prisma.hFSuggestion.findUnique({
     where: { movieId },
     include: { suggestions: true },
   });
-  if (cached && cached.suggestions.length > 0 && (Date.now() - cached.updatedAt.getTime() < ONE_MINUTE_MS)) {
+  if (cached && cached.suggestions.length > 0 && (Date.now() - cached.updatedAt.getTime() < ONE_DAY_MS)) {
     console.log("✅ Using cached suggestions for movieId:", movieId);
     console.log("Cached suggestions:", cached.suggestions.map(s => ({ title: s.title, releaseDate: s.releaseDate, posterPath: s.posterPath })));
     return cached.suggestions.map(s => ({
@@ -63,7 +63,7 @@ export async function getHFSuggestions(movieId: string, year: string): Promise<H
   console.log("ℹ️ No valid cache found. Fetching from Hugging Face...");
   let apiResponse: HFApiResponse;
   try {
-    apiResponse = await fetchHFSuggestions(movieId, year);
+    apiResponse = await fetchHFSuggestions(title, year);
     console.log("🤖 Hugging Face API response:", JSON.stringify(apiResponse, null, 2));
   } catch (err) {
     console.error("Failed to fetch Hugging Face API response:", err);
@@ -75,92 +75,103 @@ export async function getHFSuggestions(movieId: string, year: string): Promise<H
     //To JavaScript/TypeScript, it’s just a normal string containing brackets, braces, quotes, and commas.
     //That’s why you need JSON.parse(rawText) — to turn the string into a usable JavaScript array of objects.
     const rawText = apiResponse.choices[0].message.content.trim();
-    console.log("Raw text from Hugging Face content:", rawText);
+
+    // ✅ ADDED: normalize year to string to avoid invalid type issues
     try {
-      //at this point, parsed is an array of objects of type HFSuggestionItem but without posterUrl or movieId.
-      //It only has title and year.
-
       const parsed = JSON.parse(rawText);
-      if (!isHFSuggestionItemArray(parsed)) {
-        throw new Error("Invalid Hugging Face response shape");
+      if (Array.isArray(parsed)) {
+        suggestions = parsed.map(item => ({
+          title: item.title,
+          year: item.year != null ? String(item.year) : undefined, // ✅ normalize number -> string
+        }));
+        console.log("✅ Parsed and normalized HF suggestions:", suggestions);
+      } else {
+        console.warn("⚠️ Hugging Face returned invalid structure (not an array). Falling back to cache.");
       }
-      /* const parsed = JSON.parse(rawText) as HFSuggestionItem[]; */
-      console.log("Parsed suggestions from HF:", parsed);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        //Slice is a safety measure in case the model returns more than 5 suggestions.
-        //It returns another array of objects of type HFSuggestionItem.
-        suggestions = parsed.slice(0, 5);
-        console.log("Top 5 suggestions:", suggestions);
-      }
-    } catch (err) {
-      console.error("Failed to parse JSON from Hugging Face:", err, "Raw:", rawText);
-      return null;
+    } catch {
+      console.warn("⚠️ Hugging Face returned unparsable JSON. Falling back to cache if available.");
     }
+  
+}
+ // ---------- FALLBACK TO CACHE IF AI FAILED ----------
+ if (suggestions.length === 0 && cached && cached.suggestions.length >0) {
+  console.log("✅ Falling back to cached suggestions due to AI output failure.");
+  return cached.suggestions.map( s => ({
+    title: s.title,
+    posterUrl: s.imagekitPosterPath || undefined,
+    year: s.releaseDate || undefined,
+    movieId: s.id || undefined,
+  }));
+ }
+ if (suggestions.length === 0) {
+    console.warn("⚠️ No suggestions available (AI failed and no cache). Returning null.");
+    return null;
   }
-  // After parsing HuggingFace output into `suggestions: HFSuggestionItem[]`
-  // matchedMovies is a collections of objects of type {id: string} | null
-  // where id is the matched movie's id in our database
-  // if no match, the entry is null
-  const matchedMovies = await Promise.all(
-    suggestions.map(async (s) => {
-      const match = await prisma.movie.findFirst({
-        where: { title: s.title },  // <-- filter condition
-        //Only give me these fields back
-        select: {
-          id: true,
-          title: true,
-          releaseDate: true,
-          imagekitPosterPath: true,
-        },
-      });
-      return match ? {
-        id: match.id,
-        title: match.title,
-        releaseDate: match.releaseDate,
-        imagekitPosterPath: match.imagekitPosterPath,
-      } : null;
-    })
-  );
-  // Filter out nulls from matchedMovies to get an array of objects of type {id: string}
-  //If m !== null, then you can safely treat m as having this shape: { id, title, releaseDate, imagekitPosterPath }."
-  const connects = matchedMovies.filter((m): m is { id: string, title: string, releaseDate: string, imagekitPosterPath: string } => m !== null);
 
-  const dbSuggestions: HFDBSuggestionItem[] = suggestions
-    .map(s => {
-      const match = connects.find(m => m.title === s.title);
-      if (!match) return null; // skip if movie not in DB
-      return {
-        title: s.title,
-        year: s.year,
-        posterUrl: match.imagekitPosterPath,
-        movieId: match.id,
-      };
-    })
-    .filter((s): s is HFDBSuggestionItem => s !== null)
-    .filter(s => s.movieId !== movieId); // remove the original movie
-
-  console.log("✅ Final suggestions (DB only):", dbSuggestions);
-  // Upsert into DB
-  await prisma.hFSuggestion.upsert({
-    where: { movieId },
-    update: {
-      updatedAt: new Date(),
-      suggestions: {
-        //clears existing suggestions
-        set: [],
-        //connect: [{ id: 'movie1' }, { id: 'movie2' }]
-        //connect = “take these existing Movies by ID and link them to this HFSuggestion via the join table.”
-        connect: connects,
+// After parsing HuggingFace output into `suggestions: HFSuggestionItem[]`
+// matchedMovies is a collections of objects of type {id: string} | null
+// where id is the matched movie's id in our database
+// if no match, the entry is null
+const matchedMovies = await Promise.all(
+  suggestions.map(async (s) => {
+    const match = await prisma.movie.findFirst({
+      where: { title: s.title },  // <-- filter condition
+      //Only give me these fields back
+      select: {
+        id: true,
+        title: true,
+        releaseDate: true,
+        imagekitPosterPath: true,
       },
-    },
-    create: {
-      movieId,
-      createdAt: new Date(),
-      suggestions: { connect: connects },
-    },
-  });
+    });
+    return match ? {
+      id: match.id,
+      title: match.title,
+      releaseDate: match.releaseDate,
+      imagekitPosterPath: match.imagekitPosterPath,
+    } : null;
+  })
+);
+// Filter out nulls from matchedMovies to get an array of objects of type {id: string}
+//If m !== null, then you can safely treat m as having this shape: { id, title, releaseDate, imagekitPosterPath }."
+const connects = matchedMovies.filter((m): m is { id: string, title: string, releaseDate: string, imagekitPosterPath: string } => m !== null);
 
-  return dbSuggestions;
+const dbSuggestions: HFDBSuggestionItem[] = suggestions
+  .map(s => {
+    const match = connects.find(m => m.title === s.title);
+    if (!match) return null; // skip if movie not in DB
+    return {
+      title: s.title,
+      year: s.year,
+      posterUrl: match.imagekitPosterPath,
+      movieId: match.id,
+    };
+  })
+  .filter((s): s is HFDBSuggestionItem => s !== null)
+  .filter(s => s.movieId !== movieId); // remove the original movie
+
+console.log("✅ Final suggestions (DB only):", dbSuggestions);
+// Upsert into DB
+await prisma.hFSuggestion.upsert({
+  where: { movieId },
+  update: {
+    updatedAt: new Date(),
+    suggestions: {
+      //clears existing suggestions
+      set: [],
+      //connect: [{ id: 'movie1' }, { id: 'movie2' }]
+      //connect = “take these existing Movies by ID and link them to this HFSuggestion via the join table.”
+      connect: connects,
+    },
+  },
+  create: {
+    movieId,
+    createdAt: new Date(),
+    suggestions: { connect: connects },
+  },
+});
+
+return dbSuggestions;
 }
 
 

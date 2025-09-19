@@ -39,7 +39,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       "us",
       movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
     ),
-    getHFSuggestions(movie.id.toString(), movie.release_date ? movie.release_date.slice(0, 4) : '')
+    getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : '')
   ]);
   return (
     <div>
