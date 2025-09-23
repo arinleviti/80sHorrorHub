@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 const ONE_MINUTE_MS = 1000 * 60; // 1 minute
+const TWO_WEEKS_MS = 1000 * 60 * 60 * 24 * 14;
 const HUGGING_FACE_KEY = process.env.HUGGING_FACE_KEY;
 
 export interface HFSuggestionItem {
@@ -49,7 +50,7 @@ export async function getHFSuggestions(movieId: string, title: string, year: str
     where: { movieId },
     include: { suggestions: true },
   });
-  if (cached && cached.suggestions.length > 0 && (Date.now() - cached.updatedAt.getTime() < ONE_DAY_MS)) {
+  if (cached && cached.suggestions.length > 0 && (Date.now() - cached.updatedAt.getTime() < TWO_WEEKS_MS)) {
     console.log("✅ Using cached suggestions for movieId:", movieId);
     console.log("Cached suggestions:", cached.suggestions.map(s => ({ title: s.title, releaseDate: s.releaseDate, posterPath: s.posterPath })));
     return cached.suggestions.map(s => ({

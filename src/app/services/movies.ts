@@ -21,7 +21,8 @@ export const slugToIdMap: Record<string, number> = {
   "the-shining": 694,
   "the-beyond":19204,
   "the-initiation":63360,
-  "the-fly":9426
+  "the-fly":9426,
+  "night-of-the-demons": 24924
 };
 
 export interface Movie {
