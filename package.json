@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node dist/migrateAiContent.js"
   },
   "dependencies": {
     "@imagekit/react": "^5.0.1",
@@ -23,13 +27,14 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@prisma/client": "^6.15.0",
-    "@types/node": "^20",
+    "@types/node": "^20.19.17",
     "@types/qs": "^6.14.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "prisma": "^6.15.0",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }

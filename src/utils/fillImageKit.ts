@@ -1,10 +1,12 @@
 import { PrismaClient } from '../generated/prisma/client';
 import { imagekit } from '../app/services/imagekit'; // adjust path if needed
+
 const prisma = new PrismaClient();
 
 async function uploadMissingImages() {
+  // Fetch movies with cast members AND their actors
   const movies = await prisma.movie.findMany({
-    include: { castMembers: true },
+    include: { castMembers: { include: { actor: true } } },
   });
 
   for (const movie of movies) {
@@ -32,24 +34,25 @@ async function uploadMissingImages() {
 
     // 2️⃣ Upload missing cast images
     for (const cast of movie.castMembers) {
-      if (!cast.imagekitProfilePath && cast.profilePath) {
+      const actor = cast.actor;
+      if (!actor.imagekitProfilePath && actor.profilePath) {
         try {
-          const profileRes = await fetch(`https://image.tmdb.org/t/p/w185${cast.profilePath}`);
+          const profileRes = await fetch(`https://image.tmdb.org/t/p/w185${actor.profilePath}`);
           const profileBuffer = Buffer.from(await profileRes.arrayBuffer());
           const uploadResult = await imagekit.upload({
             file: profileBuffer,
-            fileName: `cast_${cast.castId}.jpg`,
+            fileName: `cast_${actor.id}.jpg`,
             folder: '/cast',
           });
 
-          await prisma.castMember.update({
-            where: { id: cast.id },
+          await prisma.actor.update({
+            where: { id: actor.id },
             data: { imagekitProfilePath: uploadResult.url },
           });
 
-          console.log(`Uploaded profile for "${cast.name}" → ${uploadResult.url}`);
+          console.log(`Uploaded profile for "${actor.name}" → ${uploadResult.url}`);
         } catch (err) {
-          console.error(`Failed to upload profile for "${cast.name}":`, err);
+          console.error(`Failed to upload profile for "${actor.name}":`, err);
         }
       }
     }

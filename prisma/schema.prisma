@@ -86,6 +86,10 @@ model Movie {
   crewMembers   CrewMember[]
   hfSuggestions HFSuggestion?  @relation("SourceMovie") // This movie HAS a suggestion record
   suggestedIn   HFSuggestion[] @relation("SuggestedMovies") // Add this for the suggestions relation
+
+  slug          String?        @unique
+  aiDescription AiDescription?
+  contributions Contribution[]
 }
 
 model Actor {
@@ -150,4 +154,66 @@ model HFSuggestion {
   updatedAt   DateTime @updatedAt
   movie       Movie    @relation("SourceMovie", fields: [movieId], references: [id]) // Add the relation name here
   suggestions Movie[]  @relation("SuggestedMovies") // <-- give it a relation name
+}
+
+enum ContributionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ContributionSection {
+  SYNOPSIS
+  FUN_FACTS
+  PRODUCTION_CONTEXT
+  RECEPTION
+  OTHER
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String?        @unique
+  image         String?
+  role          UserRole       @default(USER)
+  contributions Contribution[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Contribution {
+  id        String              @id @default(cuid())
+  movie     Movie               @relation(fields: [movieId], references: [id])
+  movieId   String
+  user      User                @relation(fields: [userId], references: [id])
+  userId    String
+  section   ContributionSection
+  title     String?
+  body      String // main text content
+  status    ContributionStatus  @default(PENDING)
+  upvotes   Int                 @default(0)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([movieId])
+  @@index([userId])
+  @@index([status])
+}
+
+model AiDescription {
+  id                String  @id @default(cuid())
+  synopsis          String?
+  funFacts          String?
+  productionContext String?
+  reception         String?
+
+  movie   Movie  @relation(fields: [movieId], references: [id])
+  movieId String @unique
 }
