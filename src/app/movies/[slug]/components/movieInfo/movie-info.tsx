@@ -5,15 +5,15 @@ import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
 import {fetchVynils} from "@/app/services/discogs";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
-import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 import CastList from "./components/castList/cast-list";
 import CrewList from "./components/crewList/crew-list";
-import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
 import EbayItemsList from "./components/ebaySearchResponse/ebay-response";
 import StreamingAvailabilityList from "./components/streaming-avail/streaming-avail";
 import { DiscogsList, ReturnedResult } from "./components/discogs/discogs-list";
 import { SpotifyEmbed } from "./components/spotifyPlaylist/spotify-playlist";
 import { SearchSpotifyPlaylist,  SpotifyPlaylistEmbed } from "@/app/services/spotify";
+import {fetchAIDescription, AiDescription} from "@/app/services/AiGeneratedMainContent";
+import AiContent from "./components/AIContent/ai-content";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -26,7 +26,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, /* hfSuggestions, */ discogsList, spotifyPlaylist]: [
+  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, /* hfSuggestions, */ discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     YouTubeVideo[],
     YouTubeVideo[],
@@ -34,7 +34,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     GetStreamingAvailabilityReturn,
     /* HFSuggestionItem[] | null, */
     ReturnedResult[] | null,
-    SpotifyPlaylistEmbed | null
+    SpotifyPlaylistEmbed | null,
+    AiDescription | null
   ] = await Promise.all([
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
@@ -47,7 +48,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     ),
     /* getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''), */
     fetchVynils(movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
-    SearchSpotifyPlaylist(`${movie.title}`, 5) // return null if no playlist found
+    SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
+    fetchAIDescription(movie.id),
   ]);
   return (
     <div>
@@ -65,7 +67,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       />
       <p>{movie.overview}</p>
       <p>Popularity: {movie.popularity}</p>
-
+      
+      <AiContent content={aiDescription}/>
       <CastList cast={credits.cast} config={config} />
       <CrewList crew={credits.crew} />
       {/*Uncomment when the movie list is full */}

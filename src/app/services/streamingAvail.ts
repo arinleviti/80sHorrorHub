@@ -105,6 +105,7 @@ await prisma.streamingQuery.upsert({
     },
   },
   update: {
+    updatedAt: new Date(), // ✅ force bump the timestamp
     options: {
       deleteMany: {},
       create: prismaOptions.map(opt => ({
