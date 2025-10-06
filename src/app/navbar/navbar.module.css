@@ -1,0 +1,166 @@
+.navbar {
+  background: var(--color-background);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-menu);
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  border-radius: 5px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.1) rotate(-2deg);
+  /* Neon glow / luminescence */
+  box-shadow: 0 0 15px var(--color-primary),
+              0 0 30px var(--color-secondary),
+              0 0 45px var(--color-accent);
+}
+
+.toggle {
+  border-color: var(--color-accent);
+}
+
+.collapse {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.navLinksContainer {
+  display: flex;
+  gap: 1.5rem;
+  margin-left: auto; /* pushes links right */
+}
+
+.navLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-family: var(--font-menu);
+  font-size: var(--font-size-menu);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  height: 3px;             /* slightly thicker for visibility */
+  width: 0%;
+  background: var(--color-secondary);
+  transition: width 0.3s ease, box-shadow 0.3s ease;
+
+  /* stronger neon glow */
+  box-shadow: 
+    0 0 5px var(--color-secondary),
+    0 0 10px var(--color-secondary),
+    0 0 15px var(--color-accent),
+    0 0 20px var(--color-accent);
+}
+
+.navLink:hover::after {
+  width: 100%;
+  box-shadow: 
+    0 0 10px var(--color-secondary),
+    0 0 20px var(--color-secondary),
+    0 0 25px var(--color-accent),
+    0 0 35px var(--color-accent);
+}
+
+.navLink:hover {
+  color: var(--color-text);
+   text-shadow: 0 0 5px var(--color-secondary),
+               0 0 10px var(--color-accent); 
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 2rem;
+}
+
+.searchInput {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-background);
+  color: var(--color-text); /* <-- typed text color when not focused */
+  font-family: var(--font-menu);
+  padding: 0.25rem 0.5rem;
+  caret-color: var(--color-neutral) !important; /* optional neon caret */
+  border-radius: 2px !important;
+   text-transform: none; /* <- this fixes the all caps */
+}
+
+/* placeholder text */
+.searchInput::placeholder {
+  color: var(--color-text);  /* visible placeholder */
+  opacity: 0.6;
+  text-transform: none;
+}
+
+/* focused state */
+.searchInput:focus {
+  border-color: var(--color-background);
+  box-shadow: 0 0 10px var(--color-primary);
+  outline: none;
+  color: var(--color-neutral); /* typed text color on focus */
+}
+
+/* placeholder on focus */
+.searchInput:focus::placeholder {
+  color: var(--color-neutral);
+  opacity: 0.6;
+}
+
+.navButton {
+  font-family: var(--font-menu);
+  border: 1px solid var(--color-background);
+  color: var(--color-text);
+  background-color: transparent;
+  padding: 0.25rem 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.navButton:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  text-shadow: 0 0 5px var(--color-accent);
+   /* Neon glow / luminescence */
+  box-shadow: 0 0 15px var(--color-primary),
+              0 0 30px var(--color-secondary),
+              0 0 45px var(--color-accent);
+}
+
+@media (max-width: 992px) {
+  .collapse {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .navLinksContainer {
+    margin-left: 0;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .searchForm {
+    margin-left: 0;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+}
