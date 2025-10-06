@@ -67,17 +67,18 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       />
       <p>{movie.overview}</p>
       <p>Popularity: {movie.popularity}</p>
-      
-      <AiContent content={aiDescription}/>
       <CastList cast={credits.cast} config={config} />
       <CrewList crew={credits.crew} />
-      {/*Uncomment when the movie list is full */}
-      {/* <HFSuggestionsList suggestions={hfSuggestions || []} /> */}
       {spotifyPlaylist ? (
   <SpotifyEmbed playlist={spotifyPlaylist} />
 ) : (
   <p>No Spotify soundtrack available</p>
 )}
+      <AiContent content={aiDescription}/>
+      
+      {/*Uncomment when the movie list is full */}
+      {/* <HFSuggestionsList suggestions={hfSuggestions || []} /> */}
+      
       {trailers.length > 0 ? (
         <VideoList videos={trailers} title="Trailers" />
       ) : (
