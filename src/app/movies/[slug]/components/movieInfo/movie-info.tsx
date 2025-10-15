@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { Container, Row, Col } from "react-bootstrap";
+import styles from "./movie-info.module.css";
 import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
@@ -52,52 +54,86 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     fetchAIDescription(movie.id),
   ]);
   return (
-    <div>
-      <h1>
-        {movie.title}{" "}
-        {movie.release_date ? `(${movie.release_date.slice(0, 4)})` : ""}
-      </h1>
+     <Container className={`${styles.moviePage} my-5`}>
+      {/* 🎬 HEADER */}
+      <Row className="align-items-start mb-5">
+        {/* LEFT: Poster */}
+        <Col md={5} className="text-center mb-4 mb-md-0">
+          <Image
+            src={posterUrl}
+            alt={movie.title}
+            width={400}
+            height={600}
+            className="img-fluid rounded shadow"
+          />
+        </Col>
 
-      <Image
-        src={posterUrl}
-        alt={movie.title}
-        width={500}
-        height={750}
-        priority
-      />
-      <p>{movie.overview}</p>
-      <p>Popularity: {movie.popularity}</p>
-      <CastList cast={credits.cast} config={config} />
-      <CrewList crew={credits.crew} />
-      {spotifyPlaylist ? (
-  <SpotifyEmbed playlist={spotifyPlaylist} />
-) : (
-  <p>No Spotify soundtrack available</p>
-)}
-      <AiContent content={aiDescription}/>
-      
-      {/*Uncomment when the movie list is full */}
-      {/* <HFSuggestionsList suggestions={hfSuggestions || []} /> */}
-      
-      {trailers.length > 0 ? (
-        <VideoList videos={trailers} title="Trailers" />
-      ) : (
-        <p>No trailers available</p>
-      )}
-      {behindTheScenes.length > 0 ? (
-        <VideoList videos={behindTheScenes} title="Behind the Scenes & Interviews" />
-      ) : (
-        <p>No behind the scenes videos available</p>
-      )}
-      {topMoments.length > 0 ? (
-        <VideoList videos={topMoments} title="Top Moments" />
-      ) : (
-        <p>No top moments videos available</p>
-      )}
-      <DiscogsList results={discogsList} />
-      <EbayItemsList ebayItems={ebayItems} />
-      <StreamingAvailabilityList streamingAvailability={streamingAvailability} />
+        {/* RIGHT: Title, Spotify, Overview */}
+        <Col md={7}>
+          <div className="d-flex justify-content-between align-items-start flex-wrap">
+            <h1 className="mb-3 me-3">
+              {movie.title}{" "}
+              {movie.release_date ? `(${movie.release_date.slice(0, 4)})` : ""}
+            </h1>
 
-    </div>
+            {/* 🎧 Spotify on top-right */}
+            {spotifyPlaylist && (
+              <div className="ms-auto mb-3" style={{ maxWidth: "300px" }}>
+                <SpotifyEmbed playlist={spotifyPlaylist} />
+              </div>
+            )}
+          </div>
+
+          {/* Overview just below title + Spotify */}
+          <p className={styles.overview}>{movie.overview}</p>
+          <p className={styles.popularity}>Popularity: {movie.popularity}</p>
+        </Col>
+      </Row>
+
+      {/* 👥 Cast & Crew */}
+      <Row className="mb-5">
+        <Col>
+          <CastList cast={credits.cast} config={config} />
+        </Col>
+        <Col>
+          <CrewList crew={credits.crew} />
+        </Col>
+      </Row>
+
+      {/* 🤖 AI Content */}
+      <Row className="mb-5">
+        <Col>
+          <AiContent content={aiDescription} />
+        </Col>
+      </Row>
+
+      {/* 🎥 Videos */}
+      <Row className="mb-5">
+        <Col>
+          <VideoList videos={trailers} title="Trailers" />
+        </Col>
+        <Col>
+          <VideoList videos={behindTheScenes} title="Behind the Scenes" />
+        </Col>
+        <Col>
+          <VideoList videos={topMoments} title="Top Moments" />
+        </Col>
+      </Row>
+
+      {/* 💿 Merchandise & Streaming */}
+      <Row className="mb-5">
+        <Col>
+          <DiscogsList results={discogsList} />
+        </Col>
+        <Col>
+          <EbayItemsList ebayItems={ebayItems} />
+        </Col>
+        <Col>
+          <StreamingAvailabilityList
+            streamingAvailability={streamingAvailability}
+          />
+        </Col>
+      </Row>
+    </Container>
   );
 }

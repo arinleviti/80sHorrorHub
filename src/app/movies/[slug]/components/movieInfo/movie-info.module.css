@@ -1,0 +1,16 @@
+.moviePage {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+.overview {
+  margin-top: 1rem;
+  line-height: 1.6;
+  color: var(--color-accent);
+}
+
+.popularity {
+  color: var(--color-neutral);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
