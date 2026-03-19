@@ -16,6 +16,8 @@ import { SpotifyEmbed } from "./components/spotifyPlaylist/spotify-playlist";
 import { SearchSpotifyPlaylist,  SpotifyPlaylistEmbed } from "@/app/services/spotify";
 import {fetchAIDescription, AiDescription} from "@/app/services/AiGeneratedMainContent";
 import AiContent from "./components/AIContent/ai-content";
+import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
+import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -28,13 +30,13 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, /* hfSuggestions, */ discogsList, spotifyPlaylist, aiDescription]: [
+  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     YouTubeVideo[],
     YouTubeVideo[],
     EbaySearchResponse,
     GetStreamingAvailabilityReturn,
-    /* HFSuggestionItem[] | null, */
+    HFSuggestionItem[] | null,
     ReturnedResult[] | null,
     SpotifyPlaylistEmbed | null,
     AiDescription | null
@@ -48,7 +50,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       "us",
       movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
     ),
-    /* getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''), */
+    getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
     fetchVynils(movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
     SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
     fetchAIDescription(movie.id),
@@ -134,6 +136,15 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           />
         </Col>
       </Row>
+
+      {/* 🤖 AI Suggestions */}
+{hfSuggestions && hfSuggestions.length > 0 && (
+  <Row className="mb-5">
+    <Col>
+      <HFSuggestionsList suggestions={hfSuggestions} />
+    </Col>
+  </Row>
+)}
     </Container>
   );
 }

@@ -1,7 +1,6 @@
 
 
-import { PrismaClient } from '../../generated/prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from "@/app/services/prisma";
 
 const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 const ONE_MINUTE_MS = 1000 * 60; // 1 minute

@@ -5,9 +5,16 @@ import Image from 'next/image';
 import { Navbar, Nav, Form, FormControl, Container, Button } from 'react-bootstrap';
 import styles from './navbar.module.css';
 import { Search } from 'lucide-react';
+import { signIn, signOut, useSession } from "next-auth/react";
 
 const NavbarRHH = () => {
   const router = useRouter();
+  const { data: session } = useSession();
+
+const handleSwitchAccount = async () => {
+  await signOut({ redirect: false });
+  window.location.href = "/api/auth/signin/google?prompt=select_account";
+};
   //React.FormEvent<HTMLFormElement> tells TypeScript:
   //This is a form event (FormEvent) coming from an HTML form element (HTMLFormElement).
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,9 +64,35 @@ const NavbarRHH = () => {
           <Nav className={styles.navLinksContainer}>
             <Link href="/movies" className={styles.navLink}>Movies</Link>
             <Link href="/about" className={styles.navLink}>About</Link>
-            <Link href="/login">
-              <Button className={styles.navButton}>Login</Button>
-            </Link>
+            {session ? (
+        <>
+          <span className={styles.userInfo}>
+            {session.user?.email}
+          </span>
+
+          <Button
+            className={styles.navButton}
+            onClick={() => signOut()}
+          >
+            Log out
+          </Button>
+
+          <Button
+            className={styles.navButton}
+            onClick={handleSwitchAccount}
+          >
+            Switch account
+          </Button>
+        </>
+      ) : (
+        <Button
+          className={styles.navButton}
+          //NextAuth internally makes a request to \app\api\auth\[...nextauth]\route.ts
+          onClick={() => signIn("google")}
+        >
+          Log in
+        </Button>
+      )}
           </Nav>
         </Navbar.Collapse>
       </Container>

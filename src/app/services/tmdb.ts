@@ -1,6 +1,6 @@
-import { PrismaClient } from '../../generated/prisma/client';
+import { prisma } from "@/app/services/prisma";
 import { imagekit } from './imagekit';
-const prisma = new PrismaClient();
+
 export interface Movie {
   id: string;
   title: string;

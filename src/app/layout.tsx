@@ -3,6 +3,7 @@ import { Merriweather, Antonio, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./navbar/navbar";
+import Providers from "./providers";
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -35,8 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${merriweather.variable} ${antonio.variable} ${bebasNeue.variable}`}>
-        <Navbar/>
-        {children}
+        <Providers>
+          <Navbar/>
+          {children}
+        </Providers>
       </body>
     </html>
   );

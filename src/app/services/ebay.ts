@@ -1,9 +1,9 @@
 import axios from 'axios';
 import qs from 'qs';
-import { PrismaClient } from '../../generated/prisma/client';
+import { prisma } from "@/app/services/prisma";
 
 const TWELVE_HOURS_MS = 1000 * 60 * 60 * 12; // 43,200,000 ms
-const prisma = new PrismaClient();
+
 export interface EbayItemPrice {
     value: string;      // Price as a string
     currency: string;   // Currency code, e.g., "USD"

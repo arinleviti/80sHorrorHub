@@ -1,7 +1,5 @@
 // src/app/services/youtube.ts
-  import { PrismaClient } from '../../generated/prisma/client';
-
-  const prisma = new PrismaClient(); // directly instantiating, no singleton
+import { prisma } from "@/app/services/prisma";
 
 
 const TWO_WEEKS_MS = 1000 * 60 * 60 * 24 * 14;

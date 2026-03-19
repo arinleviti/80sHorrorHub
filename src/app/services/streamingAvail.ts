@@ -1,7 +1,5 @@
 import * as StreamingAvailability from "streaming-availability";
-import { PrismaClient } from '../../generated/prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "@/app/services/prisma";
 const TWO_WEEKS_MS = 1000 * 60 * 60 * 24 * 14;
 
 // Type for the streaming option we return per country
