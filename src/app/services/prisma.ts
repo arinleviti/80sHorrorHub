@@ -1,3 +1,5 @@
+//Create a single Prisma client and reuse it everywhere.
+
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = global as unknown as {
