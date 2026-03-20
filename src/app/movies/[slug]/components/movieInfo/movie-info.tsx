@@ -18,6 +18,7 @@ import {fetchAIDescription, AiDescription} from "@/app/services/AiGeneratedMainC
 import AiContent from "./components/AIContent/ai-content";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
+import ContributionForm from "./components/contribution/contributionForm";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -108,7 +109,12 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <AiContent content={aiDescription} />
         </Col>
       </Row>
-
+      {/* ✍️ User Contributions */}
+<Row className="mb-5">
+        <Col>
+          <ContributionForm movieId={movie.id} />
+        </Col>
+      </Row>
       {/* 🎥 Videos */}
       <Row className="mb-5">
         <Col>
