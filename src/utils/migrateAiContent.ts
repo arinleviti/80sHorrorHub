@@ -1,8 +1,8 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { prisma } from "@/app/services/prisma";
 import path from 'path';
 import fs from 'fs';
 
-const prisma = new PrismaClient();
+
 // Load JSON dynamically so compiled JS can find it
 const jsonPath = path.resolve(__dirname, '../src/app/services/aiMovieDescriptions.json');
 const aiMovieDescriptions = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));

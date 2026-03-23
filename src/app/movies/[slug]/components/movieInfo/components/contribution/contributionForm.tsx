@@ -9,28 +9,40 @@ type Props = {
 
 export default function ContributionForm({ movieId }: Props) {
   const [section, setSection] = useState("SYNOPSIS");
+  const [type, setType] = useState("FAN_FACT");
+  const [source, setSource] = useState("UNKNOWN");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
+  const MIN_LENGTH = 150;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (body.length < MIN_LENGTH) {
+      setStatus("error");
+      setMessage(`Contribution must be at least ${MIN_LENGTH} characters.`);
+      return;
+    }
+
     setStatus("loading");
 
     try {
       const res = await fetch("/api/contributions", {
         method: "POST",
         headers: {
-            //Hey server, the body I’m sending is JSON
           "Content-Type": "application/json",
         },
-        //Converts a JavaScript object into a JSON string to send to the server
         body: JSON.stringify({
           movieId,
           section,
+          type,
+          source,
           title,
-          contributionBody: body,
+          body, // ✅ match your Prisma field name
         }),
       });
 
@@ -40,6 +52,7 @@ export default function ContributionForm({ movieId }: Props) {
 
       setStatus("success");
       setMessage("Contribution submitted for review!");
+
       setTitle("");
       setBody("");
     } catch (err) {
@@ -50,6 +63,10 @@ export default function ContributionForm({ movieId }: Props) {
 
   return (
     <Form onSubmit={handleSubmit}>
+      <Form.Text className="text-muted">
+  Share something specific: a detail, a story, or something most fans wouldn’t know.
+</Form.Text>
+      {/* SECTION */}
       <Form.Group className="mb-3">
         <Form.Label>Section</Form.Label>
         <Form.Select value={section} onChange={(e) => setSection(e.target.value)}>
@@ -61,6 +78,29 @@ export default function ContributionForm({ movieId }: Props) {
         </Form.Select>
       </Form.Group>
 
+      {/* TYPE */}
+      <Form.Group className="mb-3">
+        <Form.Label>Type of Contribution</Form.Label>
+        <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="FAN_FACT">Fan Fact</option>
+          <option value="BEHIND_THE_SCENES">Behind the Scenes</option>
+          <option value="PRODUCTION_DETAIL">Production Detail</option>
+          <option value="PERSONAL_STORY">Personal Story</option>
+        </Form.Select>
+      </Form.Group>
+
+      {/* SOURCE */}
+      <Form.Group className="mb-3">
+        <Form.Label>Source</Form.Label>
+        <Form.Select value={source} onChange={(e) => setSource(e.target.value)}>
+          <option value="INTERVIEW">Interview</option>
+          <option value="ARTICLE">Article</option>
+          <option value="PERSONAL">Personal Knowledge</option>
+          <option value="UNKNOWN">Unknown</option>
+        </Form.Select>
+      </Form.Group>
+
+      {/* TITLE */}
       <Form.Group className="mb-3">
         <Form.Label>Title (optional)</Form.Label>
         <Form.Control
@@ -70,8 +110,9 @@ export default function ContributionForm({ movieId }: Props) {
         />
       </Form.Group>
 
+      {/* CONTENT */}
       <Form.Group className="mb-3">
-        <Form.Label>Content</Form.Label>
+        <Form.Label>Contribution</Form.Label>
         <Form.Control
           as="textarea"
           rows={5}
@@ -79,6 +120,9 @@ export default function ContributionForm({ movieId }: Props) {
           onChange={(e) => setBody(e.target.value)}
           required
         />
+        <div className="text-muted mt-1" style={{ fontSize: "0.9rem" }}>
+          {body.length} / {MIN_LENGTH} characters minimum
+        </div>
       </Form.Group>
 
       <Button type="submit" disabled={status === "loading"}>

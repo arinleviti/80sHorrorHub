@@ -27,7 +27,7 @@ model YouTubeVideo {
   title     String
   thumbnail String
   url       String
-  query     YouTubeQuery @relation(fields: [queryId], references: [id]) //the relation field
+  query     YouTubeQuery @relation(fields: [queryId], references: [id], onDelete: Cascade) //the relation field
   queryId   String //YouTubeVideo.queryId = YouTubeQuery.id
 }
 
@@ -46,7 +46,7 @@ model EbayItem {
   priceCurrency String
   imageUrl      String
   itemUrl       String
-  query         EbayQuery @relation(fields: [queryId], references: [id])
+  query         EbayQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId       String
 }
 
@@ -65,7 +65,7 @@ model DiscogItem {
   format  Json
   thumb   String?
   uri     String
-  query   DiscogQuery @relation(fields: [queryId], references: [id])
+  query   DiscogQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId String
 }
 
@@ -89,6 +89,7 @@ model Movie {
   slug          String?        @unique
   aiDescription AiDescription?
   contributions Contribution[]
+  ratings       MovieRating[]
 }
 
 model Actor {
@@ -105,7 +106,7 @@ model CastMember {
   character String
   movieId   String // must match Movie.id type
   actorId   Int
-  movie     Movie  @relation(fields: [movieId], references: [id])
+  movie     Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
   actor     Actor  @relation(fields: [actorId], references: [id])
 }
 
@@ -113,7 +114,7 @@ model CrewMember {
   id      String @id @default(cuid())
   name    String
   job     String
-  movie   Movie  @relation(fields: [movieId], references: [id])
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
   movieId String
 }
 
@@ -136,7 +137,7 @@ model StreamingOption {
   link        String? // optional URL
   serviceName String? // e.g., Netflix, Prime Video
 
-  query   StreamingQuery @relation(fields: [queryId], references: [id])
+  query   StreamingQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId String
 }
 
@@ -151,7 +152,7 @@ model HFSuggestion {
   movieId     String   @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  movie       Movie    @relation("SourceMovie", fields: [movieId], references: [id]) // Add the relation name here
+  movie       Movie    @relation("SourceMovie", fields: [movieId], references: [id], onDelete: Cascade) // Add the relation name here
   suggestions Movie[]  @relation("SuggestedMovies") // <-- give it a relation name
 }
 
@@ -176,13 +177,31 @@ enum UserRole {
   ADMIN
 }
 
+enum ContributionType {
+  FAN_FACT
+  BEHIND_THE_SCENES
+  PRODUCTION_DETAIL
+  PERSONAL_STORY
+}
+
+enum ContributionSource {
+  INTERVIEW
+  ARTICLE
+  PERSONAL
+  UNKNOWN
+}
+
 model Contribution {
   id        String              @id @default(cuid())
-  movie     Movie               @relation(fields: [movieId], references: [id])
+  movie     Movie               @relation(fields: [movieId], references: [id], onDelete: Cascade)
   movieId   String
   user      User                @relation(fields: [userId], references: [id])
   userId    String
+
   section   ContributionSection
+  type      ContributionType    @default(FAN_FACT) // ✅ NEW
+  source    ContributionSource  @default(UNKNOWN) // ✅ NEW
+
   title     String?
   body      String // main text content
   status    ContributionStatus  @default(PENDING)
@@ -202,8 +221,19 @@ model AiDescription {
   productionContext String?
   reception         String?
 
-  movie   Movie  @relation(fields: [movieId], references: [id])
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
   movieId String @unique
+}
+model MovieRating {
+  id      String @id @default(cuid())
+  movieId String
+  userId  String
+  value   Int    // 1 = liked
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([movieId, userId]) // prevents multiple votes
 }
 
 //The following is for NextAuth with Google authorisation
@@ -220,6 +250,8 @@ model User {
   sessions      Session[]
 
   contributions  Contribution[]
+
+  ratings MovieRating[] 
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

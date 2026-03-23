@@ -19,6 +19,9 @@ import AiContent from "./components/AIContent/ai-content";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
 import ContributionForm from "./components/contribution/contributionForm";
+import { getMovieContributions } from "@/app/services/contributions";
+import { Contribution, ContributionSection } from "@prisma/client";
+import ContributionList from "./components/contributions/contribution-list";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -26,11 +29,11 @@ interface MovieInfoProps {
   credits: MovieCredits;
 }
 
-
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
+
   const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     YouTubeVideo[],
@@ -56,6 +59,19 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
     fetchAIDescription(movie.id),
   ]);
+  const contributions = await getMovieContributions(movie.id.toString());
+
+const grouped: Record<ContributionSection, Contribution[]> = {
+  SYNOPSIS: [],
+  FUN_FACTS: [],
+  PRODUCTION_CONTEXT: [],
+  RECEPTION: [],
+  OTHER: [],
+};
+
+contributions.forEach((c: Contribution) => {
+  grouped[c.section].push(c);
+});
   return (
      <Container className={`${styles.moviePage} my-5`}>
       {/* 🎬 HEADER */}
@@ -109,6 +125,11 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <AiContent content={aiDescription} />
         </Col>
       </Row>
+      <Row className="mb-5">
+  <Col>
+    <ContributionList grouped={grouped} />
+  </Col>
+</Row>
       {/* ✍️ User Contributions */}
 <Row className="mb-5">
         <Col>

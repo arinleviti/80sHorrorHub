@@ -1,7 +1,6 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { prisma } from "@/app/services/prisma";
 import { imagekit } from '../app/services/imagekit'; // adjust path if needed
 
-const prisma = new PrismaClient();
 
 async function uploadMissingImages() {
   // Fetch movies with cast members AND their actors
