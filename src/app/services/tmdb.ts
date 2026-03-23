@@ -1,5 +1,9 @@
 import { prisma } from "@/app/services/prisma";
-import { imagekit } from './imagekit';
+import { imagekit } from "./imagekit";
+
+/* =========================
+   TYPES
+========================= */
 
 export interface Movie {
   id: string;
@@ -17,6 +21,7 @@ export interface TMDBImageConfig {
   secure_base_url: string;
   poster_sizes: string[];
 }
+
 interface CastMemberInfo {
   character: string;
   actorName: string;
@@ -29,18 +34,13 @@ interface CrewMemberInfo {
   name: string;
 }
 
-export interface MovieCredits {
-  id: number;
-  cast: CastMemberInfo[];
-  crew: CrewMemberInfo[];
-}
 interface TMDBCastMember {
   cast_id: number;
   character: string;
-  name: string;         // <-- TMDB field
+  name: string;
   profile_path: string | null;
 }
-// TMDB API crew type
+
 interface TMDBCrewMember {
   job: string;
   name: string;
@@ -51,80 +51,111 @@ interface TMDBCredits {
   cast: TMDBCastMember[];
   crew: TMDBCrewMember[];
 }
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+/* =========================
+   CONSTANTS
+========================= */
+
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+
+/* =========================
+   FETCH HELPERS
+========================= */
 
 async function fetchFromTMDB<T>(endpoint: string): Promise<T> {
-
   const res = await fetch(`${TMDB_BASE_URL}${endpoint}`, {
     headers: {
       Authorization: `Bearer ${process.env.TMDB_BEARER_TOKEN}`,
-      accept: 'application/json',
+      accept: "application/json",
     },
   });
 
-  if (!res.ok) throw new Error('TMDB fetch failed');
+  if (!res.ok) throw new Error("TMDB fetch failed");
 
-  const data: unknown = await res.json();
-  return data as T; // safe once validated
+  return (await res.json()) as T;
 }
 
+/* =========================
+   MAIN FUNCTION
+========================= */
 
-// Get a movie by ID
 export async function getMovie(movieId: number): Promise<Movie> {
+  /* -------------------------
+     CHECK CACHE
+  ------------------------- */
   const cached = await prisma.movie.findUnique({
     where: { tmdbId: movieId },
-    include: { castMembers: { include: { actor: true } }, crewMembers: true }
-
+    include: {
+      castMembers: { include: { actor: true } },
+      crewMembers: true,
+    },
   });
+
   if (cached) {
-    const data: Movie = {
-       id: cached.id,
+    console.log(`✅ Using cached data from DB (ImageKit) for movie: ${cached.title}`);
+    return {
+      id: cached.id,
       title: cached.title,
       release_date: cached.releaseDate,
       overview: cached.overview,
       poster_path: cached.posterPath,
       imagekitPosterPath: cached.imagekitPosterPath,
       popularity: cached.popularity,
-      cast: cached.castMembers.map(c => ({
+      cast: cached.castMembers.map((c) => ({
         character: c.character,
         actorName: c.actor.name,
         profile_path: c.actor.profilePath,
-        imagekitProfilePath: c.actor.imagekitProfilePath
+        imagekitProfilePath: c.actor.imagekitProfilePath,
       })),
-      crew: cached.crewMembers.map(c => ({
+      crew: cached.crewMembers.map((c) => ({
         name: c.name,
         job: c.job,
       })),
     };
-    console.log("Using cached TMDB data for movie:", cached.title);
-    return data;
   }
-  // Fetch movie + credits from TMDB in parallel
+
+  /* -------------------------
+     FETCH TMDB DATA
+  ------------------------- */
+  console.log(`⬇️ Fetching fresh data from TMDB for movieId: ${movieId}`);
   const [movieDataRaw, creditsDataRaw] = await Promise.all([
-    fetchFromTMDB<unknown>(`/movie/${movieId}`),
+    fetchFromTMDB<any>(`/movie/${movieId}`),
     fetchFromTMDB<TMDBCredits>(`/movie/${movieId}/credits`),
   ]);
-  if (!isMovie(movieDataRaw)) throw new Error('Invalid movie data from TMDB');
-  if (!isTMDBCredits(creditsDataRaw)) throw new Error('Invalid credits data from TMDB');
 
-  
-  //Upload poster to ImageKit if available
-  let imagekitPosterUrl: string | null = null;
-  if (movieDataRaw.poster_path) {
-    const posterRes = await fetch(`https://image.tmdb.org/t/p/w500${movieDataRaw.poster_path}`);
-    const posterBuffer = Buffer.from(await posterRes.arrayBuffer());
-    const safeName = sanitizeFileName(movieDataRaw.title);
-    const uploadResult = await imagekit.upload({
-      file: posterBuffer,
-      fileName: `poster_${safeName}.jpg`,
-      folder: "/posters",
-    });
-    imagekitPosterUrl = uploadResult.url;
-    console.log("Uploaded poster to ImageKit:", uploadResult.url);
-
+  if (!isMovie(movieDataRaw)) {
+    throw new Error("Invalid movie data from TMDB");
   }
 
-  // 4️⃣ Create movie record
+  if (!isTMDBCredits(creditsDataRaw)) {
+    throw new Error("Invalid credits data from TMDB");
+  }
+
+  /* -------------------------
+     UPLOAD POSTER
+  ------------------------- */
+  let imagekitPosterUrl: string | null = null;
+
+  if (movieDataRaw.poster_path) {
+    console.log("⬆️ Uploading poster to ImageKit (first time only)");
+    const res = await fetch(
+      `https://image.tmdb.org/t/p/w500${movieDataRaw.poster_path}`
+    );
+
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    const upload = await imagekit.upload({
+      file: buffer,
+      fileName: `poster_${sanitizeFileName(movieDataRaw.title)}.jpg`,
+      folder: "/posters",
+    });
+
+    imagekitPosterUrl = upload.url;
+  }
+
+  /* -------------------------
+     CREATE MOVIE
+  ------------------------- */
   const movieRecord = await prisma.movie.create({
     data: {
       tmdbId: movieId,
@@ -137,32 +168,36 @@ export async function getMovie(movieId: number): Promise<Movie> {
     },
   });
 
- 
-  const castWithImagekit: CastMemberInfo[] = [];
+  /* -------------------------
+     CAST (SAFE + CLEAN)
+  ------------------------- */
+  const castWithImagekit = await Promise.all(
+    creditsDataRaw.cast.map(async (c) => {
+      const { actor, imagekitUrl } = await getOrCreateActor(
+        c.name,
+        c.profile_path
+      );
 
-// 🔹 NEW START: Upload cast images only if needed
-for (const c of creditsDataRaw.cast) {
-  const { actor, imagekitUrl } = await getOrCreateActor(c.name, c.profile_path);
+      await prisma.castMember.create({
+        data: {
+          character: c.character,
+          actorId: actor.id,
+          movieId: movieRecord.id,
+        },
+      });
 
-  await prisma.castMember.create({
-    data: {
-       character: c.character,
-       //actorId: actor.id This ensures all cast members referring to the same actor use the same actor.id.
-       //So Actor is created only once, and multiple CastMembers can point to it.
-        actorId: actor.id,
-        movieId: movieRecord.id,
-    },
-  });
+      return {
+        character: c.character,
+        actorName: actor.name,
+        profile_path: actor.profilePath,
+        imagekitProfilePath: imagekitUrl,
+      };
+    })
+  );
 
-  castWithImagekit.push({
-    character: c.character,
-      actorName: actor.name,
-      profile_path: actor.profilePath,
-      imagekitProfilePath: imagekitUrl,
-  });
-}
-// 🔹 NEW END
-  // 6️⃣ Create crew members
+  /* -------------------------
+     CREW
+  ------------------------- */
   for (const c of creditsDataRaw.crew) {
     await prisma.crewMember.create({
       data: {
@@ -173,114 +208,112 @@ for (const c of creditsDataRaw.cast) {
     });
   }
 
-  // Return consistent Movie object
+  /* -------------------------
+     RETURN
+  ------------------------- */
   return {
     id: movieRecord.id,
     title: movieRecord.title,
     release_date: movieRecord.releaseDate,
     overview: movieRecord.overview,
     poster_path: movieRecord.posterPath,
+    imagekitPosterPath: movieRecord.imagekitPosterPath,
     popularity: movieRecord.popularity,
     cast: castWithImagekit,
-    crew: creditsDataRaw.crew.map(c => ({ name: c.name, job: c.job })),
+    crew: creditsDataRaw.crew.map((c) => ({
+      name: c.name,
+      job: c.job,
+    })),
   };
 }
 
-// Get global configuration (image base URLs, sizes, etc.)
+/* =========================
+   CONFIG
+========================= */
+
 export async function getConfiguration(): Promise<TMDBImageConfig> {
-  const data = await fetchFromTMDB<{ images: TMDBImageConfig }>("/configuration");
+  const data = await fetchFromTMDB<{ images: TMDBImageConfig }>(
+    "/configuration"
+  );
 
-  return data.images; // only need the images object
+  return data.images;
 }
-//data is Movie → This is a special TypeScript return type called a type predicate.
-//It tells TypeScript: “If this function returns true, then data can safely be treated as a Movie.”
-function isMovie(data: unknown): data is Movie {
-  //Rejects primitives like strings, numbers, booleans.
-  if (typeof data !== 'object' || data === null) return false;
-  //This tells TypeScript: treat obj as a dictionary where keys are strings and values are unknown.
+
+/* =========================
+   TYPE GUARDS
+========================= */
+
+function isMovie(data: unknown): data is any {
+  if (typeof data !== "object" || data === null) return false;
+
   const obj = data as Record<string, unknown>;
 
   return (
-    typeof obj.title === 'string' &&
-    typeof obj.release_date === 'string' &&
-    typeof obj.overview === 'string' &&
-    (typeof obj.poster_path === 'string' || obj.poster_path === null) &&
-    typeof obj.popularity === 'number'
+    typeof obj.title === "string" &&
+    (typeof obj.release_date === "string" || obj.release_date === null) &&
+    typeof obj.overview === "string" &&
+    (typeof obj.poster_path === "string" || obj.poster_path === null) &&
+    typeof obj.popularity === "number"
   );
 }
 
-
-/* export async function getCredits(movieId: number): Promise<MovieCredits> {
-  const data = await fetchFromTMDB<unknown>(`/movie/${movieId}/credits`);
-  if (!isMovieCredits(data)) throw new Error('Invalid movie credits data');
-  return data;
-} */
-function isTMDBCastMember(data: unknown): data is TMDBCastMember {
-  if (typeof data !== 'object' || data === null) return false;
-  const obj = data as Record<string, unknown>;
-  return (
-    typeof obj.cast_id === 'number' &&
-    typeof obj.character === 'string' &&
-    typeof obj.name === 'string' &&
-    (typeof obj.profile_path === 'string' || obj.profile_path === null)
-  );
-}
-
-function isTMDBCrewMember(data: unknown): data is TMDBCrewMember {
-  if (typeof data !== 'object' || data === null) return false;
-  const obj = data as Record<string, unknown>;
-  return typeof obj.job === 'string' && typeof obj.name === 'string';
-}
-//If this function returns true, then data should be treated as a TMDBCredits object.
 function isTMDBCredits(data: unknown): data is TMDBCredits {
-  if (typeof data !== 'object' || data === null) return false;
+  if (typeof data !== "object" || data === null) return false;
+
   const obj = data as Record<string, unknown>;
+
   return (
-    typeof obj.id === 'number' &&
+    typeof obj.id === "number" &&
     Array.isArray(obj.cast) &&
-    obj.cast.every(isTMDBCastMember) &&
-    Array.isArray(obj.crew) &&
-    obj.crew.every(isTMDBCrewMember)
+    Array.isArray(obj.crew)
   );
 }
+
+/* =========================
+   HELPERS
+========================= */
 
 function sanitizeFileName(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '_')        // spaces → underscores
-    .replace(/[^a-z0-9_]/g, ''); // remove special chars
+  return name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
 }
 
+/* =========================
+   ACTOR
+========================= */
 
-// Create or reuse Actor, upload profile if needed
-async function getOrCreateActor(name: string, profilePath: string | null) {
-  const sanitizedName = sanitizeFileName(name);
+async function getOrCreateActor(
+  name: string,
+  profilePath: string | null
+) {
+  const sanitized = sanitizeFileName(name);
 
   let actor = await prisma.actor.findUnique({
-    where: { actorNameSanitized: sanitizedName }
+    where: { actorNameSanitized: sanitized },
   });
 
   let imagekitUrl: string | null = actor?.imagekitProfilePath || null;
 
   if (!actor) {
-    // Upload image if available
     if (profilePath) {
-      const profileRes = await fetch(`https://image.tmdb.org/t/p/w185${profilePath}`);
-      const profileBuffer = Buffer.from(await profileRes.arrayBuffer());
+      const res = await fetch(
+        `https://image.tmdb.org/t/p/w185${profilePath}`
+      );
 
-      const uploadResult = await imagekit.upload({
-        file: profileBuffer,
-        fileName: `cast_${sanitizedName}.jpg`, // no random appendix
+      const buffer = Buffer.from(await res.arrayBuffer());
+
+      const upload = await imagekit.upload({
+        file: buffer,
+        fileName: `cast_${sanitized}.jpg`,
         folder: "/cast",
       });
 
-      imagekitUrl = uploadResult.url;
+      imagekitUrl = upload.url;
     }
 
     actor = await prisma.actor.create({
       data: {
         name,
-        actorNameSanitized: sanitizedName,
+        actorNameSanitized: sanitized,
         profilePath,
         imagekitProfilePath: imagekitUrl,
       },

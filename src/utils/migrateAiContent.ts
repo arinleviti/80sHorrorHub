@@ -1,10 +1,11 @@
-import { prisma } from "@/app/services/prisma";
+//to run: npx prisma db seed
+import { prisma } from "../app/services/prisma";
 import path from 'path';
 import fs from 'fs';
 
 
 // Load JSON dynamically so compiled JS can find it
-const jsonPath = path.resolve(__dirname, '../src/app/services/aiMovieDescriptions.json');
+const jsonPath = path.join(process.cwd(), 'src/app/services/aiMovieDescriptions.json');
 const aiMovieDescriptions = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 // Only fetch the fields we need for matching
 type MovieForMatching = { id: string; title: string; slug: string | null };

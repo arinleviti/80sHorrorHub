@@ -10,7 +10,7 @@
     "seed": "prisma db seed"
   },
   "prisma": {
-    "seed": "node dist/migrateAiContent.js"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} src/utils/migrateAiContent.ts"
   },
   "dependencies": {
     "@imagekit/react": "^5.0.1",

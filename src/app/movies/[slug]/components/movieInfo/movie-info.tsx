@@ -5,7 +5,7 @@ import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
 import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
-import {fetchVynils} from "@/app/services/discogs";
+import { fetchVynils } from "@/app/services/discogs";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 import CastList from "./components/castList/cast-list";
 import CrewList from "./components/crewList/crew-list";
@@ -13,8 +13,8 @@ import EbayItemsList from "./components/ebaySearchResponse/ebay-response";
 import StreamingAvailabilityList from "./components/streaming-avail/streaming-avail";
 import { DiscogsList, ReturnedResult } from "./components/discogs/discogs-list";
 import { SpotifyEmbed } from "./components/spotifyPlaylist/spotify-playlist";
-import { SearchSpotifyPlaylist,  SpotifyPlaylistEmbed } from "@/app/services/spotify";
-import {fetchAIDescription, AiDescription} from "@/app/services/AiGeneratedMainContent";
+import { SearchSpotifyPlaylist, SpotifyPlaylistEmbed } from "@/app/services/spotify";
+import { fetchAIDescription, AiDescription } from "@/app/services/AiGeneratedMainContent";
 import AiContent from "./components/AIContent/ai-content";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
 import HFSuggestionsList from "./components/HFSuggestionList/hf-suggestion-list";
@@ -56,33 +56,33 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       "us",
       movie.release_date ? Number(movie.release_date.slice(0, 4)) : undefined
     ),
-    getHFSuggestions(movie.id.toString(),movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
+    getHFSuggestions(movie.id.toString(), movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
     fetchVynils(movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
     SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
     fetchAIDescription(movie.id),
   ]);
   const session = await getServerSession(authOptions);
-const userId = session?.user?.id;
+  const userId = session?.user?.id;
   const contributions = await getMovieContributions(
-  movie.id.toString(),
-  userId
-);
+    movie.id.toString(),
+    userId
+  );
 
-const grouped: Record<ContributionSection, Contribution[]> = {
-  SYNOPSIS: [],
-  FUN_FACTS: [],
-  PRODUCTION_CONTEXT: [],
-  RECEPTION: [],
-  OTHER: [],
-};
+  const grouped: Record<ContributionSection, Contribution[]> = {
+    SYNOPSIS: [],
+    FUN_FACTS: [],
+    PRODUCTION_CONTEXT: [],
+    RECEPTION: [],
+    OTHER: [],
+  };
 
-contributions.forEach((c: Contribution) => {
-  grouped[c.section].push(c);
-});
+  contributions.forEach((c: Contribution) => {
+    grouped[c.section].push(c);
+  });
 
 
   return (
-     <Container className={`${styles.moviePage} my-5`}>
+    <Container className={`${styles.moviePage} my-5`}>
       {/* 🎬 HEADER */}
       <Row className="align-items-start mb-5">
         {/* LEFT: Poster */}
@@ -135,12 +135,12 @@ contributions.forEach((c: Contribution) => {
         </Col>
       </Row>
       <Row className="mb-5">
-  <Col>
-    <ContributionList grouped={grouped} />
-  </Col>
-</Row>
+        <Col>
+          <ContributionList grouped={grouped} />
+        </Col>
+      </Row>
       {/* ✍️ User Contributions */}
-<Row className="mb-5">
+      <Row className="mb-5">
         <Col>
           <ContributionForm movieId={movie.id} />
         </Col>
@@ -174,13 +174,13 @@ contributions.forEach((c: Contribution) => {
       </Row>
 
       {/* 🤖 AI Suggestions */}
-{hfSuggestions && hfSuggestions.length > 0 && (
-  <Row className="mb-5">
-    <Col>
-      <HFSuggestionsList suggestions={hfSuggestions} />
-    </Col>
-  </Row>
-)}
+      {hfSuggestions && hfSuggestions.length > 0 && (
+        <Row className="mb-5">
+          <Col>
+            <HFSuggestionsList suggestions={hfSuggestions} />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 }

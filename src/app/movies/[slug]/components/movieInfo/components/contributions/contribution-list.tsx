@@ -18,6 +18,8 @@ const sectionTitles: Record<ContributionSection, string> = {
 };
 
 export default function ContributionList({ grouped }: ContributionListProps) {
+    //grouped only contains contributions for one specific movie and one specific user.
+    //example of grouped: { SYNOPSIS: [ {id: '1', title: '...', body: '...', upvotes: 5, user: {name: 'John', image: '...'}} ], FUN_FACTS: [], ... }
     const [localData, setLocalData] = useState(grouped);
     const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
@@ -26,11 +28,13 @@ export default function ContributionList({ grouped }: ContributionListProps) {
         if (votedIds.has(id)) return;
 
         // optimistic update
+        // prev = your current UI state (localData), then you return the new state based on it.
         setLocalData((prev) => {
+            //prev[section] lets you access the right array.
             const updatedSection = prev[section].map((c) =>
                 c.id === id ? { ...c, upvotes: c.upvotes + 1 } : c
             );
-
+            //...copies everything from prev and replaces only the section that was updated with the new array that has the incremented upvote.
             return {
                 ...prev,
                 [section]: updatedSection,
