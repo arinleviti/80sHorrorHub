@@ -209,9 +209,23 @@ model Contribution {
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
 
+  votes ContributionVote[]
+
   @@index([movieId])
   @@index([userId])
   @@index([status])
+}
+
+model ContributionVote {
+  id              String @id @default(cuid())
+
+  userId          String
+  contributionId  String
+
+  user          User @relation(fields: [userId], references: [id])
+  contribution  Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contributionId]) // 🔥 prevents duplicate votes
 }
 
 model AiDescription {
@@ -250,8 +264,9 @@ model User {
   sessions      Session[]
 
   contributions  Contribution[]
-
   ratings MovieRating[] 
+
+  votes ContributionVote[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

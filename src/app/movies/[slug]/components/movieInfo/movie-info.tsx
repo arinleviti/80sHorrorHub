@@ -22,6 +22,8 @@ import ContributionForm from "./components/contribution/contributionForm";
 import { getMovieContributions } from "@/app/services/contributions";
 import { Contribution, ContributionSection } from "@prisma/client";
 import ContributionList from "./components/contributions/contribution-list";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -59,7 +61,12 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
     fetchAIDescription(movie.id),
   ]);
-  const contributions = await getMovieContributions(movie.id.toString());
+  const session = await getServerSession(authOptions);
+const userId = session?.user?.id;
+  const contributions = await getMovieContributions(
+  movie.id.toString(),
+  userId
+);
 
 const grouped: Record<ContributionSection, Contribution[]> = {
   SYNOPSIS: [],
@@ -72,6 +79,8 @@ const grouped: Record<ContributionSection, Contribution[]> = {
 contributions.forEach((c: Contribution) => {
   grouped[c.section].push(c);
 });
+
+
   return (
      <Container className={`${styles.moviePage} my-5`}>
       {/* 🎬 HEADER */}
