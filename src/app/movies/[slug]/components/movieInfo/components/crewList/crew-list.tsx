@@ -1,5 +1,10 @@
+"use client";
+
+import { useState } from "react";
+import { ListGroup, Button, Stack } from "react-bootstrap";
+
 export interface CrewMember {
-  id?: number;      // TMDB ID or any unique identifier
+  id?: number;
   name: string;
   job: string;
 }
@@ -8,23 +13,41 @@ interface CrewListProps {
   crew: CrewMember[];
 }
 
-const CrewList: React.FC<CrewListProps> = ({ crew }) => {
+export default function CrewList({ crew }: CrewListProps) {
+  const [expanded, setExpanded] = useState(false);
+
   if (!crew || crew.length === 0) {
-    return null; // nothing to show if no crew
+    return null;
   }
 
-  return (
-    <div className="crew-list mt-6">
-      <h2 className="text-xl font-bold mb-2">Crew</h2>
-      <ul className="list-disc list-inside space-y-1">
-        {crew.map((member, index) => (
-    <li key={member.id ?? `${member.name}-${member.job}-${index}`}>
-      <span className="font-semibold">{member.job}</span>: {member.name}
-    </li>
-  ))}
-      </ul>
-    </div>
-  );
-};
+  const visibleCrew = expanded ? crew : crew.slice(0, 10);
 
-export default CrewList;
+  return (
+    <Stack gap={3}>
+      <h2 className="heading-secondary">Crew</h2>
+
+      <ListGroup variant="flush">
+        {visibleCrew.map((member, index) => (
+          <ListGroup.Item
+            key={member.id ?? `${member.name}-${member.job}-${index}`}
+            className="d-flex justify-content-between align-items-center py-2"
+          >
+            <span className="fw-semibold text-accent">{member.job}</span>
+            <span>{member.name}</span>
+          </ListGroup.Item>
+        ))}
+      </ListGroup>
+
+      {crew.length > 10 && (
+        <Button
+          variant="outline-primary"
+          size="sm"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="align-self-start"
+        >
+          {expanded ? "Show less" : `Show all (${crew.length})`}
+        </Button>
+      )}
+    </Stack>
+  );
+}

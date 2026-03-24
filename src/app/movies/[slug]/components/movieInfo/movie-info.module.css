@@ -1,3 +1,4 @@
+
 .moviePage {
   color: var(--color-text);
   background-color: var(--color-background);
@@ -13,4 +14,8 @@
   color: var(--color-neutral);
   font-size: 0.9rem;
   margin-top: 0.5rem;
+}
+.year {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 1.45rem;
 }

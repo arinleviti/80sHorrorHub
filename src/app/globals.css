@@ -16,7 +16,11 @@
   --font-size-h3: 1.75rem;
   --font-size-menu: 1.25rem;
 }
-
+.textContent {
+  margin-top: 1rem;
+  line-height: 1.6;
+  color: var(--color-accent);
+}
 body {
   font-family: var(--font-body);
   background-color: var(--color-background) !important;
@@ -45,4 +49,127 @@ nav {
   font-family: var(--font-menu);
   font-size: var(--font-size-menu);
   color: var(--color-primary);
+}
+.heading-primary {
+  font-family: var(--font-title);
+  color: var(--color-primary);
+}
+
+.heading-secondary {
+  font-family: var(--font-title) !important;
+  color: var(--color-secondary) !important;
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.text-muted-custom {
+  color: var(--color-neutral);
+}
+.placeholder-img {
+  width: 50px;
+  height: 70px;
+  background-color: #ccc;
+  border-radius: 4px;
+}
+.list-group-item {
+  background-color: transparent !important;
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.contributioncard {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--color-text) !important;
+}
+.text-content-muted {
+  color: rgba(255, 255, 255, 0.6);
+}
+.contribution-form {
+  padding: 1.5rem;
+  border-radius: 10px;
+
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  color: var(--color-text);
+}
+
+/* Labels */
+.contribution-form .form-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Inputs & selects */
+.contribution-form .form-control,
+.contribution-form .form-select {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Focus state */
+.contribution-form .form-control:focus,
+.contribution-form .form-select:focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-accent);
+  box-shadow: none;
+  color: var(--color-text);
+}
+
+/* Placeholder text */
+.contribution-form .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Help text */
+.contribution-form .text-muted {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.movie-hero-wrapper {
+  width: 100%;
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 255, 255, 0.06),
+    transparent 70%
+  );
+  padding: 3rem 0;
+}
+.movie-hero {
+  background: radial-gradient(
+    circle at top,
+    rgba(255,255,255,0.05),
+    transparent 60%
+  );
+  border-radius: 12px;
+  padding: 1.5rem 0;
+}
+.movie-hero h1,
+.movie-hero p {
+  max-width: 70ch;
+}
+.movie-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #e61c6f
+}
+.movie-title .year {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.movie-poster {
+  max-height: 90vh;
+  object-fit: cover;
+}
+
+.spotify-wrapper {
+  max-width: 300px;
+}
+.movie-content {
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.4);
+  padding: 1.5rem;
+  border-radius: 12px;
 }

@@ -62,12 +62,15 @@ export default function ContributionForm({ movieId }: Props) {
   }
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} className="contribution-form">
       <Form.Text className="text-muted">
-  Share something specific: a detail, a story, or something most fans wouldn’t know.
+        <h3 className="heading-secondary mb-3">
+  Add your contribution
+</h3>
+        <p>Share something specific: a detail, a story, or something most fans wouldn’t know.</p>
 </Form.Text>
       {/* SECTION */}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-4">
         <Form.Label>Section</Form.Label>
         <Form.Select value={section} onChange={(e) => setSection(e.target.value)}>
           <option value="SYNOPSIS">Synopsis</option>
@@ -79,7 +82,7 @@ export default function ContributionForm({ movieId }: Props) {
       </Form.Group>
 
       {/* TYPE */}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-4">
         <Form.Label>Type of Contribution</Form.Label>
         <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="FAN_FACT">Fan Fact</option>
@@ -90,7 +93,7 @@ export default function ContributionForm({ movieId }: Props) {
       </Form.Group>
 
       {/* SOURCE */}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-4">
         <Form.Label>Source</Form.Label>
         <Form.Select value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="INTERVIEW">Interview</option>
@@ -101,7 +104,7 @@ export default function ContributionForm({ movieId }: Props) {
       </Form.Group>
 
       {/* TITLE */}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-4">
         <Form.Label>Title (optional)</Form.Label>
         <Form.Control
           value={title}
@@ -111,7 +114,7 @@ export default function ContributionForm({ movieId }: Props) {
       </Form.Group>
 
       {/* CONTENT */}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-4">
         <Form.Label>Contribution</Form.Label>
         <Form.Control
           as="textarea"

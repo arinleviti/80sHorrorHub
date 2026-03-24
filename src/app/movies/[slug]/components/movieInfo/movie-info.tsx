@@ -82,41 +82,54 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
 
   return (
+
     <Container className={`${styles.moviePage} my-5`}>
-      {/* 🎬 HEADER */}
-      <Row className="align-items-start mb-5">
-        {/* LEFT: Poster */}
-        <Col md={5} className="text-center mb-4 mb-md-0">
-          <Image
-            src={posterUrl}
-            alt={movie.title}
-            width={400}
-            height={600}
-            className="img-fluid rounded shadow"
-          />
-        </Col>
+      {/* 🎬 HERO */}
+      <section className="movie-hero mb-5">
+        <Container>
+          <Row className="align-items-start">
 
-        {/* RIGHT: Title, Spotify, Overview */}
-        <Col md={7}>
-          <div className="d-flex justify-content-between align-items-start flex-wrap">
-            <h1 className="mb-3 me-3">
-              {movie.title}{" "}
-              {movie.release_date ? `(${movie.release_date.slice(0, 4)})` : ""}
-            </h1>
+            {/* POSTER */}
+            <Col xs={12} md={5} lg={4} className="text-center mb-4 mb-md-0">
+              <Image
+                src={posterUrl}
+                alt={movie.title}
+                width={600}
+                height={900}
+                className="img-fluid rounded shadow"
+              />
+            </Col>
 
-            {/* 🎧 Spotify on top-right */}
-            {spotifyPlaylist && (
-              <div className="ms-auto mb-3" style={{ maxWidth: "300px" }}>
-                <SpotifyEmbed playlist={spotifyPlaylist} />
-              </div>
-            )}
-          </div>
+            {/* LEFT CONTENT (TITLE + OVERVIEW) */}
+            <Col xs={12} md={4} lg={5}>
 
-          {/* Overview just below title + Spotify */}
-          <p className={styles.overview}>{movie.overview}</p>
-          <p className={styles.popularity}>Popularity: {movie.popularity}</p>
-        </Col>
-      </Row>
+              <h1 className="movie-title">
+                {movie.title}
+                {movie.release_date && (
+                  <span className={styles.year}>
+                    {" "}({movie.release_date.slice(0, 4)})
+                  </span>
+                )}
+              </h1>
+
+              <p className={styles.textContent}>
+                {movie.overview}
+              </p>
+
+            </Col>
+
+            {/* RIGHT CONTENT (SPOTIFY) */}
+            <Col xs={12} md={3} lg={3}>
+              {spotifyPlaylist && (
+                <div className="spotify-wrapper">
+                  <SpotifyEmbed playlist={spotifyPlaylist} />
+                </div>
+              )}
+            </Col>
+
+          </Row>
+        </Container>
+      </section>
 
       {/* 👥 Cast & Crew */}
       <Row className="mb-5">
@@ -128,21 +141,20 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
         </Col>
       </Row>
 
-      {/* 🤖 AI Content */}
+      {/* AI Content, form, contributions */}
       <Row className="mb-5">
-        <Col>
+        <Col md={6}>
           <AiContent content={aiDescription} />
         </Col>
+
+        <Col md={6}>
+          <ContributionForm movieId={movie.id} />
+        </Col>
       </Row>
+
       <Row className="mb-5">
         <Col>
           <ContributionList grouped={grouped} />
-        </Col>
-      </Row>
-      {/* ✍️ User Contributions */}
-      <Row className="mb-5">
-        <Col>
-          <ContributionForm movieId={movie.id} />
         </Col>
       </Row>
       {/* 🎥 Videos */}

@@ -60,7 +60,7 @@ export default function ContributionList({ grouped }: ContributionListProps) {
     };
     return (
         <div>
-            <h2 className="mb-4">User Contributions</h2>
+            <h2 className="mb-4 heading-secondary">User Contributions</h2>
 
             {Object.entries(grouped).map(([section, items]) => {
                 if (!items.length) return null;
@@ -72,16 +72,16 @@ export default function ContributionList({ grouped }: ContributionListProps) {
                         </h3>
 
                         {items.map((contribution) => (
-                            <Card key={contribution.id} className="mb-3">
+                            <Card key={contribution.id} className="mb-3 contributioncard">
                                 <Card.Body>
                                     {contribution.title && (
                                         <Card.Title>{contribution.title}</Card.Title>
                                     )}
 
-                                    <Card.Text>{contribution.body}</Card.Text>
+                                    <Card.Text className="text-content">{contribution.body}</Card.Text>
 
                                     <div className="d-flex justify-content-between align-items-center">
-                                        <small className="text-muted">
+                                        <small className="text-content-muted">
                                             By {contribution.user?.name}
                                             {contribution.user?.image && (
                                                 <Image

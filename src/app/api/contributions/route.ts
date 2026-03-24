@@ -11,22 +11,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { movieId, section, title, contributionBody } = await req.json();
+   // 1. Get ALL the fields from the frontend
+    const { movieId, section, title, body, type, source } = await req.json();
 
-    if (!movieId || !section || !contributionBody) {
+    if (!movieId || !section || !body || !type || !source) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    // 2. Map them to the Prisma create call
     const contribution = await prisma.contribution.create({
       data: {
         movieId,
         userId: session.user.id,
-        section,
+        section, // This is a ContributionSection enum
+        type,    // This is a ContributionType enum
+        source,  // This is a ContributionSource enum
         title: title || null,
-        body: contributionBody,
+        body: body, // Ensure this matches the frontend key
         status: "PENDING",
       },
     });

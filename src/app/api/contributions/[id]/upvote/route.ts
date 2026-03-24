@@ -6,7 +6,7 @@ import { Prisma } from "@prisma/client";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -27,13 +27,13 @@ export async function POST(
     await prisma.contributionVote.create({
       data: {
         userId: user.id,
-        contributionId: params.id,
+        contributionId: (await params).id,
       },
     });
 
     // 👉 If successful, increment
     const contribution = await prisma.contribution.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         upvotes: {
           increment: 1,
