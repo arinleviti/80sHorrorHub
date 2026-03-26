@@ -70,7 +70,7 @@ export async function getEbayAccessToken(): Promise<string> {
 
 // Fetch eBay items for a query (no DB check)
 export async function getEbayItems(query: string, accessToken: string): Promise<EbaySearchResponse> {
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=10`;
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=15`;
 
   const res = await fetch(url, {
     headers: {
