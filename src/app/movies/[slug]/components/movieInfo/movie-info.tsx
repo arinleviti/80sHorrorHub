@@ -3,8 +3,9 @@ import { Container, Row, Col } from "react-bootstrap";
 import styles from "./movie-info.module.css";
 import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
-import { Movie, TMDBImageConfig, MovieCredits } from "@/app/services/tmdb";
-import { getEbayItems, EbaySearchResponse } from "@/app/services/ebay";
+import { Movie, TMDBImageConfig, CastMemberInfo, CrewMemberInfo } from "@/app/services/tmdb";
+import { getCuratedEbayItems} from "@/app/services/ebay/getCuratedEbayItems";
+import {EbayItemSummary} from "@/app/services/ebay/getEbayItems";
 import { fetchVynils } from "@/app/services/discogs";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 import CastList from "./components/castList/cast-list";
@@ -28,7 +29,10 @@ import { authOptions } from "@/lib/auth";
 interface MovieInfoProps {
   movie: Movie;
   config: TMDBImageConfig;
-  credits: MovieCredits;
+  credits: {
+  cast: CastMemberInfo[];
+  crew: CrewMemberInfo[];
+};
 }
 
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
@@ -36,11 +40,11 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
 
-  const [trailers, behindTheScenes, topMoments, ebayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
+  const [trailers, behindTheScenes, topMoments, curatedEbayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     YouTubeVideo[],
     YouTubeVideo[],
-    EbaySearchResponse,
+    EbayItemSummary[],
     GetStreamingAvailabilityReturn,
     HFSuggestionItem[] | null,
     ReturnedResult[] | null,
@@ -50,7 +54,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
     getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} top moments`),
-    getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`),
+    getCuratedEbayItems(movie.id, movie.title, movie.release_date?.slice(0, 4) || ''),
+    /* getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`), */
     getStreamingAvailability(
       movie.title,
       "us",
@@ -176,7 +181,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <DiscogsList results={discogsList} />
         </Col>
         <Col>
-          <EbayItemsList ebayItems={ebayItems} />
+          <EbayItemsList ebayItems={curatedEbayItems} />
         </Col>
         <Col>
           <StreamingAvailabilityList

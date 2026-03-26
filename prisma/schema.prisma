@@ -33,7 +33,8 @@ model YouTubeVideo {
 
 model EbayQuery {
   id        String     @id @default(cuid())
-  query     String     @unique
+  movie     Movie?     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId   String?     @unique
   items     EbayItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -90,6 +91,8 @@ model Movie {
   aiDescription AiDescription?
   contributions Contribution[]
   ratings       MovieRating[]
+
+  ebayQuery     EbayQuery? 
 }
 
 model Actor {

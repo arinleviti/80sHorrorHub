@@ -22,14 +22,14 @@ export interface TMDBImageConfig {
   poster_sizes: string[];
 }
 
-interface CastMemberInfo {
+export interface CastMemberInfo {
   character: string;
   actorName: string;
   profile_path: string | null;
   imagekitProfilePath?: string | null;
 }
 
-interface CrewMemberInfo {
+export interface CrewMemberInfo {
   job: string;
   name: string;
 }
@@ -46,7 +46,7 @@ interface TMDBCrewMember {
   name: string;
 }
 
-interface TMDBCredits {
+export interface TMDBCredits {
   id: number;
   cast: TMDBCastMember[];
   crew: TMDBCrewMember[];

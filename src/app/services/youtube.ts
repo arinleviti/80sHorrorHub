@@ -53,13 +53,12 @@ export async function getYouTubeVideos(query: string) {
   // Try to parse the response for more info
   let jsObject;
   try {
+    //res.json() parses JSON into a Javascript object. It returns a promise that resolves with the result of parsing the body text as JSON.
     jsObject = await res.json();
     console.log("YouTube API response body:", JSON.stringify(jsObject, null, 2));
   } catch (err) {
     console.error("Failed to parse YouTube API response as JSON:", err);
   }
-
-
 
   if (!res.ok || !jsObject?.items || !Array.isArray(jsObject.items)) {
     console.warn("YouTube API error, returning fallback message");
@@ -72,8 +71,11 @@ export async function getYouTubeVideos(query: string) {
       },
     ];
   }
+  //trust me, jsObject has the shape of YouTubeSearchResponse.
   const data: YouTubeSearchResponse = jsObject;
-  const videos= data.items.map((item) => ({
+  const videos= data.items
+  .slice(0, 3) // 👈 THIS is the key line
+  .map((item) => ({
     youtubeId: item.id.videoId,
     title: item.snippet.title,
     thumbnail: item.snippet.thumbnails.medium.url,
