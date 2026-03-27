@@ -17,7 +17,7 @@ interface DiscogsListProps {
 
   return (
     <ul style={{ listStyle: "none", padding: 0 }}>
-      {results.slice(0, 5).map((item, index) => (
+      {results.map((item, index) => (
         <li key={index} style={{ marginBottom: "1rem" }}>
           <a
             href={`https://www.discogs.com${item.uri}`}

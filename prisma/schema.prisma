@@ -68,6 +68,8 @@ model DiscogItem {
   uri     String
   query   DiscogQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId String
+
+  //@@unique([uri, queryId])
 }
 
 model Movie {

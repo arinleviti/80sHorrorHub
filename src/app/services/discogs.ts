@@ -1,179 +1,275 @@
 import { prisma } from "@/app/services/prisma";
+
 const ONE_DAY_MS = 1000 * 60 * 60 * 24;
-const ONE_MINUTE_MS = 1000 * 60; // 1 minute
 const DISCOGS_KEY = process.env.DISCOGS_KEY;
-export interface Query {
-  q: string,
-  type: string,
-  format: string,
-  token: string,
-}
+
+/* ================= TYPES ================= */
+
 export interface RawResult {
-  id?: number;        // Discogs internal ID (optional)
-  title: string;      // e.g., "The Thing (Original Soundtrack)"
-  year?: number;      // release year (optional)
-  format?: string[];  // e.g., ["Vinyl", "LP"]
-  thumb?: string;     // thumbnail image URL (optional)
-  uri: string;        // Discogs URL path to the release
-  country?: string;   // e.g., "US" (optional)
-  type?: string;      // usually "release"
+  id?: number;
+  title: string;
+  year?: number | string;
+  format?: string[];
+  thumb?: string;
+  uri: string;
+  country?: string;
+  type?: string;
 }
-export interface Pagination {
-  page: number,
-  pages: number,
-  per_page: number,
-  items: number,
-  urls: Record<string, string>
-}
+
 export interface RawResponse {
-  pagination: Pagination,
-  results: RawResult[]
+  pagination: {
+    page: number;
+    pages: number;
+    per_page: number;
+    items: number;
+    urls: Record<string, string>;
+  };
+  results: RawResult[];
 }
+
 export interface ReturnedResult {
-  title: string;      // e.g., "The Thing (Original Soundtrack)"
-  year: number | null;      // release year (optional)
-  format: string[];  // e.g., ["Vinyl", "LP"]
-  thumb?: string;     // thumbnail image URL (optional)
-  uri: string;        // Discogs URL path to the release
+  title: string;
+  year: number | null;
+  format: string[];
+  thumb?: string;
+  uri: string;
 }
+
+/* ================= QUERIES ================= */
+
+function buildDiscogsQueries(title: string, year: string): string[] {
+  const yearNum = Number(year);
+  const yearsToTry = [yearNum, yearNum - 1, yearNum + 1]; // handle early/late releases
+
+  const keywords = [
+    "original motion picture soundtrack",
+    "OST",
+    "score",
+    "soundtrack",
+  ];
+
+  const queries: string[] = [];
+
+  for (const y of yearsToTry) {
+    for (const k of keywords) {
+      queries.push(`${title} ${y} ${k}`);
+    }
+  }
+
+  // Also include queries without a year
+  for (const k of keywords) {
+    queries.push(`${title} ${k}`);
+  }
+
+  return queries;
+}
+
+/* ================= MAIN FUNCTION ================= */
 
 export async function fetchVynils(title: string, year: string): Promise<ReturnedResult[] | null> {
-
-  // 1️⃣ Try to get cached results first
   const cached = await getCachedVynils(title, year);
   if (cached) return cached;
 
-  // 2️⃣ Fetch from Discogs API
-  let apiResponse: RawResponse;
   try {
-    apiResponse = await fetchFromDiscog(title, year);
-    console.log("🤖 Discog API response:", JSON.stringify(apiResponse, null, 2));
+    const queries = buildDiscogsQueries(title, year);
+    const responses = await Promise.all(queries.map(fetchFromDiscogQuery));
+    const merged = responses.flatMap(r => r.results);
+
+    const unique = dedupeByTitleYearFormat(merged);
+
+    const scored = unique.map(item => ({
+      item,
+      score: scoreDiscogs(item, Number(year)),
+    }));
+
+    const curated: RawResult[] = [];
+    const seenTitles = new Set<string>();
+
+    for (const { item, score } of scored.sort((a, b) => b.score - a.score)) {
+      if (!isRelevantDiscogs(item, title)) continue;
+      const titleKey = item.title.toLowerCase();
+      if (seenTitles.has(titleKey)) continue;
+      if (score <= 2) continue;
+
+      curated.push(item);
+      seenTitles.add(titleKey);
+
+      if (curated.length >= 15) break;
+    }
+
+    if (curated.length === 0) return null;
+
+    const returnedResults: ReturnedResult[] = curated.map(r => ({
+      title: r.title,
+      year: typeof r.year === "number" ? r.year : r.year ? parseInt(r.year, 10) : null,
+      format: Array.isArray(r.format) ? r.format : [],
+      thumb: r.thumb,
+      uri: r.uri,
+    }));
+
+    await saveVynilsToDB(title, year, returnedResults);
+
+    return returnedResults;
+
   } catch (err) {
-    console.error("Failed to fetch Hugging Face API response:", err);
+    console.error("Discogs pipeline failed:", err);
     return null;
   }
-
-  // 3️⃣ Map raw results to ReturnedResult[]
-  const returnedResults: ReturnedResult[] = apiResponse.results.map(r => ({
-    title: r.title,
-    year: r.year ? Number(r.year) : null,
-    format: Array.isArray(r.format) ? r.format : [],
-    thumb: r.thumb ?? undefined,
-    uri: r.uri,
-  }));
-
-  if (returnedResults.length === 0) return null;
-
-  // 4️⃣ Save/update results in DB
-  await saveVynilsToDB(title, year, returnedResults);
-
-  return returnedResults;
 }
 
-async function getCachedVynils(title: string, year: string): Promise<ReturnedResult[] | null> {
-  const cached = await prisma.discogQuery.findUnique({
-    where: { query: `${title}${year}` },
-    include: { items: true }
-  })
+/* ================= FETCH SINGLE QUERY ================= */
 
-  if (cached && Date.now() - cached.updatedAt.getTime() < ONE_DAY_MS) {
-    //return cached data
-    console.log("Using cached Discog data for movie:", title);
-    const mappedData: ReturnedResult[] = cached.items.map(i => ({
-      title: i.title,
-      year: i.year,
-      format: Array.isArray(i.format) ? i.format.filter(f => typeof f === "string") as string[] : [],
-      thumb: i.thumb ?? undefined,
-      uri: i.uri,
-    }))
-    return mappedData;
-  }
-  return null
+async function fetchFromDiscogQuery(query: string): Promise<RawResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    format: "vinyl",
+    type: "release",
+    per_page: "10",
+  });
+
+  if (DISCOGS_KEY) params.append("token", DISCOGS_KEY);
+
+  const response = await fetch(`https://api.discogs.com/database/search?${params.toString()}`, {
+    headers: { "User-Agent": "VintageHorror/1.0" },
+  });
+
+  const data: unknown = await response.json();
+
+  if (!isRawResponse(data)) throw new Error("Invalid Discogs response");
+
+  return data;
 }
 
-async function saveVynilsToDB(title: string, year: string, results: ReturnedResult[]): Promise<void> {
-  if (results.length === 0) return;
-  try {
-    await prisma.discogQuery.upsert({
-      where: { query: `${title}${year}` },
-      create: {
-        query: `${title}${year}`,
-        items: {
-          create: results.map(i => ({
-            title: i.title,
-            year: i.year,
-            format: i.format,
-            thumb: i.thumb,
-            uri: i.uri,
-          }))
-        },
-      },
+/* ================= HELPERS ================= */
+function isRelevantDiscogs(item: RawResult, movieTitle: string): boolean {
+  const title = item.title.toLowerCase();
+  const movie = movieTitle.toLowerCase();
 
-      update: {
-        items: {
-          deleteMany: {},
-          create: results.map(i => ({
-            title: i.title,
-            year: i.year,
-            format: i.format,
-            thumb: i.thumb,
-            uri: i.uri,
-          }))
-        },
-        updatedAt: new Date(),
-      },
-    });
-  } catch (err) {
-    console.error("Failed to upsert Discog data:", err);
-  }
+  // must contain movie title
+  if (!title.includes(movie)) return false;
 
-}
+  // must have one of these keywords
+  const keywords = ["soundtrack", "original motion picture soundtrack", "OST", "score"];
+  if (!keywords.some(k => title.includes(k.toLowerCase()))) return false;
 
-
-
-function isRawResponse(data: unknown): data is RawResponse {
-  if (typeof data !== 'object' || data === null) return false;
-
-  const pagination = (data as { pagination?: unknown }).pagination;
-  if (typeof pagination !== 'object' || pagination === null) return false;
-
-  const results = (data as { results?: unknown }).results;
-  if (!Array.isArray(results)) return false;
-
-  for (const r of results) {
-    if (typeof r !== 'object' || r === null) return false;
-    if (typeof (r as { title?: unknown }).title !== 'string') return false;
-    if (typeof (r as { uri?: unknown }).uri !== 'string') return false;
-
-    // relaxed checks:
-    const year = (r as { year?: unknown }).year;
-    if (year !== undefined && typeof year !== 'string' && typeof year !== 'number') return false;
-
-    const format = (r as { format?: unknown }).format;
-    if (format !== undefined && !Array.isArray(format)) return false;
-  }
+  // discard known bad
+  if (isBadDiscogs(item)) return false;
 
   return true;
 }
 
-async function fetchFromDiscog(title: string, year: string): Promise<RawResponse> {
-  const queryKey = `${title} ${year} soundtrack`;
-  const params = new URLSearchParams({
-    q: queryKey,
-    format: "vinyl",
-    type: "release",
-    per_page: "5"
-  })
-params.append("token", DISCOGS_KEY ?? "");
-  const response = await fetch(`https://api.discogs.com/database/search?${params.toString()}`, {
-    headers: {
-      'User-Agent': 'YourAppName/1.0',
-    },
-  });
-  const data = await response.json();
-console.log("Discogs raw response:", data);
-  if (!isRawResponse(data)) {
-    throw new Error("Discogs API returned unexpected data");
+function dedupeByTitleYearFormat(results: RawResult[]): RawResult[] {
+  const map = new Map<string, RawResult>();
+  for (const r of results) {
+    const year = typeof r.year === "number" ? r.year : r.year ? parseInt(r.year, 10) : "";
+    const key = `${r.title.toLowerCase()}|${year}|${(r.format || []).join(",")}`;
+    if (!map.has(key)) map.set(key, r);
   }
-  return data;
+  return Array.from(map.values());
+}
+
+function scoreDiscogs(item: RawResult, movieYear: number): number {
+  let score = 0;
+  const title = item.title.toLowerCase();
+  /* const formats = item.format || []; */
+  const formatsLower = (item.format || []).map(f => f.toLowerCase());
+  if (formatsLower.includes("vinyl")) score += 5;
+  if (formatsLower.includes("lp")) score += 3;
+  if (formatsLower.includes("cassette")) score += 2;
+  if (formatsLower.includes("cd")) score -= 1;
+
+  if (title.includes("original")) score += 3;
+  if (title.includes("soundtrack")) score += 3;
+  if (title.includes("score")) score += 2;
+
+  if (item.year !== undefined && item.year !== null) {
+    const itemYear = typeof item.year === "number" ? item.year : parseInt(item.year, 10);
+    const diff = Math.abs(itemYear - movieYear);
+    if (diff === 0) score += 4;
+    else if (diff <= 2) score += 2;
+    else if (diff > 10) score -= 2;
+  }
+
+  return score;
+}
+
+function isBadDiscogs(item: RawResult): boolean {
+  const title = item.title.toLowerCase();
+  return title.includes("tribute") || title.includes("cover") || title.includes("remix");
+}
+
+/* ================= CACHE ================= */
+
+async function getCachedVynils(title: string, year: string): Promise<ReturnedResult[] | null> {
+  const cached = await prisma.discogQuery.findUnique({
+    where: { query: `${title.trim().toLowerCase()}_${year}` },
+    include: { items: true },
+  });
+
+  if (cached && Date.now() - cached.updatedAt.getTime() < ONE_DAY_MS) {
+    console.log("📦 Using cached Discogs data");
+   return cached.items.map(i => ({
+  title: i.title,
+  year: i.year !== null ? Number(i.year) : null,
+  format: i.format as string[],
+  thumb: i.thumb ?? undefined,
+  uri: i.uri,
+}));
+  }
+
+  return null;
+}
+
+/* ================= SAVE TO DB ================= */
+
+async function saveVynilsToDB(title: string, year: string, results: ReturnedResult[]) {
+  await prisma.discogQuery.upsert({
+  where: { query: `${title.trim().toLowerCase()}_${year}` },
+  create: {
+    query: `${title.trim().toLowerCase()}_${year}`,
+    items: {
+      create: results.map(r => ({
+        title: r.title,
+        year: r.year !== null ? Number(r.year) : null,
+        format: r.format,
+        thumb: r.thumb,
+        uri: r.uri,
+      })),
+    },
+  },
+  update: {
+    updatedAt: new Date(),
+    items: {
+      deleteMany: {},
+      create: results.map(r => ({
+        title: r.title,
+        year: r.year !== null ? Number(r.year) : null,
+        format: r.format,
+        thumb: r.thumb,
+        uri: r.uri,
+      })),
+    },
+  },
+});
+}
+
+/* ================= TYPE GUARD ================= */
+
+function isRawResponse(data: unknown): data is RawResponse {
+  if (typeof data !== "object" || data === null) return false;
+
+  if (!("results" in data)) return false;
+  const maybeRawResponse = data as RawResponse;
+
+  if (!Array.isArray(maybeRawResponse.results)) return false;
+
+  for (const r of maybeRawResponse.results) {
+    if (typeof r !== "object" || r === null) return false;
+    if (typeof r.title !== "string") return false;
+    if (typeof r.uri !== "string") return false;
+    if ("year" in r && r.year !== undefined && typeof r.year !== "number" && typeof r.year !== "string") return false;
+    if ("format" in r && r.format !== undefined && !Array.isArray(r.format)) return false;
+  }
+
+  return true;
 }
