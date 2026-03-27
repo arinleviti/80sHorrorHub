@@ -4,8 +4,8 @@ import styles from "./movie-info.module.css";
 import { getYouTubeVideos, YouTubeVideo } from "@/app/services/youtube";
 import VideoList from "../videoList/video-list";
 import { Movie, TMDBImageConfig, CastMemberInfo, CrewMemberInfo } from "@/app/services/tmdb";
-import { getCuratedEbayItems} from "@/app/services/ebay/getCuratedEbayItems";
-import {EbayItemSummary} from "@/app/services/ebay/getEbayItems";
+import { getCuratedEbayItems } from "@/app/services/ebay/getCuratedEbayItems";
+import { EbayItemSummary } from "@/app/services/ebay/getEbayItems";
 import { fetchVynils } from "@/app/services/discogs";
 import { getStreamingAvailability, GetStreamingAvailabilityReturn } from "@/app/services/streamingAvail";
 import CastList from "./components/castList/cast-list";
@@ -25,14 +25,15 @@ import { Contribution, ContributionSection } from "@prisma/client";
 import ContributionList from "./components/contributions/contribution-list";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { RedditFeed } from "./components/RedditFeed/redditFeed";
 
 interface MovieInfoProps {
   movie: Movie;
   config: TMDBImageConfig;
   credits: {
-  cast: CastMemberInfo[];
-  crew: CrewMemberInfo[];
-};
+    cast: CastMemberInfo[];
+    crew: CrewMemberInfo[];
+  };
 }
 
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
@@ -162,6 +163,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <ContributionList grouped={grouped} />
         </Col>
       </Row>
+
       {/* 🎥 Videos */}
       <Row className="mb-5">
         <Col>
@@ -189,7 +191,15 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           />
         </Col>
       </Row>
-
+      {/* 📰 Reddit Fan Discussions */}
+      <Row className="mb-5">
+        <Col>
+          <RedditFeed
+            movie={movie}
+            limit={5}
+          />
+        </Col>
+      </Row>
       {/* 🤖 AI Suggestions */}
       {hfSuggestions && hfSuggestions.length > 0 && (
         <Row className="mb-5">
