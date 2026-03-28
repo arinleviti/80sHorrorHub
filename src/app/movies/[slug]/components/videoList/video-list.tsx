@@ -1,25 +1,91 @@
+// src/app/movies/[slug]/components/videoList/video-list.tsx
+'use client';
+import { useState } from "react";
+import { Row, Col, Modal, Button, Stack } from "react-bootstrap";
+import ReactPlayer from "react-player"; // NOT "react-player/youtube"
 import Image from "next/image";
-import {YouTubeVideo} from "@/app/services/youtube";
+import { YouTubeVideo } from "@/app/services/youtube";
+import styles from "./video-list.module.css";
 
-export default function VideoList({ videos, title }: { videos: YouTubeVideo[]; title: string }) {
-  if (videos.length === 0) return <p>No {title} available</p>;
+interface VideoListProps {
+  videos: YouTubeVideo[];
+  title: string;
+}
+
+export default function VideoList({ videos, title }: VideoListProps) {
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+const handleClose = () => setSelectedVideo(null);
+const showModal = selectedVideo !== null;
+
+  if (!videos || videos.length === 0) {
+    return <p className="text-muted-custom">No {title} available</p>;
+  }
+
   return (
-    <>
-      <h2>{title}</h2>
-      <div style={{ display: "flex", gap: "1rem", overflowX: "auto" }}>
-        {videos.map(v => (
-          <div key={v.youtubeId} style={{ minWidth: "300px" }}>
-            <h3>{v.title}</h3>
-            {v.url && v.thumbnail ? (  // <-- only render if both exist
-              <a href={v.url} target="_blank" rel="noopener noreferrer">
-                <Image src={v.thumbnail} alt={v.title} width={300} height={169} priority />
-              </a>
-            ) : (
-              <p>{v.title} — video unavailable</p>
-            )}
-          </div>
+    <Stack gap={4}>
+      <h2 className="heading-secondary">{title}</h2>
+
+      <Row className="g-3 justify-content-center">
+        {videos.map((v) => (
+          <Col key={v.youtubeId} xs={12} sm={6} md={4} lg={3}>
+            <div
+              className={styles.videoCard}
+              onClick={() => setSelectedVideo(v)}
+              style={{ cursor: "pointer" }}
+            >
+              {v.thumbnail ? (
+                <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%" }}>
+                  <Image
+                    src={v.thumbnail}
+                    alt={v.title}
+                    fill
+                    style={{ objectFit: "cover", borderRadius: "0.25rem" }}
+                  />
+                </div>
+              ) : (
+                <div className="placeholder-img" style={{ height: "180px", background: "#333" }} />
+              )}
+              <div className={styles.videoInfo}>
+                <p className="text-accent" style={{ fontSize: "1rem", margin: 0 }}>
+                  {v.title}
+                </p>
+              </div>
+            </div>
+          </Col>
         ))}
-      </div>
-    </>
+      </Row>
+
+      {/* Modal */}
+  <Modal
+  show={showModal}
+  onHide={handleClose}
+  size="xl"
+  centered
+  dialogClassName="youtube-modal"
+>
+  <Modal.Header
+    closeButton
+    style={{ 
+      backgroundColor: '#111', // same as modal background
+      borderBottom: 'none',
+      padding: '0.5rem 1rem'
+    }}
+    closeVariant="white" // <-- makes the X white
+  >
+    {/* optional title */}
+  </Modal.Header>
+  <Modal.Body style={{ padding: 0, backgroundColor: '#111' }}>
+    {selectedVideo && (
+      <ReactPlayer
+        src={selectedVideo.url}
+        controls
+        width="100%"
+        height="100%"
+        style={{ aspectRatio: "16/9" }}
+      />
+    )}
+  </Modal.Body>
+</Modal>
+    </Stack>
   );
 }

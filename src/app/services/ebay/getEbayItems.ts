@@ -7,8 +7,9 @@ interface RawEbayImage { imageUrl: string; }
 interface RawEbayItem {
   title: string;
   price: RawEbayPrice;
-  thumbnailImages: RawEbayImage[];
+  thumbnailImages?: RawEbayImage[];
   itemWebUrl: string;
+  itemEndDate?: string; // This is the field returned by MATCHING_ITEMS
 }
 interface RawEbaySearchResponse { itemSummaries: RawEbayItem[]; }
 
@@ -19,16 +20,30 @@ export interface EbayItemSummary {
   price: EbayItemPrice;
   image: EbayItemImage;
   itemAffiliateWebUrl: string;
+   listing?: {
+    endDate?: string; // ISO string from eBay API
+  };
 }
 export interface EbaySearchResponse { itemSummaries: EbayItemSummary[]; }
 
-// Map raw eBay response to our format
+/**
+ * Maps the raw API response to our internal EbayItemSummary type
+ */
 function mapEbayItem(item: RawEbayItem): EbayItemSummary {
   return {
     title: item.title,
-    price: { value: item.price.value, currency: item.price.currency },
-    image: { imageUrl: item.thumbnailImages[0]?.imageUrl || '' },
-    itemAffiliateWebUrl: item.itemWebUrl
+    price: { 
+      value: item.price.value, 
+      currency: item.price.currency 
+    },
+    image: { 
+      imageUrl: item.thumbnailImages?.[0]?.imageUrl || '' 
+    },
+    itemAffiliateWebUrl: item.itemWebUrl,
+    listing: {
+      // Mapping the raw 'itemEndDate' to our structured 'listing.endDate'
+      endDate: item.itemEndDate 
+    }
   };
 }
 
@@ -68,9 +83,15 @@ export async function getEbayAccessToken(): Promise<string> {
   return token;
 }
 
-// Fetch eBay items for a query (no DB check)
-export async function getEbayItems(query: string, accessToken: string): Promise<EbaySearchResponse> {
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=15`;
+/**
+ * Fetches eBay items with the MATCHING_ITEMS fieldgroup to unlock expiry dates
+ */
+export async function getEbayItems(
+  query: string, 
+  accessToken: string
+): Promise<EbaySearchResponse> {
+  // CRITICAL: Added &fieldgroups=MATCHING_ITEMS to unlock itemEndDate
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=15&fieldgroups=MATCHING_ITEMS`;
 
   const res = await fetch(url, {
     headers: {
@@ -80,7 +101,15 @@ export async function getEbayItems(query: string, accessToken: string): Promise<
     }
   });
 
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(`❌ eBay API Error (${res.status}):`, errorText);
+    return { itemSummaries: [] };
+  }
+
   const data: RawEbaySearchResponse = await res.json();
 
-  return { itemSummaries: (data.itemSummaries || []).map(mapEbayItem) };
+  return { 
+    itemSummaries: (data.itemSummaries || []).map(mapEbayItem) 
+  };
 }

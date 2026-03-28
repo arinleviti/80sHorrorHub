@@ -47,6 +47,7 @@ model EbayItem {
   priceCurrency String
   imageUrl      String
   itemUrl       String
+  listingEndDate DateTime?  // <- NEW: store eBay item's end/expiry date
   query         EbayQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId       String
 }

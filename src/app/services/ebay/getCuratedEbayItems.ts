@@ -19,17 +19,18 @@ export function buildEbayQueries(movieTitle: string, year: string): string[] {
     `${movieTitle} ${year} promo`,
   ];
 }
+
 type ItemType =
-  | "physical_media"   // VHS, Laserdisc
-  | "print"           // posters, lobby cards, magazines
-  | "promo"           // press kits, promo items
-  | "toy"             // figures
-  | "apparel"         // shirts, jackets
-  | "prop"            // props, replicas
-  | "home_media"      // dvd, bluray
-  | "junk" 
+  | "physical_media"
+  | "print"
+  | "promo"
+  | "toy"
+  | "apparel"
+  | "prop"
+  | "home_media"
+  | "junk"
   | "press_kit"
-  | "lobby_card"           // digital, low-value
+  | "lobby_card"
   | "unknown";
 
 function detectItemType(title: string): ItemType {
@@ -47,84 +48,52 @@ function detectItemType(title: string): ItemType {
   return "unknown";
 }
 
-// 3️⃣ Base scores for each type
 function getBaseScore(type: ItemType): number {
   switch (type) {
     case "press_kit":
     case "lobby_card":
-    case "promo":
-      return 5;
-    case "physical_media":
-      return 4;
-    case "print":
-      return 3;
+    case "promo": return 5;
+    case "physical_media": return 4;
+    case "print": return 3;
     case "toy":
     case "apparel":
-    case "prop":
-      return 2;
-    case "home_media":
-      return -2;
-    case "junk":
-      return -3;
-    default:
-      return 1; // unknown gets small baseline
+    case "prop": return 2;
+    case "home_media": return -2;
+    case "junk": return -3;
+    default: return 1;
   }
 }
 
-// 4️⃣ Score items using type + keyword signals
 function scoreItem(item: EbayItemSummary): number {
   const title = item.title.toLowerCase();
   const type = detectItemType(title);
   let score = getBaseScore(type);
 
-  // 🔥 collector signals
   if (title.includes("original")) score += 3;
   if (title.includes("vintage")) score += 3;
   if (title.includes("rare")) score += 3;
   if (title.includes("first release")) score += 2;
-
-  // 🎯 niche goodies
   if (title.includes("screener")) score += 2;
   if (title.includes("promo")) score += 2;
   if (title.includes("signed") || title.includes("autograph")) score += 4;
   if (title.includes("screen used") || title.includes("screen worn")) score += 5;
   if (title.includes("crew")) score += 2;
   if (title.includes("cast")) score += 1;
-
-  // ⚠️ soft penalties
   if (title.includes("reprint")) score -= 3;
   if (title.includes("replica")) score -= 3;
 
   return score;
 }
 
-// 5️⃣ Absolute junk filter
 function isBadItem(title: string): boolean {
   title = title.toLowerCase();
-  return (
-    title.includes("fan art") ||
-    title.includes("bootleg") ||
-    title.includes("digital code")
-  );
+  return title.includes("fan art") || title.includes("bootleg") || title.includes("digital code");
 }
-// Filter items that are "cool"
-export function isCoolItem(item: EbayItemSummary): boolean {
-  const title = item.title.toLowerCase();
-  return (
-    title.includes("vintage") ||
-    title.includes("original") ||
-    title.includes("rare") ||
-    title.includes("1980s") ||
-    title.includes("collector") ||
-    title.includes("limited")
-  );
-}
-// Deduplicate by item URL
+
 function dedupeItems(items: EbayItemSummary[]): EbayItemSummary[] {
   return Array.from(new Map(items.map(i => [i.itemAffiliateWebUrl, i])).values());
 }
 
-// Shuffle array
 function shuffle<T>(array: T[]): T[] {
   return array.sort(() => Math.random() - 0.5);
 }
@@ -135,16 +104,26 @@ export async function getCuratedEbayItems(
   year: string
 ): Promise<EbayItemSummary[]> {
   const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+  const now = new Date();
 
-  // 1️⃣ Check cached data first
+  // 1️⃣ Fetch cached data
   const cached = await prisma.ebayQuery.findUnique({
     where: { movieId },
     include: { items: true },
   });
 
-  if (cached && Date.now() - cached.updatedAt.getTime() < TWELVE_HOURS_MS) {
-    console.log(`📦 Using cached eBay data for movie ID: "${movieId}" (${cached.items.length} items)`);
-    return cached.items.map(i => ({
+  // Check if we can use cached items
+  let useCache = false;
+  if (cached) {
+    const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < TWELVE_HOURS_MS) {
+      useCache = true;
+    }
+  }
+
+  if (useCache) {
+    console.log(`📦 Using cached eBay data for movie ID: "${movieId}" (${cached!.items.length} items)`);
+    return cached!.items.map(i => ({
       title: i.title,
       price: { value: i.priceValue, currency: i.priceCurrency },
       image: { imageUrl: i.imageUrl },
@@ -155,20 +134,22 @@ export async function getCuratedEbayItems(
   // 2️⃣ Fetch fresh data from eBay
   const queries = buildEbayQueries(movieTitle, year);
   const accessToken = await getEbayAccessToken();
-
   const results: EbaySearchResponse[] = await Promise.all(
     queries.map(q => getEbayItems(q, accessToken))
   );
-
   const merged = results.flatMap(r => r.itemSummaries);
-  const unique = dedupeItems(merged);
 
+  // Filter expired items
+  const availableItems = merged.filter(item => !item.listing?.endDate || new Date(item.listing.endDate) > now);
+
+  // Deduplicate
+  const unique = dedupeItems(availableItems);
+
+  // Score & sort
   const scored = unique.map(item => ({ item, score: scoreItem(item) }));
-
-   // 3️⃣ Filter, enforce type limits, sort & limit to 15
   const typeLimits: Record<ItemType, number> = {
-    physical_media: 3, // VHS / Laserdisc
-    print: 2,          // Posters
+    physical_media: 3,
+    print: 2,
     lobby_card: 3,
     press_kit: 2,
     promo: 2,
@@ -184,23 +165,16 @@ export async function getCuratedEbayItems(
   const curated: EbayItemSummary[] = [];
 
   for (const { item, score } of scored.sort((a, b) => b.score - a.score)) {
-    if (isBadItem(item.title)) continue;
-    if (score <= 1) continue;
-
+    if (isBadItem(item.title) || score <= 1) continue;
     const type = detectItemType(item.title);
-
     if ((typeCounts[type] || 0) < (typeLimits[type] || 1)) {
       curated.push(item);
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     }
-
     if (curated.length >= 15) break;
   }
 
   const final = shuffle(curated);
-
- /*  const curated = unique.filter(isCoolItem);
-  const final = shuffle(curated).slice(0, 15); */ // limit to 15 items
 
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
@@ -213,7 +187,8 @@ export async function getCuratedEbayItems(
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
           imageUrl: i.image.imageUrl,
-          itemUrl: i.itemAffiliateWebUrl
+          itemUrl: i.itemAffiliateWebUrl,
+          listingEndDate: i.listing?.endDate ? new Date(i.listing.endDate) : null
         }))
       }
     },
@@ -226,7 +201,8 @@ export async function getCuratedEbayItems(
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
           imageUrl: i.image.imageUrl,
-          itemUrl: i.itemAffiliateWebUrl
+          itemUrl: i.itemAffiliateWebUrl,
+          listingEndDate: i.listing?.endDate ? new Date(i.listing.endDate) : null
         }))
       }
     }

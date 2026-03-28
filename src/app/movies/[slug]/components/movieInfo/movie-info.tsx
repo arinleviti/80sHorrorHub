@@ -41,9 +41,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
 
-  const [trailers, behindTheScenes, topMoments, curatedEbayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
-    YouTubeVideo[],
-    YouTubeVideo[],
+  const [youTubeVideos, curatedEbayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     EbayItemSummary[],
     GetStreamingAvailabilityReturn,
@@ -52,9 +50,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     SpotifyPlaylistEmbed | null,
     AiDescription | null
   ] = await Promise.all([
-    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} trailer`),
-    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} behind the scenes interview`),
-    getYouTubeVideos(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} top moments`),
+    getYouTubeVideos(movie.title, movie.release_date?.slice(0, 4) || ''),
     getCuratedEbayItems(movie.id, movie.title, movie.release_date?.slice(0, 4) || ''),
     /* getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`), */
     getStreamingAvailability(
@@ -167,14 +163,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       {/* 🎥 Videos */}
       <Row className="mb-5">
         <Col>
-          <VideoList videos={trailers} title="Trailers" />
+          <VideoList videos={youTubeVideos} title="YouTube Curated Selection" />
         </Col>
-        <Col>
-          <VideoList videos={behindTheScenes} title="Behind the Scenes" />
-        </Col>
-        <Col>
-          <VideoList videos={topMoments} title="Top Moments" />
-        </Col>
+       
       </Row>
 
       {/* 💿 Merchandise & Streaming */}

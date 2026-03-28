@@ -5,7 +5,7 @@ async function cleanup() {
   await prisma.youTubeQuery.deleteMany({
     where: {
       updatedAt: {
-        lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+        lt: new Date(Date.now() - 1000 * 60 * 60 * 24), // less than 24h
       },
     },
   });
