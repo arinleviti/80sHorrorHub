@@ -1,5 +1,9 @@
+"use client";
+
 import Image from "next/image";
+import { Card } from "react-bootstrap";
 import { HFSuggestionItem } from "@/app/services/huggingFaceAI";
+import styles from "./hf-suggestion-list.module.css";
 
 interface HFSuggestionsListProps {
   suggestions: HFSuggestionItem[];
@@ -9,45 +13,32 @@ const HFSuggestionsList: React.FC<HFSuggestionsListProps> = ({ suggestions }) =>
   if (!suggestions || suggestions.length === 0) return null;
 
   return (
-    <div className="hf-suggestions mt-6">
-      <h2 className="text-xl font-bold mb-2">AI Suggested Movies</h2>
-      <ul
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "10px",
-          listStyle: "none",
-          padding: 0,
-        }}
-      >
+    <Card className={`${styles.hfSuggestionsCard} my-4`}>
+      <Card.Header className={styles.hfSuggestionsHeader}>
+        AI Suggested Movies
+      </Card.Header>
+
+      <div className={styles.hfSuggestionsList}>
         {suggestions.map((s, index) => (
-          <li
-            key={s.title ?? index}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: 100,
-            }}
-          >
+          <div key={s.title ?? index} className={styles.hfSuggestionItem}>
             {s.posterUrl ? (
               <Image
                 src={s.posterUrl}
                 alt={s.title}
-                width={80}
-                height={120}
-                style={{ objectFit: "cover", borderRadius: "4px" }}
+                width={60}
+                height={90}
+                className={styles.hfSuggestionPoster}
               />
             ) : (
-              <div style={{ width: 80, height: 120, backgroundColor: "#ccc" }} />
+              <div className={styles.hfSuggestionPoster} style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
             )}
-            <span style={{ textAlign: "center", marginTop: 4 }}>
+            <span className={styles.hfSuggestionTitle}>
               {s.title} <br /> ({s.year})
             </span>
-          </li>
+          </div>
         ))}
-      </ul>
-    </div>
+      </div>
+    </Card>
   );
 };
 

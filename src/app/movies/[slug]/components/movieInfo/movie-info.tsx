@@ -40,7 +40,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png"; // fallback if poster missing
-
+const topActorNames = credits.cast.slice(0, 5).map(actor => actor.actorName);
   const [youTubeVideos, curatedEbayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
     YouTubeVideo[],
     EbayItemSummary[],
@@ -50,7 +50,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     SpotifyPlaylistEmbed | null,
     AiDescription | null
   ] = await Promise.all([
-    getYouTubeVideos(movie.title, movie.release_date?.slice(0, 4) || ''),
+    getYouTubeVideos(movie.title, movie.release_date?.slice(0, 4) || '', topActorNames),
     getCuratedEbayItems(movie.id, movie.title, movie.release_date?.slice(0, 4) || ''),
     /* getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`), */
     getStreamingAvailability(
@@ -82,6 +82,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     grouped[c.section].push(c);
   });
 
+  const director = credits.crew.find((member) => member.job === "Director");
 
   return (
 
@@ -103,22 +104,31 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
             </Col>
 
             {/* LEFT CONTENT (TITLE + OVERVIEW) */}
-            <Col xs={12} md={4} lg={5}>
+           <Col xs={12} md={4} lg={5}>
+  {/* Title - Large and bold */}
+  <h1 className="movie-title mb-1">
+    {movie.title}
+  </h1>
 
-              <h1 className="movie-title">
-                {movie.title}
-                {movie.release_date && (
-                  <span className={styles.year}>
-                    {" "}({movie.release_date.slice(0, 4)})
-                  </span>
-                )}
-              </h1>
+  {/* Director - Smaller, styled with your custom class */}
+  {director && (
+    <h4 className={`${styles.director} mb-1`}>
+      {director.name}
+    </h4>
+  )}
 
-              <p className={styles.textContent}>
-                {movie.overview}
-              </p>
+  {/* Year - Muted and distinct */}
+  {movie.release_date && (
+    <p className={`${styles.year} mb-3 text-muted`}>
+      ({movie.release_date.slice(0, 4)})
+    </p>
+  )}
 
-            </Col>
+  {/* Overview */}
+  <p className={styles.textContent}>
+    {movie.overview}
+  </p>
+</Col>
 
             {/* RIGHT CONTENT (SPOTIFY) */}
             <Col xs={12} md={3} lg={3}>
@@ -168,30 +178,36 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
        
       </Row>
 
-      {/* 💿 Merchandise & Streaming */}
-      <Row className="mb-5">
-        <Col>
-          <DiscogsList results={discogsList} />
-        </Col>
-        <Col>
-          <EbayItemsList ebayItems={curatedEbayItems} />
-        </Col>
-        <Col>
-          <StreamingAvailabilityList
-            streamingAvailability={streamingAvailability}
-          />
-        </Col>
-      </Row>
-      {/* 📰 Reddit Fan Discussions */}
-      <Row className="mb-5">
-        <Col>
-          <RedditFeed
-            movie={movie}
-            limit={5}
-          />
-        </Col>
-      </Row>
-      {/* 🤖 AI Suggestions */}
+     {/* 💿 Merchandise & Streaming + Reddit */}
+<Row className="mb-5">
+  {/* LEFT COLUMN: Discogs + eBay */}
+  <Col md={6}>
+    
+    <Row>
+      <Col>
+        <EbayItemsList ebayItems={curatedEbayItems} />
+      </Col>
+    </Row>
+  </Col>
+
+  {/* RIGHT COLUMN: Streaming Availability + Reddit */}
+  <Col md={6}>
+  <Row className="mb-3">
+      <Col>
+        <DiscogsList results={discogsList} />
+      </Col>
+    </Row>
+    <Row className="mb-3">
+      <Col>
+        <StreamingAvailabilityList streamingAvailability={streamingAvailability} />
+      </Col>
+    </Row>
+    <Row>
+      <Col>
+        <RedditFeed movie={movie} limit={5} />
+      </Col>
+    </Row>
+     {/* 🤖 AI Suggestions */}
       {hfSuggestions && hfSuggestions.length > 0 && (
         <Row className="mb-5">
           <Col>
@@ -199,6 +215,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           </Col>
         </Row>
       )}
+  </Col>
+</Row>
+     
     </Container>
   );
 }

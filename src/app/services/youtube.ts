@@ -1,236 +1,215 @@
 import { prisma } from "@/app/services/prisma";
 
-// We changed this to 30 days (1 month) to maximize your quota efficiency
 const ONE_MONTH_MS = 1000 * 60 * 60 * 24 * 30;
 
 // ---------------------- 
-// 📝 INTERFACES
+// 📝 STRICT INTERFACES
 // ----------------------
+interface YouTubeSearchItem {
+  id: { videoId: string };
+  snippet: {
+    title: string;
+    description: string;
+    thumbnails: { medium: { url: string } };
+  };
+}
+
 interface YouTubeSearchResponse {
-  items: {
-    id: { videoId: string };
-    snippet: {
-      title: string;
-      thumbnails: { medium: { url: string } };
-    };
-  }[];
+  items: YouTubeSearchItem[];
+}
+
+interface YouTubeVideoDetails {
+  id: string;
+  statistics: {
+    viewCount: string;
+  };
+  contentDetails: {
+    duration: string;
+  };
 }
 
 interface YouTubeStatsResponse {
-  items: {
-    id: string;
-    statistics: {
-      viewCount: string;
-      likeCount?: string;
-    };
-    contentDetails: {
-      duration: string;
-    };
-  }[];
+  items: YouTubeVideoDetails[];
 }
 
 export interface YouTubeVideo {
   youtubeId: string;
   title: string;
+  description?: string;
   thumbnail: string;
   url: string;
   views?: number;
-  duration?: number; // seconds
+  duration?: number;
 }
 
-// ---------------------- 
-// 🔍 QUERY BUILDER (Optimized for Quota: 100 units total)
-// ----------------------
-function buildYoutubeQuery(movieTitle: string, year: string): string {
-  return `${movieTitle} ${year} (trailer OR scene OR "behind the scenes" OR interview OR "making of" OR documentary)`;
-}
+type VideoType = "trailer" | "scene" | "interview" | "behind" | "review" | "other";
 
 // ----------------------
 // 🧠 TYPE DETECTION
 // ----------------------
-type VideoType =
-  | "trailer"
-  | "scene"
-  | "interview"
-  | "behind"
-  | "review"
-  | "other";
-
 function detectVideoType(title: string): VideoType {
-  title = title.toLowerCase();
-
-  if (title.includes("trailer")) return "trailer";
-  if (title.includes("scene") || title.includes("clip")) return "scene";
-  if (title.includes("interview")) return "interview";
-  if (title.includes("behind") || title.includes("making")) return "behind";
-  if (title.includes("review")) return "review";
-
+  const t = title.toLowerCase();
+  if (t.includes("behind") || t.includes("making") || t.includes("documentary")) return "behind";
+  if (t.includes("interview") || t.includes("podcast")) return "interview";
+  if (t.includes("scene") || t.includes("clip")) return "scene";
+  if (t.includes("review") || t.includes("reaction")) return "review";
+  if (t.includes("trailer")) return "trailer";
   return "other";
 }
 
-// ----------------------
-// ⏱️ ISO8601 → seconds
-// ----------------------
 function parseDuration(duration: string): number {
-  const match = duration.match(/PT(\d+M)?(\d+S)?/);
-  const minutes = match?.[1] ? parseInt(match[1]) : 0;
-  const seconds = match?.[2] ? parseInt(match[2]) : 0;
-  return minutes * 60 + seconds;
+  const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+  const hours = match?.[1] ? parseInt(match[1]) : 0;
+  const minutes = match?.[2] ? parseInt(match[2]) : 0;
+  const seconds = match?.[3] ? parseInt(match[3]) : 0;
+  return hours * 3600 + minutes * 60 + seconds;
 }
 
 // ----------------------
-// ⭐ SCORING (Keeping all your specific logic)
+// ⭐ SCORING (With Actor Fallback)
 // ----------------------
-function scoreVideo(video: YouTubeVideo): number {
+function scoreVideo(video: YouTubeVideo, movieTitle: string, actorNames: string[] = []): number {
   const title = video.title.toLowerCase();
+  const description = (video.description || "").toLowerCase();
+  const movie = movieTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedTitle = title.replace(/[^a-z0-9]/g, "");
+  
+  const topActors = actorNames.slice(0, 5);
   let score = 0;
 
-  if (title.includes("official trailer")) score += 5;
-  if (title.includes("trailer")) score += 3;
-  if (title.includes("scene")) score += 3;
+  const hasMovieTitle = normalizedTitle.includes(movie);
+  const hasActorInTitle = topActors.some(name => title.includes(name.toLowerCase()));
+  const hasActorInDesc = topActors.some(name => description.includes(name.toLowerCase()));
 
-  if (title.includes("behind")) score += 4;
-  if (title.includes("interview")) score += 3;
-  if (title.includes("making")) score += 4;
-  if (title.includes("documentary")) score += 4;
-
-  if (title.includes("kills") || title.includes("death")) score += 2;
-
-  if (
-    title.includes("rare") ||
-    title.includes("promo") ||
-    title.includes("vintage") ||
-    title.includes("signed") ||
-    title.includes("screener")
-  ) {
-    score += 3;
+  if (hasMovieTitle) {
+    score += 7;
+  } else if (hasActorInTitle || hasActorInDesc) {
+    // If movie title is missing, actors prove this is the right movie
+    score += 5; 
+  } else {
+    // Neither movie title nor top actors? Likely garbage.
+    score -= 15; 
   }
 
-  if (title.includes("reaction")) score -= 3;
-  if (title.includes("fan film")) score -= 4;
-  if (title.includes("recap") || title.includes("explained")) score -= 2;
+  topActors.forEach(name => {
+    if (title.includes(name.toLowerCase())) score += 3;
+    if (description.includes(name.toLowerCase())) score += 1;
+  });
 
-  if (video.views) {
-    if (video.views > 1_000_000) score += 2;
-    else if (video.views > 100_000) score += 1;
-    else if (video.views < 5_000) score -= 2;
+  if (title.includes("official trailer")) score += 2;
+  if (title.includes("scene") || title.includes("clip")) {
+    score += 5;
+    if (title.match(/\(\d+\/\d+\)/)) score -= 5; 
   }
+  if (title.includes("behind") || title.includes("making")) score += 6;
+  if (title.includes("interview")) score += 4;
 
-  if (video.duration) {
-    if (video.duration < 60) score -= 2;
-    if (video.duration > 1800) score -= 2;
-  }
+  if (video.views && video.views > 500000) score += 2;
+  if (video.views && video.views < 1000) score -= 3;
 
   return score;
 }
 
 // ----------------------
-// 🧹 DEDUPE & SHUFFLE
-// ----------------------
-function dedupeVideos(videos: YouTubeVideo[]): YouTubeVideo[] {
-  return Array.from(new Map(videos.map(v => [v.youtubeId, v])).values());
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-// ----------------------
 // 🚀 MAIN FUNCTION
 // ----------------------
-export async function getYouTubeVideos(movieTitle: string, year: string) {
+export async function getYouTubeVideos(movieTitle: string, year: string, actorNames: string[] = []): Promise<YouTubeVideo[]> {
   const queryKey = `${movieTitle}-${year}`;
 
-  // 1️⃣ Cache check (Check if we have any data at all)
   const cached = await prisma.youTubeQuery.findUnique({
     where: { query: queryKey },
     include: { videos: true },
   });
 
-  const isFresh = cached && (Date.now() - cached.updatedAt.getTime() < ONE_MONTH_MS);
-
-  if (isFresh) {
-    console.log("📦 Using fresh cached YouTube data");
+  if (cached && (Date.now() - cached.updatedAt.getTime() < ONE_MONTH_MS)) {
+    // ✅ CACHE LOG
+    console.log(`\x1b[32m%s\x1b[0m`, `📦 CACHE HIT: Found ${cached.videos.length} videos in DB for "${queryKey}"`);
     return cached.videos;
   }
-
-  // 2️⃣ API FETCH BLOCK (Inside try-catch for graceful fallback)
+// ❌ CACHE MISS LOG
+  console.log(`\x1b[33m%s\x1b[0m`, `🔍 CACHE MISS: Fetching new videos from YouTube API for "${queryKey}"...`);
   try {
     const API_KEY = process.env.YOUTUBE_API_KEY;
-    console.log("🎬 YouTube API Key:", API_KEY ? "FOUND" : "MISSING");
-
-    const q = buildYoutubeQuery(movieTitle, year);
-    console.log("🔍 Running Optimized Master Query:", q);
-
+    const top2Actors = actorNames.slice(0, 2).join(" "); 
+    const q = `${movieTitle} ${year} ${top2Actors} (trailer OR scene OR "behind the scenes")`;
+    
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=50&key=${API_KEY}`;
     const searchRes = await fetch(searchUrl);
-    
-    console.log(`🔍 YouTube Search Response:`, searchRes.status);
+    const searchData: YouTubeSearchResponse = await searchRes.json();
 
-    if (!searchRes.ok) {
-        const errData = await searchRes.json();
-        throw new Error(`YouTube API Error: ${searchRes.status} - ${JSON.stringify(errData)}`);
-    }
-
-    const data: YouTubeSearchResponse = await searchRes.json();
-    const searchItems = data.items || [];
-    console.log(`📦 Total videos fetched: ${searchItems.length}`);
-
-    const baseVideos: YouTubeVideo[] = searchItems.map(item => ({
+    const baseVideos: YouTubeVideo[] = (searchData.items || []).map(item => ({
       youtubeId: item.id.videoId,
       title: item.snippet.title,
+      description: item.snippet.description,
       thumbnail: item.snippet.thumbnails.medium.url,
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
     }));
 
-    const unique = dedupeVideos(baseVideos);
-    console.log(`🎯 Unique videos after dedupe: ${unique.length}`);
-
-    if (unique.length === 0) return cached?.videos || [];
-
-    // 3️⃣ FETCH STATS (batch)
-    const ids = unique.map(v => v.youtubeId).join(",");
+    const ids = baseVideos.map(v => v.youtubeId).join(",");
     const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails&id=${ids}&key=${API_KEY}`;
-    
     const statsRes = await fetch(statsUrl);
     const statsData: YouTubeStatsResponse = await statsRes.json();
 
-    const statsMap = new Map(
-      (statsData.items || []).map(i => [
+    const statsMap = new Map<string, { views: number; duration: number }>(
+      (statsData.items || []).map((i: YouTubeVideoDetails) => [
         i.id,
         {
-          views: i.statistics?.viewCount ? parseInt(i.statistics.viewCount) : undefined,
-          duration: i.contentDetails?.duration ? parseDuration(i.contentDetails.duration) : undefined,
+          views: i.statistics?.viewCount ? parseInt(i.statistics.viewCount) : 0,
+          duration: i.contentDetails?.duration ? parseDuration(i.contentDetails.duration) : 0,
         },
       ])
     );
 
-    const enriched = unique.map(v => ({
+    const enriched = baseVideos.map(v => ({
       ...v,
       ...statsMap.get(v.youtubeId),
     }));
 
-    // 4️⃣ SCORE + DIVERSITY
-    const scored = enriched.map(v => ({ video: v, score: scoreVideo(v) }));
+    // ⚖️ SCORING LOG
+    const scoredforLog = enriched.map(v => {
+        const score = scoreVideo(v, movieTitle, actorNames);
+        return { 
+            title: v.title.substring(0, 50), // Truncate for clean table
+            score: score, 
+            type: detectVideoType(v.title)
+        };
+    });
 
-    const limits = { trailer: 2, scene: 3, interview: 1, behind: 1, review: 1, other: 1 };
+    // Sort for the log table
+    const sortedForLog = [...scoredforLog].sort((a, b) => b.score - a.score);
+    
+    console.log(`📊 SCORING RESULTS FOR: ${movieTitle}`);
+    console.table(sortedForLog.slice(0, 15)); // Shows top 15 results and their scores in a nice table
+    const scored = enriched.map(v => ({ video: v, score: scoreVideo(v, movieTitle, actorNames) }));
+    const sorted = [...scored].sort((a, b) => b.score - a.score);
+
+    const limits: Record<string, number> = { trailer: 1, scene: 4, interview: 2, behind: 2, other: 0 };
     const counts: Record<string, number> = {};
     const curated: YouTubeVideo[] = [];
 
-    for (const { video, score } of scored.sort((a, b) => b.score - a.score)) {
-      if (score <= 0) continue;
+    // Pass 1: Variety
+    for (const { video } of sorted) {
       const type = detectVideoType(video.title);
-      if ((counts[type] || 0) < (limits[type] || 1)) {
+      if ((counts[type] || 0) < limits[type]) {
         curated.push(video);
         counts[type] = (counts[type] || 0) + 1;
       }
       if (curated.length >= 9) break;
     }
 
-    const final = shuffle(curated);
-    console.log("🎯 Final curated videos:", final.map(v => v.title));
+    // Pass 2: Fill remaining (Strict Trailer Cap)
+    if (curated.length < 9) {
+      for (const { video } of sorted) {
+        if (curated.find(c => c.youtubeId === video.youtubeId)) continue;
+        const type = detectVideoType(video.title);
+        if (type === 'trailer' && (counts['trailer'] || 0) >= 2) continue;
+        curated.push(video);
+        if (curated.length >= 9) break;
+      }
+    }
 
-    // 5️⃣ UPDATE CACHE
+    const final = curated.sort(() => Math.random() - 0.5);
+
     await prisma.youTubeQuery.upsert({
       where: { query: queryKey },
       update: {
@@ -257,20 +236,11 @@ export async function getYouTubeVideos(movieTitle: string, year: string) {
         },
       },
     });
-
+console.log(`✅ SUCCESS: Curated 9 videos and saved to cache for "${queryKey}"`);
     return final;
 
   } catch (error) {
-    // 6️⃣ THE FAIL-SAFE FALLBACK
-    console.error("🚨 YouTube API Process Failed. Falling back to cache:", error);
-    
-    // If API fails (like a 403 Forbidden), return stale data if it exists
-    if (cached) {
-      console.log("🩹 API Failed but found stale cache data. Serving...");
-      return cached.videos;
-    }
-
-    // If no cache and no API, return empty
-    return [];
+    console.error("🚨 YouTube API Fail:", error);
+    return cached ? (cached.videos as YouTubeVideo[]) : [];
   }
 }

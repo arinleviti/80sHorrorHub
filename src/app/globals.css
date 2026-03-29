@@ -58,6 +58,7 @@ nav {
 .heading-secondary {
   font-family: var(--font-title) !important;
   color: var(--color-secondary) !important;
+  font-size: var(--font-size-h2);
 }
 
 .text-accent {

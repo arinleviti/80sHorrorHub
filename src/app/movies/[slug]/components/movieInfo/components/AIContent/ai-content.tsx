@@ -14,22 +14,22 @@ export default function AiContent({ content }: AiContentProps) {
     <Stack gap={4}>
       <section>
         <h2 className="heading-secondary">Synopsis</h2>
-        <p>{content.synopsis}</p>
+        <p className="text-content-muted">{content.synopsis}</p>
       </section>
 
       <section>
         <h2 className="heading-secondary">Fun Facts</h2>
-        <p>{content.funFacts}</p>
+        <p className="text-content-muted">{content.funFacts}</p>
       </section>
 
       <section>
         <h2 className="heading-secondary">Production Context</h2>
-        <p>{content.productionContext}</p>
+        <p className="text-content-muted">{content.productionContext}</p>
       </section>
 
       <section>
         <h2 className="heading-secondary">Reception</h2>
-        <p>{content.reception}</p>
+        <p className="text-content-muted">{content.reception}</p>
       </section>
     </Stack>
   );

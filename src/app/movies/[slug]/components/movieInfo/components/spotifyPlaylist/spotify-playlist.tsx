@@ -8,7 +8,7 @@ interface SpotifyEmbedProps {
 export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
   return (
     <div className="spotify-embed">
-      <h3>{playlist.name}</h3>
+      <h3 className="heading-secondary">{playlist.name}</h3>
       <iframe
         src={playlist.embedUrl}
         width="300"

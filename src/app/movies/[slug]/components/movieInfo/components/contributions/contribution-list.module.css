@@ -1,0 +1,90 @@
+/* contribution-list.module.css */
+
+/* Overall section title */
+.contributionSectionTitle {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-title);
+  color: var(--color-secondary);
+}
+
+/* User Contributions header */
+.userContributionsHeader {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-title);
+  color: var(--color-secondary);
+}
+
+/* Container for all contributions in a section, horizontal layout */
+.contributionSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* contribution-list.module.css */
+
+/* Each contribution card */
+.contributionCard {
+  flex: 0 0 250px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  background-color: rgba(255, 255, 255, 0.03) !important; /* semi-transparent dark card */
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--color-text) !important; /* ensures text is readable */
+}
+
+/* Card body adjustments */
+.contributionCardBody {
+  padding: 0.5rem;
+}
+
+/* Card title */
+.contributionCardTitle {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-accent);
+}
+
+/* Card text */
+.contributionCardText {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* User info section (small text) */
+.contributionUserInfo {
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Upvote button */
+.contributionUpvoteBtn {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--color-text);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* User info section (small text) */
+.contributionUserInfo {
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(255,255,255,0.6);
+}
+
+/* Upvote button */
+.contributionUpvoteBtn {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+}

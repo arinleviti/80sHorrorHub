@@ -1,42 +1,73 @@
-// ebay-response.tsx
+"use client";
+
 import Image from "next/image";
-import { EbayItemSummary } from "@/app/services/ebay/getEbayItems";
+import Card from "react-bootstrap/Card";
+import ListGroup from "react-bootstrap/ListGroup";
+import Stack from "react-bootstrap/Stack";
+import type { EbayItemSummary } from "@/app/services/ebay/getEbayItems";
 
 interface EbayItemsListProps {
-  ebayItems: EbayItemSummary[]; // directly an array
+  ebayItems: EbayItemSummary[];
 }
 
 const EbayItemsList: React.FC<EbayItemsListProps> = ({ ebayItems }) => {
+  // Guard clause for empty/null states
   if (!ebayItems || ebayItems.length === 0) {
-    return <p>No eBay items available</p>;
+    return <p className="text-muted-custom">No eBay items available.</p>;
   }
 
   return (
-    <div>
-      <h2>eBay Items</h2>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+    <Card className="contributioncard">
+      <Card.Header className="heading-secondary">eBay Items</Card.Header>
+      
+      <ListGroup variant="flush">
         {ebayItems.map((item) => (
-          <li key={item.itemAffiliateWebUrl} style={{ marginBottom: "1rem" }}>
-            <a
-              href={item.itemAffiliateWebUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontWeight: 500, display: "block" }}
-            >
-              {item.title} - {item.price.value} {item.price.currency}
-            </a>
-            {item.image.imageUrl && (
-              <Image
-                src={item.image.imageUrl}
-                alt={item.title}
-                width={80}
-                height={100}
-              />
+          <ListGroup.Item 
+            key={item.itemAffiliateWebUrl} 
+            className="d-flex align-items-center"
+          >
+            {/* Image Thumbnail */}
+            {item.image?.imageUrl && (
+              <div 
+                style={{ 
+                  position: "relative", 
+                  width: 60, 
+                  height: 80, 
+                  marginRight: "1rem", 
+                  flexShrink: 0 
+                }}
+              >
+                <Image
+                  src={item.image.imageUrl}
+                  alt={item.title}
+                  fill
+                  sizes="60px"
+                  style={{ objectFit: "cover", borderRadius: "4px" }}
+                />
+              </div>
             )}
-          </li>
+
+            {/* Item Details */}
+            <Stack gap={1}>
+              <a
+                href={item.itemAffiliateWebUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent fw-bold"
+              >
+                {item.title}
+              </a>
+              
+              {item.price && (
+                <small className="text-muted-custom">
+                  {item.price.value} {item.price.currency}
+                </small>
+              )}
+            </Stack>
+          </ListGroup.Item>
         ))}
-      </ul>
-    </div>
+      </ListGroup>
+    </Card>
   );
 };
 

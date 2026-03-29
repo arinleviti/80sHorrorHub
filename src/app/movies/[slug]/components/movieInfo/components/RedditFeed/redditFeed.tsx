@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { fetchRedditPosts, RedditPost } from "../../../../../../services/reddit";
-import { Card, ListGroup, Spinner, Alert } from "react-bootstrap";
+import { Card, ListGroup, Spinner, Alert, Stack } from "react-bootstrap";
 
 interface MovieInput {
   title: string;
@@ -23,26 +23,29 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-  const loadPosts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchRedditPosts({
-        title: movie.title,
-        releaseDate: movie.releaseDate,
-        castMembers: movie.castMembers,
-      }, limit);
-      setPosts(data);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load Reddit posts.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadPosts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchRedditPosts(
+          {
+            title: movie.title,
+            releaseDate: movie.releaseDate,
+            castMembers: movie.castMembers,
+          },
+          limit
+        );
+        setPosts(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load Reddit posts.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  loadPosts();
-}, [movie.title, movie.releaseDate, movie.castMembers, limit]);
+    loadPosts();
+  }, [movie.title, movie.releaseDate, movie.castMembers, limit]);
 
   if (loading)
     return (
@@ -58,22 +61,25 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
     return <Alert variant="info">No relevant Reddit discussions found.</Alert>;
 
   return (
-    <Card className="my-3">
-      <Card.Header as="h5">Reddit Discussions</Card.Header>
+    <Card className="contributioncard my-3">
+      <Card.Header className="heading-secondary">Reddit Discussions</Card.Header>
+
       <ListGroup variant="flush">
         {posts.map((post) => (
           <ListGroup.Item key={post.id}>
-            <a
-              href={post.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="fw-semibold text-decoration-none"
-            >
-              {post.title}
-            </a>
-            <div className="text-muted small">
-              u/{post.author} · r/{post.subreddit} · {post.upvotes} upvotes
-            </div>
+            <Stack gap={1}>
+              <a
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent fw-bold text-decoration-none"
+              >
+                {post.title}
+              </a>
+              <small className="text-content-muted">
+                u/{post.author} · r/{post.subreddit} · {post.upvotes} upvotes
+              </small>
+            </Stack>
           </ListGroup.Item>
         ))}
       </ListGroup>
