@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { fetchRedditPosts, RedditPost } from "../../../../../../services/reddit";
 import { Card, ListGroup, Spinner, Alert, Stack } from "react-bootstrap";
+import { RedditPost } from "../../../../../../services/reddit";
 
 interface MovieInput {
   title: string;
   releaseDate?: string | null;
-  castMembers?: {
-    actor: { name: string };
-  }[];
+  castMembers?: { actor: { name: string } }[];
 }
 
 interface RedditFeedProps {
@@ -26,15 +24,14 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
     const loadPosts = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        const data = await fetchRedditPosts(
-          {
-            title: movie.title,
-            releaseDate: movie.releaseDate,
-            castMembers: movie.castMembers,
-          },
-          limit
+        const res = await fetch(
+          `/api/reddit?title=${encodeURIComponent(movie.title)}&limit=${limit}`
         );
+        if (!res.ok) throw new Error("Failed to fetch Reddit posts");
+
+        const data: RedditPost[] = await res.json();
         setPosts(data);
       } catch (err) {
         console.error(err);

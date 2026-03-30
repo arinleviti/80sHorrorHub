@@ -103,6 +103,7 @@ model Actor {
   name                String       @unique
   profilePath         String?
   imagekitProfilePath String?
+  imagekitProfileFileId  String?      // <-- new column for storing ImageKit fileId
   actorNameSanitized  String       @unique
   castMembers         CastMember[]
 }

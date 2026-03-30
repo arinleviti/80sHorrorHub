@@ -1,4 +1,4 @@
-//npx dotenv-cli -- npm run rebuildCast -- 10014
+// npx dotenv-cli -- npm run rebuildCast -- <tmdbId>
 
 import { prisma } from "../src/app/services/prisma";
 import { imagekit } from "../src/app/services/imagekit";
@@ -6,7 +6,9 @@ import fetch from "node-fetch"; // For Node <18
 import readline from "readline";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-
+console.log("Checking Environment Variables...");
+console.log("URL Endpoint:", process.env.IMAGEKIT_URL_ENDPOINT ? "✅ Found" : "❌ Missing");
+console.log("Private Key:", process.env.IMAGEKIT_PRIVATE_KEY ? "✅ Found" : "❌ Missing");
 // -----------------------------
 // TYPES
 // -----------------------------
@@ -47,20 +49,12 @@ async function fetchFromTMDB<T>(endpoint: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function deleteImageKitFile(urlOrPath: string | null) {
-  if (!urlOrPath) return;
+async function deleteImageKitFileById(fileId: string | null) {
+  if (!fileId) return;
 
   try {
-    let filePath = urlOrPath;
-
-    // If it’s a full URL, extract the pathname
-    if (urlOrPath.startsWith("http")) {
-      const parsed = new URL(urlOrPath);
-      filePath = parsed.pathname.replace(/^\//, ""); // remove leading slash
-    }
-
-    await imagekit.deleteFile(filePath);
-    console.log(`🗑️ Deleted ImageKit file: ${filePath}`);
+    await imagekit.deleteFile(fileId);
+    console.log(`🗑️ Deleted ImageKit file: ${fileId}`);
   } catch (err) {
     console.warn("⚠️ Failed to delete ImageKit file:", err);
   }
@@ -73,18 +67,22 @@ async function getOrCreateActor(name: string, profilePath: string | null) {
     where: { actorNameSanitized: sanitized },
   });
 
-  let imagekitUrl: string | null = actor?.imagekitProfilePath || null;
-
   if (!actor) {
+    let imagekitUrl: string | null = null;
+    let imagekitFileId: string | null = null;
+
     if (profilePath) {
       const res = await fetch(`https://image.tmdb.org/t/p/w185${profilePath}`);
       const buffer = Buffer.from(await res.arrayBuffer());
+
       const upload = await imagekit.upload({
         file: buffer,
         fileName: `cast_${sanitized}.jpg`,
         folder: "/cast",
       });
+
       imagekitUrl = upload.url;
+      imagekitFileId = upload.fileId;
     }
 
     actor = await prisma.actor.create({
@@ -93,6 +91,7 @@ async function getOrCreateActor(name: string, profilePath: string | null) {
         actorNameSanitized: sanitized,
         profilePath,
         imagekitProfilePath: imagekitUrl,
+        imagekitProfileFileId: imagekitFileId,
       },
     });
   }
@@ -109,49 +108,29 @@ async function refreshMovieCast(movieId: number) {
     include: { castMembers: { include: { actor: true } }, crewMembers: true },
   });
 
-  if (!movie) {
-    throw new Error(`Movie with TMDB ID ${movieId} not found`);
-  }
+  if (!movie) throw new Error(`Movie with TMDB ID ${movieId} not found`);
 
   console.log(`🔄 Refreshing cast and crew for movie: ${movie.title}`);
 
-  // 1️⃣ Delete movie poster if exists
-  await deleteImageKitFile(movie.imagekitPosterPath);
-
-  // 2️⃣ Delete cast images (only if actor not in other movies)
+  // 1️⃣ Delete cast images (only if actor not in other movies)
   for (const cast of movie.castMembers) {
     const otherCasts = await prisma.castMember.findMany({
       where: { actorId: cast.actorId, movieId: { not: movie.id } },
     });
+
     if (otherCasts.length === 0) {
-      await deleteImageKitFile(cast.actor.imagekitProfilePath);
+      await deleteImageKitFileById(cast.actor.imagekitProfileFileId);
     }
   }
 
-  // 3️⃣ Delete cast & crew rows for this movie
+  // 2️⃣ Delete cast & crew rows for this movie
   await prisma.castMember.deleteMany({ where: { movieId: movie.id } });
   await prisma.crewMember.deleteMany({ where: { movieId: movie.id } });
 
-  // 4️⃣ Fetch fresh TMDB credits
+  // 3️⃣ Fetch fresh TMDB credits
   const credits: TMDBCredits = await fetchFromTMDB(`/movie/${movieId}/credits`);
 
-  // 5️⃣ Upload new poster
-  if (movie.posterPath) {
-    const res = await fetch(`https://image.tmdb.org/t/p/w500${movie.posterPath}`);
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const upload = await imagekit.upload({
-      file: buffer,
-      fileName: `poster_${sanitizeFileName(movie.title)}.jpg`,
-      folder: "/posters",
-    });
-
-    await prisma.movie.update({
-      where: { id: movie.id },
-      data: { imagekitPosterPath: upload.url },
-    });
-  }
-
-  // 6️⃣ Insert fresh cast
+  // 4️⃣ Insert fresh cast
   for (let i = 0; i < credits.cast.length; i++) {
     const c = credits.cast[i];
     const { actor } = await getOrCreateActor(c.name, c.profile_path);
@@ -166,7 +145,7 @@ async function refreshMovieCast(movieId: number) {
     });
   }
 
-  // 7️⃣ Insert fresh crew
+  // 5️⃣ Insert fresh crew
   for (const c of credits.crew) {
     await prisma.crewMember.create({
       data: {
@@ -194,7 +173,6 @@ async function main() {
       process.exit(1);
     }
   } else {
-    // Interactive prompt
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
