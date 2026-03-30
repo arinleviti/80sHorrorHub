@@ -112,6 +112,7 @@ model CastMember {
   character String
   movieId   String // must match Movie.id type
   actorId   Int
+  castOrder Int?    // <-- NEW: TMDB order/index
   movie     Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
   actor     Actor  @relation(fields: [actorId], references: [id])
 }

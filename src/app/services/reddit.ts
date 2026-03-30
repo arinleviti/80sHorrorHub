@@ -89,16 +89,19 @@ export const fetchRedditPosts = async (
   for (const subreddit of allowedSubreddits) {
     try {
       const res = await axios.get<RedditAPIResponse>(
-        `https://www.reddit.com/r/${subreddit}/search.json`,
-        {
-          params: {
-            q: movie.title,
-            restrict_sr: 1,
-            sort: "relevance",
-            limit: 15, // fetch extra for filtering
-          },
-        }
-      );
+  `https://www.reddit.com/r/${subreddit}/search.json`,
+  {
+    params: {
+      q: movie.title,
+      restrict_sr: 1,
+      sort: "relevance",
+      limit: 15,
+    },
+    headers: {
+      'User-Agent': 'VintageHorrorApp/1.0 by Arin Leviti'
+    }
+  }
+);
 
       const posts: RedditPost[] = res.data.data.children.map(child => ({
         id: child.data.id,
