@@ -68,7 +68,12 @@ function buildDiscogsQueries(title: string, year: string): string[] {
 
 export async function fetchVynils(title: string, year: string): Promise<ReturnedResult[] | null> {
   const cached = await getCachedVynils(title, year);
-  if (cached) return cached;
+  if (cached) {
+    console.log(`📦 Discogs cache hit for "${title} (${year})" → using DB`);
+    return cached;
+  } else {
+    console.log(`🔍 Discogs cache miss for "${title} (${year})" → calling API`);
+  }
 
   try {
     const queries = buildDiscogsQueries(title, year);
@@ -133,7 +138,22 @@ async function fetchFromDiscogQuery(query: string): Promise<RawResponse> {
     headers: { "User-Agent": "VintageHorror/1.0" },
   });
 
-  const data: unknown = await response.json();
+  // Check HTTP status first
+  if (!response.ok) {
+    const text = await response.text();
+    console.error("Discogs request failed:", response.status, response.statusText, text.slice(0, 500));
+    throw new Error(`Discogs request failed with status ${response.status}`);
+  }
+
+  // Try parsing JSON safely
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch (err) {
+    const text = await response.text(); // fallback to see actual content
+    console.error("Failed to parse Discogs JSON:", text.slice(0, 500));
+    throw new Error("Discogs returned invalid JSON");
+  }
 
   if (!isRawResponse(data)) throw new Error("Invalid Discogs response");
 

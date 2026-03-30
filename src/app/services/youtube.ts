@@ -49,11 +49,12 @@ type VideoType = "trailer" | "scene" | "interview" | "behind" | "review" | "othe
 // ----------------------
 function detectVideoType(title: string): VideoType {
   const t = title.toLowerCase();
+  if (t.includes("trailer")) return "trailer";
   if (t.includes("behind") || t.includes("making") || t.includes("documentary")) return "behind";
   if (t.includes("interview") || t.includes("podcast")) return "interview";
   if (t.includes("scene") || t.includes("clip")) return "scene";
   if (t.includes("review") || t.includes("reaction")) return "review";
-  if (t.includes("trailer")) return "trailer";
+
   return "other";
 }
 
@@ -73,7 +74,7 @@ function scoreVideo(video: YouTubeVideo, movieTitle: string, actorNames: string[
   const description = (video.description || "").toLowerCase();
   const movie = movieTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
   const normalizedTitle = title.replace(/[^a-z0-9]/g, "");
-  
+
   const topActors = actorNames.slice(0, 5);
   let score = 0;
 
@@ -84,13 +85,16 @@ function scoreVideo(video: YouTubeVideo, movieTitle: string, actorNames: string[
   if (hasMovieTitle) {
     score += 7;
   } else if (hasActorInTitle || hasActorInDesc) {
-    // If movie title is missing, actors prove this is the right movie
-    score += 5; 
+    score += 3; // weaker than movie title
   } else {
-    // Neither movie title nor top actors? Likely garbage.
-    score -= 15; 
+    score -= 15;
   }
 
+  //new: Short videos that don't match "interview" are likely junk, while longer interviews get a boost
+  if (video.duration) {
+    if (video.duration < 30) score -= 5; // shorts / junk
+    if (video.duration > 600 && detectVideoType(video.title) === "interview") score += 2;
+  }
   topActors.forEach(name => {
     if (title.includes(name.toLowerCase())) score += 3;
     if (description.includes(name.toLowerCase())) score += 1;
@@ -99,7 +103,7 @@ function scoreVideo(video: YouTubeVideo, movieTitle: string, actorNames: string[
   if (title.includes("official trailer")) score += 2;
   if (title.includes("scene") || title.includes("clip")) {
     score += 5;
-    if (title.match(/\(\d+\/\d+\)/)) score -= 5; 
+    if (title.match(/\(\d+\/\d+\)/)) score -= 5;
   }
   if (title.includes("behind") || title.includes("making")) score += 6;
   if (title.includes("interview")) score += 4;
@@ -107,6 +111,10 @@ function scoreVideo(video: YouTubeVideo, movieTitle: string, actorNames: string[
   if (video.views && video.views > 500000) score += 2;
   if (video.views && video.views < 1000) score -= 3;
 
+  // ADD HERE
+  if (video.views && video.views < 50000 && score > 10) {
+    score += 2;
+  }
   return score;
 }
 
@@ -126,13 +134,13 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
     console.log(`\x1b[32m%s\x1b[0m`, `📦 CACHE HIT: Found ${cached.videos.length} videos in DB for "${queryKey}"`);
     return cached.videos;
   }
-// ❌ CACHE MISS LOG
+  // ❌ CACHE MISS LOG
   console.log(`\x1b[33m%s\x1b[0m`, `🔍 CACHE MISS: Fetching new videos from YouTube API for "${queryKey}"...`);
   try {
     const API_KEY = process.env.YOUTUBE_API_KEY;
-    const top2Actors = actorNames.slice(0, 2).join(" "); 
+    const top2Actors = actorNames.slice(0, 2).join(" ");
     const q = `${movieTitle} ${year} ${top2Actors} (trailer OR scene OR "behind the scenes")`;
-    
+
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=50&key=${API_KEY}`;
     const searchRes = await fetch(searchUrl);
     const searchData: YouTubeSearchResponse = await searchRes.json();
@@ -167,17 +175,17 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
 
     // ⚖️ SCORING LOG
     const scoredforLog = enriched.map(v => {
-        const score = scoreVideo(v, movieTitle, actorNames);
-        return { 
-            title: v.title.substring(0, 50), // Truncate for clean table
-            score: score, 
-            type: detectVideoType(v.title)
-        };
+      const score = scoreVideo(v, movieTitle, actorNames);
+      return {
+        title: v.title.substring(0, 50), // Truncate for clean table
+        score: score,
+        type: detectVideoType(v.title)
+      };
     });
 
     // Sort for the log table
     const sortedForLog = [...scoredforLog].sort((a, b) => b.score - a.score);
-    
+
     console.log(`📊 SCORING RESULTS FOR: ${movieTitle}`);
     console.table(sortedForLog.slice(0, 15)); // Shows top 15 results and their scores in a nice table
     const scored = enriched.map(v => ({ video: v, score: scoreVideo(v, movieTitle, actorNames) }));
@@ -188,8 +196,12 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
     const curated: YouTubeVideo[] = [];
 
     // Pass 1: Variety
-    for (const { video } of sorted) {
-      const type = detectVideoType(video.title);
+    for (const { video, score } of sorted) {
+  const type = detectVideoType(video.title);
+
+  if (type === "other" && score < 12) continue;
+    
+
       if ((counts[type] || 0) < limits[type]) {
         curated.push(video);
         counts[type] = (counts[type] || 0) + 1;
@@ -197,16 +209,33 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
       if (curated.length >= 9) break;
     }
 
-    // Pass 2: Fill remaining (Strict Trailer Cap)
-    if (curated.length < 9) {
-      for (const { video } of sorted) {
-        if (curated.find(c => c.youtubeId === video.youtubeId)) continue;
-        const type = detectVideoType(video.title);
-        if (type === 'trailer' && (counts['trailer'] || 0) >= 2) continue;
-        curated.push(video);
-        if (curated.length >= 9) break;
-      }
+   // Pass 2: Fill remaining to always get 9 videos
+if (curated.length < 9) {
+  for (const { video, score } of sorted) {
+    if (curated.find(c => c.youtubeId === video.youtubeId)) continue;
+
+    const type = detectVideoType(video.title);
+
+    // Keep basic limits, but allow slightly lower-quality videos if needed
+    if (type === "other" && score < 8) continue; // allow lower scores than Pass 1
+    if (type === 'trailer' && (counts['trailer'] || 0) >= 2) continue;
+
+    curated.push(video);
+    counts[type] = (counts[type] || 0) + 1;
+
+    if (curated.length >= 9) break;
+  }
+}
+
+// Last resort: if still < 9, just fill with anything left
+if (curated.length < 9) {
+  for (const { video } of sorted) {
+    if (!curated.find(c => c.youtubeId === video.youtubeId)) {
+      curated.push(video);
+      if (curated.length >= 9) break;
     }
+  }
+}
 
     const final = curated.sort(() => Math.random() - 0.5);
 
@@ -236,7 +265,7 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
         },
       },
     });
-console.log(`✅ SUCCESS: Curated 9 videos and saved to cache for "${queryKey}"`);
+    console.log(`✅ SUCCESS: Curated 9 videos and saved to cache for "${queryKey}"`);
     return final;
 
   } catch (error) {
