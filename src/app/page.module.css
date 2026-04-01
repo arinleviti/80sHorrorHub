@@ -1,0 +1,112 @@
+/* === MAIN SEARCH INPUT === */
+.searchInputMain {
+  width: 420px;
+  padding: 0.8rem 1rem;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+/* === SEARCH CONTAINER WRAPPER === */
+.searchContainer {
+  display: flex;          /* use flex to center content */
+  justify-content: center; /* horizontal centering */
+  position: relative;     /* keep dropdown absolute inside */
+  margin-bottom: 2rem;    /* space below search bar before carousel */
+  z-index: 10000;           /* make this VERY high */
+}
+.searchInputMain:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow:
+    0 0 10px var(--color-secondary),
+    0 0 20px rgba(230,28,111,0.3);
+}
+
+/* === DROPDOWN === */
+.searchDropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+transform: translateX(-50%);
+  width: 420px;
+
+  background: rgba(0,0,0,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+
+  z-index: 10001;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* === DROPDOWN ITEM === */
+.searchItem {
+  display: block;
+  padding: 0.6rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s ease;
+}
+
+.searchItem:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* === NO RESULTS === */
+.noResults {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+transform: translateX(-50%);
+  width: 420px;
+z-index: 10001;
+  background: rgba(0,0,0,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.6rem;
+  color: var(--color-secondary);
+}
+.container {
+  min-height: 100vh;
+  background-image: url('/static_imgs/vhs_background.png');
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+
+  /* optional dark overlay for readability */
+  position: relative;
+}
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3); /* adjust darkness */
+  z-index: 0;
+}
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+/* === PAGE TITLE === */
+.title {
+  padding: 1rem 0;
+  text-align: center;               /* horizontal center */
+  font-size: 2.5rem;                  /* large, eye-catching */
+  font-weight: bold;
+  margin:  0;
+  color: #ff3b3b;                   /* retro horror red */
+  text-shadow:
+    2px 2px 0 #000,                 /* subtle shadow for depth */
+    0 0 10px #ff3b3b;               /* glow effect */
+  position: relative;               /* above container overlay */
+  z-index: 1;
+}
+.carouselWrapper {
+  position: relative;   /* keep it in normal flow */
+  z-index: 1;           /* make sure it's below dropdown */
+}
