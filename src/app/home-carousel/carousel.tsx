@@ -7,7 +7,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { DBMovie } from '../page';
-import {  normalizeSlug } from '@/app/services/movies';
+import { normalizeSlug } from '@/app/services/movies';
 import { EffectCoverflow } from 'swiper/modules';
 const TMDB_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -22,20 +22,24 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
   return (
     <div className={styles.carouselWrapper}>
       <Swiper
-       modules={[Navigation, EffectCoverflow]}
-  effect="coverflow"
-  grabCursor={true}
-  centeredSlides={true}
-  slidesPerView={'auto'}
-  coverflowEffect={{
-    rotate: 0,
-    stretch: 0,
-    depth: 100,
-    modifier: 2,
-    slideShadows: false, // we will use opacity
-  }}
-  loop={true}
-  navigation
+        modules={[Navigation, EffectCoverflow]}
+        effect="coverflow"
+        grabCursor={true}
+        centeredSlides={true}
+        slidesPerView={'auto'}
+        slideToClickedSlide={true}
+        watchSlidesProgress={true} // Aiuta a gestire la visibilità dei cloni
+        loop={true}
+  loopAdditionalSlides={3}
+        coverflowEffect={{
+          rotate: 0,
+          stretch: 0,
+          depth: 100,
+          modifier: 2,
+          slideShadows: false, // we will use opacity
+        }}
+        loop={true}
+        navigation
       >
         {moviesWithPoster.map((movie) => {
           const slug = normalizeSlug(movie.title); // compute slug here

@@ -1,5 +1,8 @@
-import Image from "next/image";
+"use client";
+
+import React from "react";
 import { SpotifyPlaylistEmbed } from "@/app/services/spotify";
+import styles from "./spotify-playlist.module.css";
 
 interface SpotifyEmbedProps {
   playlist: SpotifyPlaylistEmbed;
@@ -7,27 +10,25 @@ interface SpotifyEmbedProps {
 
 export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
   return (
-    <div className="spotify-embed">
-      <h3 className="heading-secondary">{playlist.name}</h3>
-      <iframe
-        src={playlist.embedUrl}
-        width="300"
-        height="380"
-        frameBorder="0"
-        allow="encrypted-media"
-        title={playlist.name}
-      ></iframe>
-        {/* {playlist.imageUrl && (
-        <div className="relative w-48 h-48">
-          <Image
-            src={playlist.imageUrl}
-            alt={playlist.name}
-            fill
-            style={{ objectFit: "cover" }}
-            priority
-          />
-        </div>
-      )} */}
+    <div className={styles.spotifyEmbed}>
+      {/* Combining the global 'heading-secondary' for base styles 
+        with our local 'title' for the specific sizing 
+      */}
+      <h3 className={`${styles.title} heading-secondary`}>
+        {playlist.name}
+      </h3>
+      
+      <div className={styles.iframeWrapper}>
+        <iframe
+          src={playlist.embedUrl}
+          width="300"
+          height="380"
+          allow="encrypted-media"
+          title={playlist.name}
+          className={styles.spotifyIframe}
+          loading="lazy"
+        ></iframe>
+      </div>
     </div>
   );
 }

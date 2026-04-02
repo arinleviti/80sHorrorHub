@@ -19,3 +19,11 @@
   color: rgba(255, 255, 255, 0.6) !important;
   font-size: 1.45rem;
 }
+.movie-title {
+  font-family: 'Eighties Horror';
+  text-transform: uppercase !important;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #e61c6f;
+}

@@ -11,7 +11,7 @@ export default function AiContent({ content }: AiContentProps) {
   }
 
   return (
-    <Stack gap={4}>
+    <Stack gap={2}>
       <section>
         <h2 className="heading-secondary">Synopsis</h2>
         <p className="text-content-muted">{content.synopsis}</p>

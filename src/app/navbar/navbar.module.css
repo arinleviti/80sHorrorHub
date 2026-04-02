@@ -4,7 +4,7 @@
   padding-top: 0.5rem !important;
   padding-bottom: 0 !important;
   min-height: 0 !important;
-  font-family: var(--font-menu);
+  font-family: 'Eighties Horror', sans-serif;
   min-height: 0;         /* remove default Bootstrap min-height */
   z-index: 99999;
 }
@@ -53,7 +53,7 @@
 }
 .searchInput {
   padding-left: 2rem;
-  font-size: 1rem;
+  font-size: 0.85rem;
   border: 1px solid var(--color-background);
   border-radius: 3px;
   background: var(--color-background);
@@ -108,8 +108,8 @@
 .navLink {
   color: var(--color-primary);
   text-decoration: none;
-  font-family: var(--font-menu);
-  font-size: 1rem;
+  font-family: 'Eighties Horror', sans-serif;
+  font-size: 0.85rem;
   position: relative;
   transition: all 0.3s ease;
 }
@@ -142,12 +142,16 @@
 
 /* Login button */
 .navButton {
-  font-family: var(--font-menu);
+  font-family: 'Eighties Horror', sans-serif;
   border: 1px solid var(--color-background);
   color: var(--color-primary) !important;
   background-color: transparent;
   padding: 0.25rem 0.75rem;
   transition: all 0.3s ease;
+  font-size: 0.8rem; /* Smaller font */
+
+  white-space: nowrap;       /* Impedisce al testo di andare a capo */
+  flex-shrink: 0;            /* Impedisce al bottone di rimpicciolirsi troppo */
 }
 .navButton:hover {
   background-color: var(--color-primary);
@@ -158,7 +162,10 @@
               0 0 30px var(--color-secondary),
               0 0 45px var(--color-accent);
 }
-
+.userInfo {
+  text-transform: uppercase;
+  font-size: 0.85rem; /* Even smaller for the email address */
+}
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .container {
@@ -184,6 +191,38 @@
   .searchInput {
     width: 150px;
   }
+}
+.searchDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-background);
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  z-index: 99999;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.searchItem {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-family: var(--font-menu);
+  transition: background 0.2s ease;
+}
+
+.searchItem:hover {
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+
+.noResults {
+  padding: 0.5rem 1rem;
+  color: var(--color-neutral);
+  font-family: var(--font-menu);
 }
 
 @media (max-width: 576px) {

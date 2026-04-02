@@ -1,23 +1,72 @@
+/* carousel.module.css */
+
 .carouselWrapper {
   margin-top: 40px;
-  padding: 40px 0;
+  padding: 60px 0;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 1. Opacità base per tutte le slide "lontane" */
+.carouselWrapper :global(.swiper-slide) {
+  transition: transform 0.3s ease, opacity 0.3s ease !important;
+  opacity: 0.3; /* Molto trasparenti quelle ai bordi */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto !important;
+  user-select: none;
+}
+
+/* 2. Slide ATTIVA (la centrale) - 100% visibile */
+.carouselWrapper :global(.swiper-slide-active) {
+  opacity: 1 !important;
+  z-index: 10;
+}
+
+/* 3. Slide PRECEDENTE e SUCCESSIVA (le 2 vicine alla centrale) - 100% visibili */
+.carouselWrapper :global(.swiper-slide-prev),
+.carouselWrapper :global(.swiper-slide-next) {
+  opacity: 1 !important;
+  z-index: 5;
+}
+
+/* Frecce di navigazione */
+.carouselWrapper :global(.swiper-button-next),
+.carouselWrapper :global(.swiper-button-prev) {
+  color: var(--color-primary) !important;
+  z-index: 100;
+}
+
+/* Area cliccabile: forziamo dimensioni fisse per non perdere il click */
+.slideLink {
+  display: block;
+  width: 200px; /* Deve combaciare con lo style={{width: 200}} della SwiperSlide */
+  height: 300px;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 20; /* Sopra tutto per catturare il click */
 }
 
 .poster {
   width: 100%;
-  height: 300px;
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-
-.swiper-slide {
-  transition: transform 0.3s, opacity 0.3s;
-  opacity: 0.5; /* default for side slides */
+/* Effetto hover solo sulla slide attiva (opzionale, ma consigliato per chiarezza) */
+.carouselWrapper :global(.swiper-slide-active) .slideLink:hover .poster {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--color-primary), 0 0 30px rgba(0, 0, 0, 0.8);
+  filter: brightness(1.1);
 }
 
-.swiper-slide-active {
-  opacity: 1; /* center slide fully visible */
+/* Evita che le slide laterali "morte" catturino il mouse se non sono cliccabili */
+.carouselWrapper :global(.swiper-slide):not(.swiper-slide-active):not(.swiper-slide-next):not(.swiper-slide-prev) {
+  cursor: default;
 }

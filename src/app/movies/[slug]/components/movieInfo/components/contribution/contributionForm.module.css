@@ -1,0 +1,29 @@
+/* contributionForm.module.css */
+
+.inputField {
+  background-color: var(--color-background) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  /* This ensures the arrow and the box stay dark */
+}
+
+.inputField:focus {
+  background-color: var(--color-background) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 5px var(--color-primary);
+  outline: none;
+  
+}
+
+/* This ensures the actual dropdown list (options) match on most browsers */
+.inputField option {
+  background-color: var(--color-background) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2px; /* Tightens space between label and field */
+}

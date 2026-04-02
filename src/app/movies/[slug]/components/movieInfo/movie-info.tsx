@@ -86,9 +86,9 @@ const topActorNames = credits.cast.slice(0, 5).map(actor => actor.actorName);
 
   return (
 
-    <Container className={`${styles.moviePage} my-5`}>
+    <Container className={`${styles.moviePage} my-2`}>
       {/* 🎬 HERO */}
-      <section className="movie-hero mb-5">
+      <section className="movie-hero mb-2">
         <Container>
           <Row className="align-items-start">
 
@@ -106,7 +106,7 @@ const topActorNames = credits.cast.slice(0, 5).map(actor => actor.actorName);
             {/* LEFT CONTENT (TITLE + OVERVIEW) */}
            <Col xs={12} md={4} lg={5}>
   {/* Title - Large and bold */}
-  <h1 className="movie-title mb-1">
+  <h1 className={`${styles['movie-title']} mb-1`}>
     {movie.title}
   </h1>
 

@@ -1,6 +1,6 @@
 'use client';
 import Styles from './page.module.css';
-import { moviesArray, Movie } from '@/app/services/movies';
+import { moviesArray} from '@/app/services/movies';
 import { useState, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import Fuse from 'fuse.js';

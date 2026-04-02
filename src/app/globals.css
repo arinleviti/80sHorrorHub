@@ -1,7 +1,14 @@
+@font-face {
+  font-family: 'Eighties Horror';
+  src: url('/fonts/EightiesHorror-yrJe.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 :root {
   --font-body: 'Merriweather', serif;
-  --font-title: 'Antonio', sans-serif;
-  --font-menu: 'Bebas Neue', sans-serif;
+  --font-title: 'Eighties Horror', sans-serif;
+  --font-menu: 'Eighties Horror', sans-serif;
 
   --color-background: #18151c;
   --color-primary: #c31f15;
@@ -31,6 +38,7 @@ h1 {
   font-family: var(--font-title);
   font-size: var(--font-size-h1);
   color: var(--color-primary);
+  text-transform: uppercase ;
 }
 
 h2 {
@@ -52,6 +60,7 @@ nav {
 }
 .heading-primary {
   font-family: var(--font-title);
+  text-transform: uppercase ;
   color: var(--color-primary);
 }
 
@@ -59,6 +68,7 @@ nav {
   font-family: var(--font-title) !important;
   color: var(--color-secondary) !important;
   font-size: var(--font-size-h2);
+  text-transform: uppercase ;
 }
 
 .text-accent {

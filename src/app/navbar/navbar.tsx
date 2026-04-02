@@ -1,38 +1,60 @@
 "use client";
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Navbar, Nav, Form, FormControl, Container, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import styles from './navbar.module.css';
 import { Search } from 'lucide-react';
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useState, useEffect, useRef } from 'react';
+import Fuse from 'fuse.js';
+import { moviesArray } from '@/app/services/movies';
+
+const fuse = new Fuse(moviesArray, {
+  keys: ['slug', 'title'],
+  threshold: 0.4,
+  getFn: (obj, path) => (path === 'slug' ? obj.slug : obj.title),
+});
 
 const NavbarRHH = () => {
-  const router = useRouter();
   const { data: session } = useSession();
+  const [search, setSearch] = useState('');
+  const [results, setResults] = useState<{ slug: string; id: number; title: string }[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-const handleSwitchAccount = async () => {
-  await signOut({ redirect: false });
-  window.location.href = "/api/auth/signin/google?prompt=select_account";
-};
-  //React.FormEvent<HTMLFormElement> tells TypeScript:
-  //This is a form event (FormEvent) coming from an HTML form element (HTMLFormElement).
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const form = e.currentTarget;
-    const input = form.elements.namedItem('search') as HTMLInputElement;
-    const query = input.value;
-
-    if (query) {
-      router.push(`/movies/${encodeURIComponent(query)}`);
+  useEffect(() => {
+    if (!search.trim()) {
+      setResults([]);
+      setShowDropdown(false);
+      return;
     }
+    const fuseResults = fuse.search(search.trim());
+    setResults(fuseResults.map((r) => ({ ...r.item })));
+    setShowDropdown(true);
+  }, [search]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const handleSwitchAccount = async () => {
+    await signOut({ redirect: false });
+    window.location.href = "/api/auth/signin/google?prompt=select_account";
   };
+
   return (
     <Navbar expand="lg" className={styles.navbar}>
       <Container className={styles.container}>
+
         {/* Top row: Logo + Search + Hamburger */}
         <div className={styles.topRow}>
+
           <Link href="/" className={styles.logoLink}>
             <Image
               src="/static_imgs/RHH_def_beta.webp"
@@ -43,58 +65,70 @@ const handleSwitchAccount = async () => {
             />
           </Link>
 
-          <Form className={styles.searchForm} onSubmit={handleSearch}>
+          {/* Search */}
+          <div className={styles.searchForm} ref={dropdownRef} style={{ position: 'relative' }}>
             <div className={styles.searchWrapper}>
               <Search className={styles.searchIconInside} size={18} />
-              <FormControl
+              <input
                 type="search"
-                name="search" // give it a name to access it in the form
-                placeholder="Search movies..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => search && setShowDropdown(true)}
+                placeholder="SEARCH"
                 className={styles.searchInput}
                 aria-label="Search"
               />
             </div>
-          </Form>
+
+            {showDropdown && results.length > 0 && (
+              <div className={styles.searchDropdown}>
+                {results.map((r) => (
+                  <Link // <--- Add the tag name here
+                    key={r.slug}
+                    href={`/movies/${r.slug}`}
+                    className={styles.searchItem}
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setSearch('');
+                    }}
+                  >
+                    {r.title}
+                  </Link> // <--- Use </Link> to match
+                ))}
+              </div>
+            )}
+
+            {showDropdown && results.length === 0 && (
+              <div className={styles.noResults}>No results found</div>
+            )}
+          </div>
 
           <Navbar.Toggle aria-controls="basic-navbar-nav" className={styles.toggle} />
         </div>
 
-        {/* Nav links row */}
+        {/* Nav links */}
         <Navbar.Collapse id="basic-navbar-nav" className={styles.collapse}>
           <Nav className={styles.navLinksContainer}>
-            <Link href="/movies" className={styles.navLink}>Movies</Link>
-            <Link href="/about" className={styles.navLink}>About</Link>
+            <Link href="/about" className={styles.navLink}>ABOUT</Link>
+
             {session ? (
-        <>
-          <span className={styles.userInfo}>
-            {session.user?.email}
-          </span>
-
-          <Button
-            className={styles.navButton}
-            onClick={() => signOut()}
-          >
-            Log out
-          </Button>
-
-          <Button
-            className={styles.navButton}
-            onClick={handleSwitchAccount}
-          >
-            Switch account
-          </Button>
-        </>
-      ) : (
-        <Button
-          className={styles.navButton}
-          //NextAuth internally makes a request to \app\api\auth\[...nextauth]\route.ts
-          onClick={() => signIn("google")}
-        >
-          Log in
-        </Button>
-      )}
+              <>
+                <span className={styles.userInfo}>{session.user?.email}</span>
+                <Button className={styles.navButton} onClick={() => signOut()}>
+                  LOG OUT
+                </Button>
+                <Button className={styles.navButton} onClick={handleSwitchAccount}>
+                  SWITCH ACCOUNT
+                </Button>
+              </>
+            ) : (
+              <Button className={styles.navButton} onClick={() => signIn("google")}>
+                LOG IN
+              </Button>
+            )}
           </Nav>
         </Navbar.Collapse>
+
       </Container>
     </Navbar>
   );

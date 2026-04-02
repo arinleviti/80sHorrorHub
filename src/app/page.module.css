@@ -94,6 +94,7 @@ z-index: 10001;
 }
 /* === PAGE TITLE === */
 .title {
+  font-family: var(--font-title); /* <--- ADD THIS LINE */
   padding: 1rem 0;
   text-align: center;               /* horizontal center */
   font-size: 2.5rem;                  /* large, eye-catching */
