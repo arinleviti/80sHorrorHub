@@ -20,8 +20,12 @@ const NavbarRHH = () => {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<{ slug: string; id: number; title: string }[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Search logic
   useEffect(() => {
     if (!search.trim()) {
       setResults([]);
@@ -32,7 +36,7 @@ const NavbarRHH = () => {
     setResults(fuseResults.map((r) => ({ ...r.item })));
     setShowDropdown(true);
   }, [search]);
-
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -43,18 +47,53 @@ const NavbarRHH = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  const handleEmailLogin = async () => {
+  if (!email.trim() || !name.trim()) {
+    alert("Please enter both name and email.");
+    return;
+  }
+
+  try {
+    // 1. Save the name to the Database first
+    const preRes = await fetch("/api/auth/pre-sign-up", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, name }),
+    });
+
+    if (!preRes.ok) throw new Error("Could not save user name.");
+
+    // 2. Now trigger the NextAuth Magic Link
+    const result = await signIn("email", {
+      email: email.toLowerCase().trim(),
+      redirect: false,
+      callbackUrl: "/",
+    });
+
+    if (result?.error) {
+      alert("Error: " + result.error);
+    } else {
+      alert("Check your inbox for the magic login link! 👻");
+      setEmail('');
+      setName('');
+      setShowEmailInput(false);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Please try again.");
+  }
+};
   const handleSwitchAccount = async () => {
     await signOut({ redirect: false });
     window.location.href = "/api/auth/signin/google?prompt=select_account";
   };
 
-  return (
+    return (
     <Navbar expand="lg" className={styles.navbar}>
       <Container className={styles.container}>
 
         {/* Top row: Logo + Search + Hamburger */}
         <div className={styles.topRow}>
-
           <Link href="/" className={styles.logoLink}>
             <Image
               src="/static_imgs/RHH_def_beta.webp"
@@ -83,7 +122,7 @@ const NavbarRHH = () => {
             {showDropdown && results.length > 0 && (
               <div className={styles.searchDropdown}>
                 {results.map((r) => (
-                  <Link // <--- Add the tag name here
+                  <Link
                     key={r.slug}
                     href={`/movies/${r.slug}`}
                     className={styles.searchItem}
@@ -93,7 +132,7 @@ const NavbarRHH = () => {
                     }}
                   >
                     {r.title}
-                  </Link> // <--- Use </Link> to match
+                  </Link>
                 ))}
               </div>
             )}
@@ -113,7 +152,7 @@ const NavbarRHH = () => {
 
             {session ? (
               <>
-                <span className={styles.userInfo}>{session.user?.email}</span>
+                <span className={styles.userInfo}>{session.user?.name}</span>
                 <Button className={styles.navButton} onClick={() => signOut()}>
                   LOG OUT
                 </Button>
@@ -122,13 +161,47 @@ const NavbarRHH = () => {
                 </Button>
               </>
             ) : (
-              <Button className={styles.navButton} onClick={() => signIn("google")}>
-                LOG IN
-              </Button>
+              <>
+                <Button
+                  className={styles.navButton}
+                  onClick={() => signIn("google")}
+                >
+                  LOG IN WITH GOOGLE
+                </Button>
+
+                {/* Email login input */}
+                <div style={{ display: "inline-block", position: "relative" }}>
+                  <Button
+                    className={styles.navButton}
+                    onClick={() => setShowEmailInput((prev) => !prev)}
+                  >
+                    LOG IN WITH EMAIL
+                  </Button>
+
+                  {showEmailInput && (
+    <div style={{ position: "absolute", top: "110%", left: 0, zIndex: 1000, background: "#222", padding: "0.5rem", borderRadius: "4px" }}>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Your name"
+        style={{ padding: "0.4rem", width: "200px", marginRight: "0.5rem" }}
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Your email"
+        style={{ padding: "0.4rem", width: "200px", marginRight: "0.5rem" }}
+      />
+      <Button onClick={handleEmailLogin}>Send Link</Button>
+    </div>
+  )}
+                </div>
+              </>
             )}
           </Nav>
         </Navbar.Collapse>
-
       </Container>
     </Navbar>
   );
