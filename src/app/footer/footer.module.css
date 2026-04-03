@@ -1,0 +1,27 @@
+.footer {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: 'Merriweather', serif;
+  padding: 1rem 0;
+  font-size: 0.65rem;
+}
+
+.footerTitle {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.textContent {
+  color: var(--color-accent);
+  line-height: 1.6;
+  font-size: 0.65rem;
+  margin: 0.25rem 0;  /* reduces space between paragraphs */
+}
+
+.link {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

@@ -4,6 +4,7 @@ import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./navbar/navbar";
 import Providers from "./providers";
+import Footer from "./footer/footer";
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
         <Providers>
           <Navbar/>
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>
