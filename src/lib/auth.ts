@@ -17,9 +17,9 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "database" },
-  
-  // ADD THIS: Fixes the 'null' emailVerified for Google users
+
   events: {
+    // Fixes 'null' emailVerified for Google users
     async linkAccount({ user }) {
       await prisma.user.update({
         where: { id: user.id },
@@ -29,14 +29,32 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
+    // Add user info + consent to session
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
         session.user.role = user.role;
-        // NextAuth pulls 'user.name' directly from your DB User table
-        session.user.name = user.name; 
+        session.user.name = user.name;
+        session.user.consentPrivacy = user.consentPrivacy ?? false;
+        session.user.consentNewsletter = user.consentNewsletter ?? false;
       }
       return session;
     },
+
+    // Sign-in callback
+    async signIn({ user, account }) {
+  if (account?.provider === "google") {
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email! },
+    });
+
+    // If user exists and hasn't consented, block login
+    if (dbUser && !dbUser.consentPrivacy) {
+      return false; // login blocked
+    }
+  }
+
+  return true; // allow login otherwise
+},
   },
 };

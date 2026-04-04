@@ -28,6 +28,10 @@ export const rawSlugToIdMap: Record<string, number> = {
   "tremors": 9362,
   "friday-the-13th:-the-final-chapter": 9730,
   "maximum-overdrive": 9980,
+  "scanners": 9538, //No AI content yet
+  "my-bloody-valentine": 39874, //No AI content yet
+   "motel-hell": 30924, //No AI content yet
+   "the-evil-dead": 764 //No AI content yet
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

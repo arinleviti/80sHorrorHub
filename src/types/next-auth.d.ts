@@ -8,16 +8,24 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      consentPrivacy: boolean;
+      consentNewsletter: boolean;
     };
   }
-   interface User {
+
+  interface User {
     id: string;
     role: "USER" | "MODERATOR" | "ADMIN";
+    consentPrivacy: boolean;
+    consentNewsletter: boolean;
   }
 }
+
 declare module "next-auth/adapters" {
   interface AdapterUser {
     id: string;
     role: "USER" | "MODERATOR" | "ADMIN";
+    consentPrivacy: boolean;
+    consentNewsletter: boolean;
   }
 }
