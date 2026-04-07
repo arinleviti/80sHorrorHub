@@ -1,13 +1,17 @@
 "use client";
-
-import { Contribution, ContributionSection } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ContributionSection } from "@prisma/client";
 import { Card, Button } from "react-bootstrap";
 import { useState } from "react";
 import Image from "next/image";
 import styles from "./contribution-list.module.css";
 
+// Generates a Contribution type that includes the related User object (not returned by Prisma by default)
+type ContributionWithUser = Prisma.ContributionGetPayload<{
+  include: { user: true };
+}>;
 interface ContributionListProps {
-  grouped: Record<ContributionSection, Contribution[]>;
+  grouped: Record<ContributionSection, ContributionWithUser[]>;
 }
 
 const sectionTitles: Record<ContributionSection, string> = {
@@ -43,10 +47,14 @@ export default function ContributionList({ grouped }: ContributionListProps) {
       });
     }
   };
-
+  const hasContributions = Object.values(grouped).some((items) => items.length > 0);
   return (
     <div>
+       {hasContributions ? (
       <h2 className="heading-secondary">User Contributions</h2>
+    ) : (
+      <h2 className="heading-secondary">Be the first to leave a contribution!</h2>
+    )}
 
       {Object.entries(grouped).map(([section, items]) => {
         if (!items.length) return null;
