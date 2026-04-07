@@ -268,5 +268,113 @@
     "productionContext": "Produced with a mix of practical effects and a modest Hollywood budget, the film relied heavily on mechanical rigs, miniatures, and real vehicles to create the illusion of machines attacking humans. King directed with an emphasis on spectacle and energy, though the production faced difficulties with stunts and special effects. The narrative structure is episodic, highlighting the relentless threat of animated machinery and the struggle of a motley group of survivors.",
     "reception": "Upon release, Maximum Overdrive received largely negative reviews, criticized for its uneven tone and chaotic pacing. However, it has since been reevaluated by cult film enthusiasts who appreciate its bizarre premise, 1980s charm, and King’s unique vision. The movie has become a staple of so-bad-it’s-good cinema and is often celebrated for its audacious concept and memorable mechanical mayhem."
   }
+  },
+   {
+    "slug": "scanners",
+    "aiDescription": {
+      "synopsis": "Scanners follows Cameron Vale, a drifter who discovers he possesses powerful telepathic and telekinetic abilities. He is recruited by a private security company to track down Darryl Revok, a rogue scanner leading a violent underground movement. As Vale learns to control his powers, the film explores themes of identity, control, and corporate manipulation, building toward a series of intense psychic confrontations, including its famously explosive climax.",
+      "funFacts": "The film is best known for its shocking head explosion scene, achieved using practical effects with prosthetics and explosives. Director David Cronenberg has said the effect was difficult to pull off and required multiple attempts. The term “scanner” became synonymous with psychic-powered individuals in pop culture following the film’s release.",
+      "productionContext": "Directed by David Cronenberg, the film was produced in Canada with a moderate budget. The production faced challenges, including script changes during filming and difficulties refining the special effects sequences. Cronenberg focused on blending body horror with science fiction, using practical effects to depict the physical toll of psychic powers.",
+      "reception": "Scanners received mixed reviews upon release but performed well commercially. Over time, it has gained cult status, particularly for its special effects and unique concept. It remains one of Cronenberg’s most recognizable films and spawned several sequels."
+    }
+  },
+  {
+    "slug": "my-bloody-valentine",
+    "aiDescription": {
+      "synopsis": "My Bloody Valentine is set in a small mining town where a tragic accident decades earlier left several miners dead. When the town resumes its Valentine’s Day celebrations, a series of brutal murders begins, seemingly linked to the legend of Harry Warden, a miner who went mad. As bodies pile up, a group of young townspeople must uncover the truth behind the killings before it’s too late.",
+      "funFacts": "The film was heavily censored upon release, with many of its gore scenes cut to secure an R rating. These scenes were later restored in special editions. It stands out among slashers for its unique mining setting and use of underground tunnels to create tension.",
+      "productionContext": "Directed by George Mihalka, the film was shot on location in Canadian mines, which added authenticity but also posed logistical challenges. The filmmakers aimed to differentiate it from other slashers by focusing on atmosphere and setting rather than solely on body count.",
+      "reception": "Initially receiving mixed reviews, My Bloody Valentine performed modestly at the box office. Over time, it has become a cult favorite among slasher fans, praised for its setting and suspense. It later inspired a remake in 2009."
+    }
+  },
+  {
+    "slug": "motel-hell",
+    "aiDescription": {
+      "synopsis": "Motel Hell centers on Vincent Smith, a seemingly friendly farmer who runs a roadside motel and produces famous smoked meats. Beneath his polite exterior lies a dark secret: he kidnaps travelers and buries them alive to harvest them as ingredients. As his crimes begin to unravel, the film blends horror and dark comedy in a grotesque tale of rural madness.",
+      "funFacts": "The film’s tagline, “It takes all kinds of critters to make Farmer Vincent’s fritters,” became iconic. It mixes satire with horror, poking fun at consumer culture and the food industry. The pig-head chainsaw duel near the end is one of its most memorable scenes.",
+      "productionContext": "Directed by Kevin Connor, the film was produced on a modest budget and filmed in California. It deliberately leaned into a campy tone, combining elements of slasher films with black comedy to stand out from more serious horror releases.",
+      "reception": "Motel Hell received mixed reviews at the time of release but has since developed a cult following. It is appreciated for its offbeat tone and unique blend of humor and horror."
+    }
+  },
+  {
+    "slug": "the-evil-dead",
+    "aiDescription": {
+      "synopsis": "The Evil Dead follows a group of friends who travel to a remote cabin in the woods, where they discover a mysterious book and tape recordings that unleash demonic forces. As the group is possessed one by one, Ash Williams must fight to survive the night. The film escalates from eerie suspense to relentless supernatural horror.",
+      "funFacts": "The film was made on a very low budget, with director Sam Raimi and his friends using creative techniques to achieve its effects. Bruce Campbell, who plays Ash, endured physically demanding scenes during filming. The “shaky cam” effect was created using improvised camera rigs to simulate the demon’s perspective.",
+      "productionContext": "Directed by Sam Raimi, the film was shot in rural Tennessee under difficult conditions. The crew used practical effects extensively, including stop-motion animation and makeup effects. Raimi’s energetic camera work became one of the film’s defining features.",
+      "reception": "Initially controversial for its intense violence, The Evil Dead gained popularity through word of mouth and became a cult classic. It launched a successful franchise and established Raimi and Campbell as key figures in horror cinema."
+    }
+  },
+  {
+    "slug": "the-changeling",
+    "aiDescription": {
+      "synopsis": "The Changeling follows composer John Russell, who moves into a large, historic mansion after a personal tragedy. He soon experiences strange occurrences that suggest the house is haunted by a child’s spirit. As he investigates, he uncovers a dark secret involving murder and political corruption, leading to a chilling confrontation with the past.",
+      "funFacts": "The film is loosely based on real events reported by writer Russell Hunter. Its famous séance scene and the bouncing ball sequence are considered some of the most effective moments in supernatural horror. It relies more on atmosphere than gore.",
+      "productionContext": "Directed by Peter Medak and starring George C. Scott, the film was shot in Canada and the United States. The production focused on creating a classic haunted house atmosphere, using sound design and subtle visual effects to build tension.",
+      "reception": "The Changeling was well received by critics and audiences, praised for its suspenseful storytelling and performance by George C. Scott. It remains a respected entry in the haunted house genre."
+    }
+  },
+  {
+    "slug": "dressed-to-kill",
+    "aiDescription": {
+      "synopsis": "Dressed to Kill follows a housewife who becomes entangled in a deadly mystery after a chance encounter leads to her brutal murder. A call girl and the victim’s son attempt to uncover the identity of the killer, who appears to be linked to a psychiatrist. The film blends psychological thriller elements with slasher-style violence.",
+      "funFacts": "Directed by Brian De Palma, the film pays homage to Alfred Hitchcock, particularly Psycho. Its museum sequence is notable for being nearly dialogue-free. The film sparked controversy for its portrayal of gender and violence.",
+      "productionContext": "De Palma used stylized camera work, split screens, and elaborate tracking shots to create suspense. The film was produced with a moderate budget and relied heavily on visual storytelling and editing techniques.",
+      "reception": "Dressed to Kill received mixed-to-positive reviews, with praise for its direction and criticism for its content. It performed well at the box office and has since been reassessed as a notable thriller of its era."
+    }
+  },
+  {
+    "slug": "fade-to-black",
+    "aiDescription": {
+      "synopsis": "Fade to Black tells the story of Eric Binford, a socially isolated film buff obsessed with classic cinema. After being pushed to the edge by those around him, he begins committing murders while disguised as famous movie characters. The film explores the blurred line between fantasy and reality.",
+      "funFacts": "The film features numerous references to classic Hollywood films, with the protagonist mimicking characters from movies like Dracula and The Mummy. It serves as both a horror film and a commentary on media obsession.",
+      "productionContext": "Directed by Vernon Zimmerman, the film was produced independently with a modest budget. It focused on character psychology and film references rather than elaborate effects.",
+      "reception": "Fade to Black received mixed reviews and modest box office success. Over time, it has gained a cult following, particularly among cinephiles who appreciate its film references."
+    }
+  },
+  {
+    "slug": "the-burning",
+    "aiDescription": {
+      "synopsis": "The Burning follows a group of campers who become targets of a disfigured former caretaker seeking revenge after a prank gone wrong. Set in a summer camp, the film builds tension as the killer stalks the group, leading to a series of violent confrontations.",
+      "funFacts": "The film features early appearances by actors Jason Alexander and Holly Hunter. Its special effects were created by Tom Savini, who returned after missing Friday the 13th Part 2. The raft massacre scene is one of its most مشهور sequences.",
+      "productionContext": "Directed by Tony Maylam and produced by Harvey Weinstein, the film was shot in New York. It aimed to compete with other camp-based slashers but distinguished itself with strong practical effects.",
+      "reception": "The Burning received mixed reviews but has since become a cult favorite, especially for its effects and atmosphere."
+    }
+  },
+  {
+    "slug": "halloween-II",
+    "aiDescription": {
+      "synopsis": "Halloween II picks up immediately after the events of the first film, following Laurie Strode as she is taken to a hospital while Michael Myers continues his pursuit. The largely empty hospital setting creates a tense and claustrophobic atmosphere as Laurie fights to survive.",
+      "funFacts": "John Carpenter co-wrote and produced the film but did not direct it. The sequel introduced the twist that Laurie is Michael’s sister, which became central to later entries in the franchise.",
+      "productionContext": "Directed by Rick Rosenthal, the film was shot primarily in a hospital set. Carpenter’s involvement ensured continuity in tone, though the sequel featured more explicit violence than the original.",
+      "reception": "Halloween II was a commercial success, though critics were divided. It remains a key part of the franchise and is often viewed as a direct continuation of the original."
+    }
+  },
+  {
+    "slug": "cat-people",
+    "aiDescription": {
+      "synopsis": "Cat People follows siblings Irena and Paul, who belong to a mysterious lineage of humans capable of transforming into panthers when aroused. As Irena struggles with her identity and desires, the film blends horror with erotic and psychological elements.",
+      "funFacts": "The film is a remake of the 1942 classic of the same name. Its theme song, “Cat People (Putting Out Fire),” was performed by David Bowie. The film is known for its stylized visuals and sensual tone.",
+      "productionContext": "Directed by Paul Schrader, the film emphasized atmosphere, music, and visual style. It used practical effects and makeup to depict transformations, combined with symbolic imagery.",
+      "reception": "Cat People received mixed reviews but has gained appreciation for its visual style and performances. It remains a distinctive entry in 1980s horror."
+    }
+  },
+  {
+    "slug": "basket-case",
+    "aiDescription": {
+      "synopsis": "Basket Case follows Duane Bradley, who travels to New York City carrying a mysterious basket containing his deformed conjoined twin, Belial. Together, they seek revenge on the doctors who separated them. The film blends horror with dark humor and explores themes of identity and dependence.",
+      "funFacts": "The film was made on a very low budget, with Belial created using practical puppetry and stop-motion effects. It became a staple of midnight movie screenings.",
+      "productionContext": "Directed by Frank Henenlotter, the film was shot in New York City with guerrilla-style filmmaking techniques. Its low budget led to creative solutions for effects and storytelling.",
+      "reception": "Basket Case received mixed reviews initially but became a cult classic, praised for its originality and offbeat tone."
+    }
+  },
+  {
+    "slug": "halloween-III:-season-of-the-witch",
+    "aiDescription": {
+      "synopsis": "Halloween III: Season of the Witch departs from the Michael Myers storyline, focusing instead on a sinister plot involving a toy company that plans to use Halloween masks to kill children through a televised broadcast. A doctor and a young woman uncover the conspiracy as Halloween approaches.",
+      "funFacts": "The film is notable for not featuring Michael Myers, which surprised audiences. It was intended to launch an anthology approach for the series, with each film telling a different story.",
+      "productionContext": "Directed by Tommy Lee Wallace and produced by John Carpenter, the film embraced a science fiction-horror blend. It used practical effects and a synth-heavy score to create its atmosphere.",
+      "reception": "Halloween III was initially met with negative reactions due to the absence of Michael Myers. Over time, it has been reevaluated and gained a cult following for its unique story and tone."
+    }
   }
 ]

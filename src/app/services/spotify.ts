@@ -1,231 +1,197 @@
 const CLIENT_ID = process.env.CLIENT_ID!;
 const CLIENT_SECRET = process.env.CLIENT_SECRET!;
+
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SEARCH_URL = "https://api.spotify.com/v1/search";
 
-// --- ALL ORIGINAL INTERFACES ---
-interface SpotifyImage {
-  url: string;
-  height: number | null;
-  width: number | null;
-}
-
-interface SpotifyPlaylistRaw {
-  id: string;
-  name: string;
-  description: string;
-  external_urls: {
-    spotify: string;
-  };
-  images: SpotifyImage[];
-  owner: {
-    display_name: string;
-    external_urls: {
-      spotify: string;
-    };
-  };
-  tracks: {
-    total: number;
-  };
-}
+// --- TYPES ---
+interface SpotifyImage { url: string; }
 
 interface SpotifyAlbumRaw {
   id: string;
   name: string;
   images: SpotifyImage[];
-  external_urls: {
-    spotify: string;
-  };
-  artists: {
-    name: string;
-    external_urls: {
-      spotify: string;
-    };
-  }[];
+  artists: { name: string }[];
   total_tracks: number;
+  release_date?: string; // YYYY-MM-DD
 }
 
-interface SpotifyPlaylistSearchRaw {
-  playlists: {
-    items: SpotifyPlaylistRaw[];
-  };
+interface SpotifyPlaylistRaw {
+  id: string;
+  name: string;
+  images: SpotifyImage[];
+  tracks: { total: number };
 }
 
-interface SpotifyAlbumSearchRaw {
-  albums: {
-    items: SpotifyAlbumRaw[];
-  };
-}
-
-export interface SpotifyPlaylistEmbed {
+export interface SpotifyEmbed {
   id: string;
   name: string;
   embedUrl: string;
   imageUrl?: string;
+  type: "album" | "playlist";
 }
 
-// --- MAIN SEARCH FUNCTION ---
-export async function SearchSpotifyPlaylist(query: string, limit: number): Promise<SpotifyPlaylistEmbed | null> {
-  console.log("🔍 Searching Spotify for playlist:", query);
-  
-  try {
-    const token = await fetchSpotifyToken();
-    if (!token) return null;
+// --- CONFIG ---
+const SOUNDTRACK_KEYWORDS = [
+  "ost",
+  "soundtrack",
+  "score",
+  "original soundtrack",
+  "original score",
+  "motion picture",
+  "film score"
+];
 
-    const sanitizedQuery = query.replace(/\./g, " ").trim();
-    const params = new URLSearchParams({
-      q: `${sanitizedQuery} soundtrack`,
-      type: "playlist,album",
-      limit: limit.toString(),
-      market: "US",
-      locale: "en_US",
-    });
+const STOPWORDS = ["the", "a", "an", "of", "on", "in", "and"];
+const SEARCH_LIMIT = 50;
+const YEAR_TOLERANCE = 2;
 
-    const response = await fetch(`${SEARCH_URL}?${params.toString()}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      },
-    });
+// --- HELPERS ---
+const normalize = (str: string) =>
+  str?.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim() || "";
 
-    if (response.status === 429) {
-      console.warn(`⚠️ Rate limited. Retry-After: ${response.headers.get("Retry-After")}s`);
-      return null;
-    }
+const hasSoundtrackKeyword = (title: string) =>
+  SOUNDTRACK_KEYWORDS.some(k => normalize(title).includes(normalize(k)));
 
-    if (response.status === 403) {
-      console.error("🚫 403 Forbidden: Check Premium status of Dev Account.");
-      return null;
-    }
+const getMovieWords = (movie: string) =>
+  normalize(movie)
+    .split(" ")
+    .filter(w => w && !STOPWORDS.includes(w));
 
-    if (!response.ok) {
-      console.error(`❌ Spotify API error: ${response.status} ${response.statusText}`);
-      return null;
-    }
+const countMatchingWords = (title: string, movieWords: string[]) => {
+  const titleNorm = normalize(title);
+  return movieWords.filter(word => titleNorm.includes(word)).length;
+};
 
-    const data = await response.json();
+const getAlbumYear = (album: SpotifyAlbumRaw): number | null => {
+  if (!album.release_date) return null;
+  const year = parseInt(album.release_date.slice(0, 4), 10);
+  return isNaN(year) ? null : year;
+};
 
-    // Logic for null-filtering
-    if (data?.playlists?.items) {
-      data.playlists.items = data.playlists.items.filter((item: SpotifyPlaylistRaw | null) => item !== null);
-    }
+const extractYearFromTitle = (title: string): number | null => {
+  const match = title.match(/(\d{4})/);
+  if (!match) return null;
+  const year = parseInt(match[1], 10);
+  return isNaN(year) ? null : year;
+};
 
-    const hasValidPlaylists = isSpotifyPlaylistSearchRaw(data);
-    const hasValidAlbums = isSpotifyAlbumSearchRaw(data);
+const toEmbed = (item: SpotifyAlbumRaw | SpotifyPlaylistRaw, type: "album" | "playlist"): SpotifyEmbed => ({
+  id: item.id,
+  name: item.name,
+  embedUrl: `https://open.spotify.com/embed/${type}/${item.id}`,
+  imageUrl: item.images?.[0]?.url,
+  type
+});
 
-    // 1. Search Albums (Original Logic)
-    if (hasValidAlbums && data.albums.items.length > 0) {
-      const albumMatch = data.albums.items
-        .filter(a => a.total_tracks >= 5)
-        .find(a =>
-          a.name.toLowerCase().includes(query.toLowerCase()) &&
-          a.name.toLowerCase().includes("soundtrack")
-        );
-
-      if (albumMatch) {
-        return {
-          id: albumMatch.id,
-          name: albumMatch.name,
-          embedUrl: `https://open.spotify.com/embed/album/${albumMatch.id}`,
-          imageUrl: albumMatch.images[0]?.url,
-        };
-      }
-    }
-
-    // 2. Search Playlists (Original Logic)
-    if (hasValidPlaylists && data.playlists.items.length > 0) {
-      const filtered = data.playlists.items
-        .filter(p => p.tracks.total >= 3)
-        .filter(p =>
-          p.name.toLowerCase().includes(query.toLowerCase()) &&
-          p.name.toLowerCase().includes("soundtrack")
-        );
-
-      const playlist = filtered[0] || null;
-      if (playlist) {
-        return {
-          id: playlist.id,
-          name: playlist.name,
-          embedUrl: `https://open.spotify.com/embed/playlist/${playlist.id}`,
-          imageUrl: playlist.images[0]?.url,
-        };
-      }
-    }
-
-    return null;
-
-  } catch (error) {
-    console.error("🚨 Spotify Service Error:", error);
-    return null;
-  }
-}
-
-// --- TOKEN FETCH ---
+// --- TOKEN ---
 async function fetchSpotifyToken(): Promise<string | null> {
   try {
-    const response = await fetch(TOKEN_URL, {
+    const res = await fetch(TOKEN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Basic " + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
+        Authorization: "Basic " + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
       },
       body: "grant_type=client_credentials"
     });
 
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.access_token;
-  } catch (err) {
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data.access_token ?? null;
+  } catch {
     return null;
   }
 }
 
-// --- STRICT TYPE GUARDS (NO ANY) ---
-function isSpotifyPlaylistSearchRaw(data: unknown): data is SpotifyPlaylistSearchRaw {
-  const d = data as SpotifyPlaylistSearchRaw;
-  return (
-    d !== null &&
-    typeof d === "object" &&
-    d.playlists !== undefined &&
-    Array.isArray(d.playlists.items) &&
-    d.playlists.items.every(isSpotifyPlaylistRaw)
-  );
+// --- SEARCH SINGLE QUERY ---
+async function searchOnce(
+  token: string,
+  query: string,
+  movie: string,
+  movieYear?: number
+): Promise<SpotifyEmbed | null> {
+
+  const params = new URLSearchParams({
+    q: query,
+    type: "album,playlist",
+    limit: SEARCH_LIMIT.toString()
+  });
+
+  const res = await fetch(`${SEARCH_URL}?${params}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+
+  const movieWords = getMovieWords(movie);
+
+  // --- FILTER ALBUMS ---
+  const albums: { album: SpotifyAlbumRaw; year: number | null }[] =
+  (data?.albums?.items ?? [])
+    .filter((a: SpotifyAlbumRaw) => a?.name && hasSoundtrackKeyword(a.name))
+    .map((a: SpotifyAlbumRaw) => ({ album: a, year: getAlbumYear(a) }))
+    .filter((x: { album: SpotifyAlbumRaw; year: number | null }) => {
+      const matches = countMatchingWords(x.album.name, movieWords);
+      if (matches < movieWords.length) return false;
+      if (movieYear && x.year) {
+        return Math.abs(x.year - movieYear) <= YEAR_TOLERANCE;
+      }
+      return true;
+    });
+
+// --- FILTER PLAYLISTS ---
+const playlists: { playlist: SpotifyPlaylistRaw; year: number | null }[] =
+  (data?.playlists?.items ?? [])
+    .filter((p: SpotifyPlaylistRaw) => p?.name && hasSoundtrackKeyword(p.name))
+    .map((p: SpotifyPlaylistRaw) => ({ playlist: p, year: extractYearFromTitle(p.name) }))
+    .filter((x: { playlist: SpotifyPlaylistRaw; year: number | null }) => {
+      const matches = countMatchingWords(x.playlist.name, movieWords);
+      if (matches < movieWords.length) return false;
+      if (movieYear && x.year) {
+        return Math.abs(x.year - movieYear) <= YEAR_TOLERANCE;
+      }
+      return false; // discard playlists without year
+    });
+
+  // --- PRIORITIZE ALBUMS ---
+  const candidates: SpotifyEmbed[] = [
+    ...albums.sort((a, b) => b.year ?? 0 - (a.year ?? 0)).map(a => toEmbed(a.album, "album")),
+    ...playlists.sort((a, b) => (b.year ?? 0) - (a.year ?? 0)).map(p => toEmbed(p.playlist, "playlist"))
+  ];
+
+  return candidates[0] ?? null;
 }
 
-function isSpotifyPlaylistRaw(item: unknown): item is SpotifyPlaylistRaw {
-  const i = item as SpotifyPlaylistRaw;
-  return (
-    i !== null &&
-    typeof i === "object" &&
-    typeof i.id === "string" &&
-    typeof i.name === "string" &&
-    i.tracks !== undefined &&
-    typeof i.tracks.total === "number"
-  );
-}
+// --- MAIN SEARCH ---
+export async function searchSpotify(
+  rawQuery: string,
+  year?: number
+): Promise<SpotifyEmbed | null> {
 
-function isSpotifyAlbumSearchRaw(data: unknown): data is SpotifyAlbumSearchRaw {
-  const d = data as SpotifyAlbumSearchRaw;
-  return (
-    d !== null &&
-    typeof d === "object" &&
-    d.albums !== undefined &&
-    Array.isArray(d.albums.items) &&
-    d.albums.items.every(isSpotifyAlbumRaw)
-  );
-}
+  const token = await fetchSpotifyToken();
+  if (!token) return null;
 
-function isSpotifyAlbumRaw(item: unknown): item is SpotifyAlbumRaw {
-  const i = item as SpotifyAlbumRaw;
-  return (
-    i !== null &&
-    typeof i === "object" &&
-    typeof i.id === "string" &&
-    typeof i.name === "string" &&
-    typeof i.total_tracks === "number"
-  );
-}
+  const movie = rawQuery
+    .split("\n")[0]
+    .replace(/\(.*?\)/g, "")
+    .replace(/\./g, " ")
+    .trim();
 
-function isSpotifyImage(item: unknown): item is SpotifyImage {
-  const i = item as SpotifyImage;
-  return i !== null && typeof i.url === "string";
+  const queries = [
+    `${movie} soundtrack`,
+    `${movie} ost`,
+    `${movie} score`,
+    `${movie} original soundtrack`,
+    `${movie} original score`
+  ];
+
+  for (const q of queries) {
+    const result = await searchOnce(token, q.trim(), movie, year);
+    if (result) return result;
+  }
+
+  return null;
 }

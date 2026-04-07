@@ -14,7 +14,7 @@ import EbayItemsList from "./components/ebaySearchResponse/ebay-response";
 import StreamingAvailabilityList from "./components/streaming-avail/streaming-avail";
 import { DiscogsList, ReturnedResult } from "./components/discogs/discogs-list";
 import { SpotifyEmbed } from "./components/spotifyPlaylist/spotify-playlist";
-import { SearchSpotifyPlaylist, SpotifyPlaylistEmbed } from "@/app/services/spotify";
+import { searchSpotify, SpotifyEmbed as SpotifyEmbedType } from "@/app/services/spotify";
 import { fetchAIDescription, AiDescription } from "@/app/services/AiGeneratedMainContent";
 import AiContent from "./components/AIContent/ai-content";
 import { getHFSuggestions, HFSuggestionItem } from "@/app/services/huggingFaceAI";
@@ -36,26 +36,38 @@ interface MovieInfoProps {
     crew: CrewMemberInfo[];
   };
 }
+
 type ContributionWithUser = Prisma.ContributionGetPayload<{
   include: { user: true; votes: true };
 }>;
+
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
   const posterUrl = movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
-    : "/placeholder-poster.png"; // fallback if poster missing
+    : "/placeholder-poster.png";
+
   const topActorNames = credits.cast.slice(0, 5).map(actor => actor.actorName);
-  const [youTubeVideos, curatedEbayItems, streamingAvailability, hfSuggestions, discogsList, spotifyPlaylist, aiDescription]: [
+
+  // Fetch Spotify playlist first
+  const spotifyPlaylist: SpotifyEmbedType | null = await searchSpotify(movie.title, movie.release_date?.slice(0, 4));
+
+  const [
+    youTubeVideos,
+    curatedEbayItems,
+    streamingAvailability,
+    hfSuggestions,
+    discogsList,
+    aiDescription,
+  ]: [
     YouTubeVideo[],
     EbayItemSummary[],
     GetStreamingAvailabilityReturn,
     HFSuggestionItem[] | null,
     ReturnedResult[] | null,
-    SpotifyPlaylistEmbed | null,
     AiDescription | null
   ] = await Promise.all([
     getYouTubeVideos(movie.title, movie.release_date?.slice(0, 4) || '', topActorNames),
     getCuratedEbayItems(movie.id, movie.title, movie.release_date?.slice(0, 4) || ''),
-    /* getEbayItems(`${movie.title} ${movie.release_date?.slice(0, 4) || ''} memorabilia collectible`), */
     getStreamingAvailability(
       movie.title,
       "us",
@@ -63,15 +75,13 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     ),
     getHFSuggestions(movie.id.toString(), movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
     fetchVynils(movie.title, movie.release_date ? movie.release_date.slice(0, 4) : ''),
-    SearchSpotifyPlaylist(`${movie.title}`, 5), // return null if no playlist found
     fetchAIDescription(movie.id),
   ]);
+
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const contributions = await getMovieContributions(
-    movie.id.toString(),
-    userId
-  );
+
+  const contributions = await getMovieContributions(movie.id.toString(), userId);
 
   const grouped: Record<ContributionSection, ContributionWithUser[]> = {
     SYNOPSIS: [],
@@ -81,20 +91,16 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     OTHER: [],
   };
 
-  contributions.forEach((c) => {
-    grouped[c.section].push(c);
-  });
+  contributions.forEach(c => grouped[c.section].push(c));
 
-  const director = credits.crew.find((member) => member.job === "Director");
+  const director = credits.crew.find(member => member.job === "Director");
 
   return (
-
     <Container className={`${styles.moviePage} my-2`}>
       {/* 🎬 HERO */}
       <section className="movie-hero mb-2">
         <Container>
           <Row className="align-items-start">
-
             {/* POSTER */}
             <Col xs={12} md={5} lg={4} className="text-center mb-4 mb-md-0">
               <Image
@@ -106,31 +112,12 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
               />
             </Col>
 
-            {/* LEFT CONTENT (TITLE + OVERVIEW) */}
+            {/* LEFT CONTENT */}
             <Col xs={12} md={4} lg={5}>
-              {/* Title - Large and bold */}
-              <h1 className={`${styles['movie-title']} mb-1`}>
-                {movie.title}
-              </h1>
-
-              {/* Director - Smaller, styled with your custom class */}
-              {director && (
-                <h4 className={`${styles.director} mb-1`}>
-                  {director.name}
-                </h4>
-              )}
-
-              {/* Year - Muted and distinct */}
-              {movie.release_date && (
-                <p className={`${styles.year} mb-3 text-muted`}>
-                  ({movie.release_date.slice(0, 4)})
-                </p>
-              )}
-
-              {/* Overview */}
-              <p className={styles.textContent}>
-                {movie.overview}
-              </p>
+              <h1 className={`${styles['movie-title']} mb-1`}>{movie.title}</h1>
+              {director && <h4 className={`${styles.director} mb-1`}>{director.name}</h4>}
+              {movie.release_date && <p className={`${styles.year} mb-3 text-muted`}>({movie.release_date.slice(0, 4)})</p>}
+              <p className={styles.textContent}>{movie.overview}</p>
             </Col>
 
             {/* RIGHT CONTENT (SPOTIFY) */}
@@ -141,86 +128,49 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
                 </div>
               )}
             </Col>
-
           </Row>
         </Container>
       </section>
 
       {/* 👥 Cast & Crew */}
       <Row className="mb-5">
-        <Col>
-          <CastList cast={credits.cast} config={config} />
-        </Col>
-        <Col>
-          <CrewList crew={credits.crew} />
-        </Col>
+        <Col><CastList cast={credits.cast} config={config} /></Col>
+        <Col><CrewList crew={credits.crew} /></Col>
       </Row>
 
-      {/* AI Content, form, contributions */}
+      {/* AI Content & Contributions Form */}
       <Row className="mb-5">
-        <Col md={6}>
-          <AiContent content={aiDescription} />
-        </Col>
-
-        <Col md={6}>
-          <ContributionForm movieId={movie.id} />
-        </Col>
+        <Col md={6}><AiContent content={aiDescription} /></Col>
+        <Col md={6}><ContributionForm movieId={movie.id} /></Col>
       </Row>
 
       <Row className="mb-5">
-        <Col>
-          <ContributionList grouped={grouped} />
-        </Col>
+        <Col><ContributionList grouped={grouped} /></Col>
       </Row>
 
       {/* 🎥 Videos */}
       <Row className="mb-5">
-        <Col>
-          <VideoList videos={youTubeVideos} title="YouTube Curated Selection" />
-        </Col>
-
+        <Col><VideoList videos={youTubeVideos} title="YouTube Curated Selection" /></Col>
       </Row>
 
       {/* 💿 Merchandise & Streaming + Reddit */}
       <Row className="mb-5">
-        {/* LEFT COLUMN: Discogs + eBay */}
         <Col md={6}>
-
-          <Row>
-            <Col>
-              <EbayItemsList ebayItems={curatedEbayItems} />
-            </Col>
-          </Row>
+          <Row><Col><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
         </Col>
 
-        {/* RIGHT COLUMN: Streaming Availability + Reddit */}
         <Col md={6}>
-          <Row className="mb-3">
-            <Col>
-              <DiscogsList results={discogsList} />
-            </Col>
-          </Row>
-          <Row className="mb-3">
-            <Col>
-              <StreamingAvailabilityList streamingAvailability={streamingAvailability} />
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <RedditFeed movie={movie} limit={5} />
-            </Col>
-          </Row>
-          {/* 🤖 AI Suggestions */}
+          <Row className="mb-3"><Col><DiscogsList results={discogsList} /></Col></Row>
+          <Row className="mb-3"><Col><StreamingAvailabilityList streamingAvailability={streamingAvailability} /></Col></Row>
+          <Row><Col><RedditFeed movie={movie} limit={5} /></Col></Row>
+
           {hfSuggestions && hfSuggestions.length > 0 && (
             <Row className="mb-5">
-              <Col>
-                <HFSuggestionsList suggestions={hfSuggestions} />
-              </Col>
+              <Col><HFSuggestionsList suggestions={hfSuggestions} /></Col>
             </Row>
           )}
         </Col>
       </Row>
-
     </Container>
   );
 }

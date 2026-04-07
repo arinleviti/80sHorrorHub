@@ -28,10 +28,18 @@ export const rawSlugToIdMap: Record<string, number> = {
   "tremors": 9362,
   "friday-the-13th:-the-final-chapter": 9730,
   "maximum-overdrive": 9980,
-  "scanners": 9538, //No AI content yet
-  "my-bloody-valentine": 39874, //No AI content yet
-   "motel-hell": 30924, //No AI content yet
-   "the-evil-dead": 764 //No AI content yet
+  "scanners": 9538, 
+  "my-bloody-valentine": 39874, 
+   "motel-hell": 30924, 
+   "the-evil-dead": 764, 
+   "the-changeling": 13550, 
+   "dressed-to-kill": 11033, 
+   "fade-to-black": 40034, 
+   "the-burning": 24124, 
+   "halloween-II": 11281, 
+   "cat-people": 6217, 
+  "basket-case": 27813, 
+  "halloween-III:-season-of-the-witch": 10676, 
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
