@@ -9,6 +9,7 @@ import MovieCarousel from './home-carousel/carousel';
 
 export type DBMovie = {
   id: string;
+  tmdbId?: number;
   title: string;
   overview: string;
   releaseDate: string | null;
@@ -57,12 +58,17 @@ export default function Home() {
   
 
   useEffect(() => {
+    console.log('Running homepageMovies fetch...');
     fetch('/api/homepageMovies')
-      .then((res) => res.json())
+      .then((res) => {
+      console.log('Response status:', res.status);
+      return res.json();
+    })
       .then((data: DBMovie[]) => {
         // Map fields to match the Movie type used by the carousel
       const mapped :DBMovie[] = data.map(m => ({
          id: m.id,
+         tmdbId: m.tmdbId,  // 👈 add this
         title: m.title,
         overview: m.overview,
         releaseDate: m.releaseDate,
@@ -111,7 +117,10 @@ export default function Home() {
 
       {/* Carousel */}
       <div className={Styles.carouselWrapper}>
-  {mapped.length > 0 && <MovieCarousel moviesArray={mapped} />}
+  {mapped.length > 0 && <MovieCarousel 
+  moviesArray={mapped}       // fetched from /api/homepageMovies (DB)
+  
+ />}
 </div>
     </div>
   );

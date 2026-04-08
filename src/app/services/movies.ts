@@ -44,6 +44,8 @@ export const rawSlugToIdMap: Record<string, number> = {
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
 for (const key in rawSlugToIdMap) {
+  //normalizeSlug(key) converts the raw slug into a clean, consistent slug that can be used in URLs and lookups. 
+  //It trims whitespace, converts to lowercase, replaces spaces with hyphens, and removes special characters.
   slugToIdMap[normalizeSlug(key)] = rawSlugToIdMap[key];
 }
 export interface Movie {
