@@ -48,10 +48,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
   const topActorNames = credits.cast.slice(0, 5).map(actor => actor.actorName);
 
-  // Fetch Spotify playlist first
-  const spotifyPlaylist: SpotifyEmbedType | null = await searchSpotify(movie.title, movie.release_date?.slice(0, 4));
-
   const [
+    spotifyPlaylist,
     youTubeVideos,
     curatedEbayItems,
     streamingAvailability,
@@ -59,6 +57,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     discogsList,
     aiDescription,
   ]: [
+    SpotifyEmbedType | null,
     YouTubeVideo[],
     EbayItemSummary[],
     GetStreamingAvailabilityReturn,
@@ -66,6 +65,11 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
     ReturnedResult[] | null,
     AiDescription | null
   ] = await Promise.all([
+    searchSpotify(
+    movie.title,
+    Number(movie.release_date?.slice(0, 4)),
+    credits.crew
+  ),
     getYouTubeVideos(movie.title, movie.release_date?.slice(0, 4) || '', topActorNames),
     getCuratedEbayItems(movie.id, movie.title, movie.release_date?.slice(0, 4) || ''),
     getStreamingAvailability(

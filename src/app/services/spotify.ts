@@ -5,22 +5,22 @@ const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SEARCH_URL = "https://api.spotify.com/v1/search";
 
 // --- TYPES ---
-interface SpotifyImage { url: string; }
+interface SpotifyImage {
+  url: string;
+}
 
 interface SpotifyAlbumRaw {
   id: string;
   name: string;
   images: SpotifyImage[];
   artists: { name: string }[];
-  total_tracks: number;
-  release_date?: string; // YYYY-MM-DD
+  release_date?: string;
 }
 
 interface SpotifyPlaylistRaw {
   id: string;
   name: string;
   images: SpotifyImage[];
-  tracks: { total: number };
 }
 
 export interface SpotifyEmbed {
@@ -32,6 +32,9 @@ export interface SpotifyEmbed {
 }
 
 // --- CONFIG ---
+const SEARCH_LIMIT = 50;
+const YEAR_TOLERANCE = 2;
+
 const SOUNDTRACK_KEYWORDS = [
   "ost",
   "soundtrack",
@@ -43,8 +46,10 @@ const SOUNDTRACK_KEYWORDS = [
 ];
 
 const STOPWORDS = ["the", "a", "an", "of", "on", "in", "and"];
-const SEARCH_LIMIT = 50;
-const YEAR_TOLERANCE = 2;
+const MIN_SCORE = 7; // or 6, experiment with this
+
+// allow short but meaningful names (bands etc.)
+const ALLOWED_SHORT_NAMES = ["goblin"];
 
 // --- HELPERS ---
 const normalize = (str: string) =>
@@ -71,18 +76,101 @@ const getAlbumYear = (album: SpotifyAlbumRaw): number | null => {
 
 const extractYearFromTitle = (title: string): number | null => {
   const match = title.match(/(\d{4})/);
-  if (!match) return null;
-  const year = parseInt(match[1], 10);
-  return isNaN(year) ? null : year;
+  return match ? parseInt(match[1], 10) : null;
 };
 
-const toEmbed = (item: SpotifyAlbumRaw | SpotifyPlaylistRaw, type: "album" | "playlist"): SpotifyEmbed => ({
+const toEmbed = (
+  item: SpotifyAlbumRaw | SpotifyPlaylistRaw,
+  type: "album" | "playlist"
+): SpotifyEmbed => ({
   id: item.id,
   name: item.name,
   embedUrl: `https://open.spotify.com/embed/${type}/${item.id}`,
   imageUrl: item.images?.[0]?.url,
   type
 });
+
+// --- CREW MATCHING ---
+const extractCrewNames = (crew?: { name: string; job: string }[]) => {
+  if (!crew) return [];
+
+  return crew.map(c => normalize(c.name));
+};
+
+const isStrongName = (name: string) => {
+  if (ALLOWED_SHORT_NAMES.includes(name)) return true;
+
+  // require at least 2 words (e.g. "john carpenter")
+  if (!name.includes(" ")) return false;
+
+  // avoid very short names
+  if (name.length < 5) return false;
+
+  return true;
+};
+
+const matchesCrew = (
+  title: string,
+  artists: { name: string }[] = [],
+  crewNames: string[]
+): boolean => {
+  const titleNorm = normalize(title);
+  const artistNames = artists.map(a => normalize(a.name));
+//some() stops only if at least one element matches the condition (true).
+  return crewNames.some(crew => {
+    if (!isStrongName(crew)) return false;
+
+    return (
+      //here we check if the crew member we're iterating over is present in the title of the album/playlist.
+      titleNorm.includes(crew) ||
+      //Returns true if at least one element passes the test.
+      //here we check if at least at least one of the artist in the spotify almbum/playlist matches the crew member we're iterating over.
+      artistNames.some(a => a.includes(crew))
+    );
+  });
+};
+
+// --- SCORING ---
+const computeScore = ({
+  title,
+  artists,
+  movieWords,
+  crewNames,
+  itemYear,
+  movieYear,
+  isAlbum
+}: {
+  title: string;
+  artists?: { name: string }[];
+  movieWords: string[];
+  crewNames: string[];
+  itemYear: number | null;
+  movieYear?: number;
+  isAlbum: boolean;
+}) => {
+  let score = 0;
+
+  // 🎼 CREW MATCH (strongest signal)
+  if (matchesCrew(title, artists, crewNames)) {
+    score += 10;
+  }
+
+  // 🎬 TITLE MATCH
+  const wordMatches = countMatchingWords(title, movieWords);
+  score += wordMatches * 2;
+
+  // 📅 YEAR MATCH
+  if (movieYear && itemYear) {
+    const diff = Math.abs(itemYear - movieYear);
+    if (diff === 0) score += 5;
+    else if (diff <= YEAR_TOLERANCE) score += 2;
+  }
+
+  // 🎵 Prefer albums over playlists
+  if (isAlbum) score += 2;
+
+  return score;
+};
 
 // --- TOKEN ---
 async function fetchSpotifyToken(): Promise<string | null> {
@@ -91,7 +179,9 @@ async function fetchSpotifyToken(): Promise<string | null> {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic " + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
+        Authorization:
+          "Basic " +
+          Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
       },
       body: "grant_type=client_credentials"
     });
@@ -105,12 +195,13 @@ async function fetchSpotifyToken(): Promise<string | null> {
   }
 }
 
-// --- SEARCH SINGLE QUERY ---
+// --- SEARCH CORE ---
 async function searchOnce(
   token: string,
   query: string,
   movie: string,
-  movieYear?: number
+  movieYear?: number,
+  crew?: { name: string; job: string }[]
 ): Promise<SpotifyEmbed | null> {
 
   const params = new URLSearchParams({
@@ -124,51 +215,67 @@ async function searchOnce(
   });
 
   if (!res.ok) return null;
+
   const data = await res.json();
 
   const movieWords = getMovieWords(movie);
+  const crewNames = extractCrewNames(crew);
 
-  // --- FILTER ALBUMS ---
-  const albums: { album: SpotifyAlbumRaw; year: number | null }[] =
-  (data?.albums?.items ?? [])
-    .filter((a: SpotifyAlbumRaw) => a?.name && hasSoundtrackKeyword(a.name))
-    .map((a: SpotifyAlbumRaw) => ({ album: a, year: getAlbumYear(a) }))
-    .filter((x: { album: SpotifyAlbumRaw; year: number | null }) => {
-      const matches = countMatchingWords(x.album.name, movieWords);
-      if (matches < movieWords.length) return false;
-      if (movieYear && x.year) {
-        return Math.abs(x.year - movieYear) <= YEAR_TOLERANCE;
-      }
-      return true;
+  const candidates: { embed: SpotifyEmbed; score: number }[] = [];
+
+  // --- ALBUMS ---
+  for (const album of data?.albums?.items ?? []) {
+    if (!album?.name || !hasSoundtrackKeyword(album.name)) continue;
+
+    const score = computeScore({
+      title: album.name,
+      artists: album.artists,
+      movieWords,
+      crewNames,
+      itemYear: getAlbumYear(album),
+      movieYear,
+      isAlbum: true
     });
 
-// --- FILTER PLAYLISTS ---
-const playlists: { playlist: SpotifyPlaylistRaw; year: number | null }[] =
-  (data?.playlists?.items ?? [])
-    .filter((p: SpotifyPlaylistRaw) => p?.name && hasSoundtrackKeyword(p.name))
-    .map((p: SpotifyPlaylistRaw) => ({ playlist: p, year: extractYearFromTitle(p.name) }))
-    .filter((x: { playlist: SpotifyPlaylistRaw; year: number | null }) => {
-      const matches = countMatchingWords(x.playlist.name, movieWords);
-      if (matches < movieWords.length) return false;
-      if (movieYear && x.year) {
-        return Math.abs(x.year - movieYear) <= YEAR_TOLERANCE;
-      }
-      return false; // discard playlists without year
+    if (score > MIN_SCORE) {
+      candidates.push({
+        embed: toEmbed(album, "album"),
+        score
+      });
+    }
+  }
+
+  // --- PLAYLISTS ---
+  for (const playlist of data?.playlists?.items ?? []) {
+    if (!playlist?.name || !hasSoundtrackKeyword(playlist.name)) continue;
+
+    const score = computeScore({
+      title: playlist.name,
+      movieWords,
+      crewNames,
+      itemYear: extractYearFromTitle(playlist.name),
+      movieYear,
+      isAlbum: false
     });
 
-  // --- PRIORITIZE ALBUMS ---
-  const candidates: SpotifyEmbed[] = [
-    ...albums.sort((a, b) => b.year ?? 0 - (a.year ?? 0)).map(a => toEmbed(a.album, "album")),
-    ...playlists.sort((a, b) => (b.year ?? 0) - (a.year ?? 0)).map(p => toEmbed(p.playlist, "playlist"))
-  ];
+    if (score > MIN_SCORE) {
+      candidates.push({
+        embed: toEmbed(playlist, "playlist"),
+        score
+      });
+    }
+  }
 
-  return candidates[0] ?? null;
+  candidates.sort((a, b) => b.score - a.score);
+
+  return candidates[0]?.embed ?? null;
 }
 
-// --- MAIN SEARCH ---
+// --- MAIN ---
 export async function searchSpotify(
   rawQuery: string,
-  year?: number
+  year?: number,
+  crew?: { name: string; job: string }[]
 ): Promise<SpotifyEmbed | null> {
 
   const token = await fetchSpotifyToken();
@@ -189,7 +296,7 @@ export async function searchSpotify(
   ];
 
   for (const q of queries) {
-    const result = await searchOnce(token, q.trim(), movie, year);
+    const result = await searchOnce(token, q, movie, year, crew);
     if (result) return result;
   }
 
