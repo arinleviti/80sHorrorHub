@@ -12,6 +12,7 @@ export interface HFSuggestionItem {
   posterUrl?: string;
   year?: string;
   movieId?: string;
+  tmdbId?: number; // 👈 add this
 }
 export interface HFChoiceMessage {
   role: string;
@@ -40,6 +41,7 @@ interface HFDBSuggestionItem {
   year: string | undefined;
   posterUrl: string;
   movieId: string; // required because this comes from the DB
+  tmdbId: number; // 👈 add this
 }
 
 export async function getHFSuggestions(movieId: string, title: string, year: string): Promise<HFSuggestionItem[] | null> {
@@ -57,6 +59,7 @@ export async function getHFSuggestions(movieId: string, title: string, year: str
       posterUrl: s.imagekitPosterPath || undefined,
       year: s.releaseDate || undefined,
       movieId: s.id || undefined,
+      tmdbId: s.tmdbId, // 👈 add this
     }));
   }
   //fetch from hugging face API
@@ -101,6 +104,7 @@ export async function getHFSuggestions(movieId: string, title: string, year: str
     posterUrl: s.imagekitPosterPath || undefined,
     year: s.releaseDate || undefined,
     movieId: s.id || undefined,
+    tmdbId: s.tmdbId, // 👈 add this
   }));
  }
  if (suggestions.length === 0) {
@@ -122,6 +126,7 @@ const matchedMovies = await Promise.all(
         title: true,
         releaseDate: true,
         imagekitPosterPath: true,
+        tmdbId: true, // 👈 add this
       },
     });
     return match ? {
@@ -129,12 +134,13 @@ const matchedMovies = await Promise.all(
       title: match.title,
       releaseDate: match.releaseDate,
       imagekitPosterPath: match.imagekitPosterPath,
+      tmdbId: match.tmdbId, // 👈 add this
     } : null;
   })
 );
 // Filter out nulls from matchedMovies to get an array of objects of type {id: string}
 //If m !== null, then you can safely treat m as having this shape: { id, title, releaseDate, imagekitPosterPath }."
-const connects = matchedMovies.filter((m): m is { id: string, title: string, releaseDate: string, imagekitPosterPath: string } => m !== null);
+const connects = matchedMovies.filter((m): m is { id: string, title: string, releaseDate: string | null, imagekitPosterPath: string | null, tmdbId: number } => m !== null);
 
 const dbSuggestions: HFDBSuggestionItem[] = suggestions
   .map(s => {
@@ -145,6 +151,7 @@ const dbSuggestions: HFDBSuggestionItem[] = suggestions
       year: s.year,
       posterUrl: match.imagekitPosterPath,
       movieId: match.id,
+      tmdbId: match.tmdbId, // 👈 add this
     };
   })
   .filter((s): s is HFDBSuggestionItem => s !== null)

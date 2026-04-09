@@ -39,7 +39,10 @@ export const rawSlugToIdMap: Record<string, number> = {
    "halloween-II": 11281, 
    "cat-people": 6217, 
   "basket-case": 27813, 
-  "halloween-III:-season-of-the-witch": 10676, 
+  "halloween-III:-season-of-the-witch": 10676,
+  "they-live": 8337, 
+  "videodrome": 837, 
+  "christine": 8769, 
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

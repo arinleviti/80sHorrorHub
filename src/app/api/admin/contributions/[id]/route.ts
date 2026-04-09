@@ -5,11 +5,12 @@ import { requireAdmin } from "@/lib/admin";
 // APPROVE contribution
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
 
+    const { id } = await params;
     const { status } = await req.json();
 
     if (!["APPROVED", "REJECTED"].includes(status)) {
@@ -20,7 +21,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.contribution.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
 

@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { SpotifyPlaylistEmbed } from "@/app/services/spotify";
+import { SpotifyEmbed as SpotifyEmbedType } from "@/app/services/spotify";
 import styles from "./spotify-playlist.module.css";
 
 interface SpotifyEmbedProps {
-  playlist: SpotifyPlaylistEmbed;
+  playlist: SpotifyEmbedType;
 }
 
 export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {

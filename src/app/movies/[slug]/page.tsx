@@ -5,9 +5,9 @@ import {  slugToIdMap } from '@/app/services/movies';
 import { getMovie, getConfiguration} from '@/app/services/tmdb';
 
 interface MoviePageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function MoviePage({ params }: MoviePageProps) {
