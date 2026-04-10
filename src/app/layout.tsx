@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Merriweather,  Bebas_Neue } from "next/font/google";
+import { Merriweather, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./navbar/navbar";
 import Providers from "./providers";
 import Footer from "./footer/footer";
+import Script from 'next/script';
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -34,8 +35,20 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${merriweather.variable} ${bebasNeue.variable}`}>
         <Providers>
-          <Navbar/>
+          <Navbar />
           {children}
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-1Q15D7ZWMZ"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-1Q15D7ZWMZ');
+          `}
+          </Script>
           <Footer />
         </Providers>
       </body>
