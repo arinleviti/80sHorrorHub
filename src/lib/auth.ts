@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: { strategy: "database" },
 
-  events: {
+  /* events: {
     // Fixes 'null' emailVerified for Google users
     async linkAccount({ user }) {
       await prisma.user.update({
@@ -26,8 +26,34 @@ export const authOptions: NextAuthOptions = {
         data: { emailVerified: new Date() },
       });
     },
-  },
+  }, */
+events: {
+  async linkAccount({ user }) {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const pendingConsent = cookieStore.get("pendingConsent");
 
+    let consentPrivacy = false;
+    let consentNewsletter = false;
+
+    if (pendingConsent) {
+      try {
+        ({ consentPrivacy, consentNewsletter } = JSON.parse(pendingConsent.value));
+      } catch (e) {
+        console.error("Failed to parse consent cookie", e);
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: new Date(),
+        consentPrivacy,
+        consentNewsletter,
+      },
+    });
+  },
+},
   callbacks: {
     // Add user info + consent to session
     async session({ session, user }) {

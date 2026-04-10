@@ -55,6 +55,28 @@ const NavbarRHH = () => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+useEffect(() => {
+  const applyPendingConsent = async () => {
+    if (!session?.user) return;
+
+    const raw = localStorage.getItem("pendingConsent");
+    if (!raw) return;
+
+    try {
+      const { consentPrivacy, consentNewsletter } = JSON.parse(raw);
+      await fetch("/api/auth/update-consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consentPrivacy, consentNewsletter }),
+      });
+      localStorage.removeItem("pendingConsent");
+    } catch (e) {
+      console.error("Failed to apply pending consent", e);
+    }
+  };
+
+  applyPendingConsent();
+}, [session]);
 
   // Email login handler
   const handleEmailLogin = async () => {
@@ -95,17 +117,24 @@ const NavbarRHH = () => {
   };
 
   // Google login handler
-  const handleGoogleLogin = async () => {
+ /*  const handleGoogleLogin = async () => {
     if (!consentPrivacy) {
       setShowGoogleConsent(true);
       return;
     }
     const result = await signIn("google", { redirect: false, callbackUrl: "/" });
     if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
-  };
+  }; */
+  const handleGoogleLogin = async () => {
+  if (!consentPrivacy) {
+    setShowGoogleConsent(true);
+    return;
+  }
+  await signIn("google", { callbackUrl: "/" });
+};
 
   // Google consent submit handler
-  const handleGoogleConsentSubmit = async () => {
+ /*  const handleGoogleConsentSubmit = async () => {
     if (!consentPrivacy) {
       alert("You must agree to the Privacy Policy to continue.");
       return;
@@ -113,8 +142,18 @@ const NavbarRHH = () => {
     setShowGoogleConsent(false);
     const result = await signIn("google", { redirect: false, callbackUrl: "/" });
     if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
-  };
+  }; */
+const handleGoogleConsentSubmit = async () => {
+  if (!consentPrivacy) {
+    alert("You must agree to the Privacy Policy to continue.");
+    return;
+  }
+  setShowGoogleConsent(false);
 
+  localStorage.setItem("pendingConsent", JSON.stringify({ consentPrivacy, consentNewsletter }));
+
+  await signIn("google", { callbackUrl: "/" });
+};
   // Load consent from session
   useEffect(() => {
     if (session?.user) {
