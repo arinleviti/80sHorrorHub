@@ -22,8 +22,8 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Retro Horror Hub",
-  description: "70s,80s,90s Horror Movies Hub for collectors and fans.",
+  title: "Retro Horror Hub – Horror Movies & Collectibles for Fans",
+  description: "Discover cult horror films from the 70s, 80s and 90s. Explore cast & crew, trailers, fan contributions, collectibles, vinyls, and rare memorabilia in a curated horror archive for fans and collectors.",
 };
 
 export default function RootLayout({

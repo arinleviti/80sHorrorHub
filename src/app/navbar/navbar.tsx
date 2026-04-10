@@ -24,6 +24,7 @@ const NavbarRHH = () => {
   // Modals
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showGoogleConsent, setShowGoogleConsent] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -177,9 +178,13 @@ const NavbarRHH = () => {
           {/* Nav links */}
           <Navbar.Collapse id="basic-navbar-nav" className={styles.collapse}>
             <Nav className={styles.navLinksContainer}>
-              <Link href="/about" className={styles.navLink}>
-                ABOUT
-              </Link>
+              <span
+  className={styles.navLink}
+  onClick={() => setShowAboutModal(true)}
+  style={{ cursor: "pointer" }}
+>
+  ABOUT
+</span>
 
               {session ? (
                 <>
@@ -202,6 +207,65 @@ const NavbarRHH = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
+
+{/* --- About Modal --- */}
+<Modal
+  show={showAboutModal}
+  onHide={() => setShowAboutModal(false)}
+  centered
+  className={styles.modalWrapper}
+  contentClassName={styles.modalContent}
+>
+  <Modal.Header closeButton>
+    <Modal.Title className={styles.modalTitle}>
+      About Retro Horror Hub
+    </Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body className={styles.modalBody} style={{ maxHeight: "60vh", overflowY: "auto" }}>
+    <p>
+      Retro Horror Hub is a space for people who already love these films.
+    </p>
+
+    <p>
+      This isn’t about reviews, ratings, or deciding what to watch next. If
+      you’re here, chances are you already know the movie—you’ve seen it,
+      you remember it, and you care about it. The goal is simple: go deeper.
+    </p>
+
+    <p>
+      This project is still in its early stages, and it’s being built and
+      curated by one person. New movies are being added every day, so the hub is constantly evolving. What you see is a mix of structured data and
+      custom systems designed to surface the most interesting and relevant
+      content around each film—whether that’s rare collectibles, standout
+      videos, or hard-to-find details.
+    </p>
+
+    <p>
+      The platform uses algorithms to filter and prioritize quality over
+      noise, but it’s not just about pulling data from APIs. The real
+      ambition goes beyond that.
+    </p>
+
+    <p>
+      Over time, the hub aims to become a curated, fan-driven knowledge
+      base. Not comments, not generic reviews—but meaningful contributions:
+      behind-the-scenes facts, personal insights, obscure trivia, and
+      anything that adds real value.
+    </p>
+
+    <p>
+      If you create an account, you’ll be able to contribute. Submissions
+      are reviewed to keep the quality high, with the long-term vision of
+      building something shaped by fans who genuinely care.
+    </p>
+
+    <p>
+      This is a work in progress, and feedback is not just welcome—it’s
+      essential.
+    </p>
+  </Modal.Body>
+</Modal>
 
       {/* --- Email Login Modal --- */}
       <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)} centered className={styles.modalWrapper} contentClassName={styles.modalContent}>

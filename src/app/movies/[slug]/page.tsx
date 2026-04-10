@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import styles from './movies.module.css';
 import MovieInfo from './components/movieInfo/movie-info';
 import {  slugToIdMap } from '@/app/services/movies';
@@ -8,6 +9,31 @@ interface MoviePageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const movieId = slugToIdMap[slug];
+  if (!movieId) return {};
+
+  const movie = await getMovie(movieId);
+  console.log("generateMetadata movie:", movie.title, movie.poster_path);
+  return {
+    title: `${movie.title} (${movie.release_date?.slice(0, 4)}) | Retro Horror Hub`,
+    description: movie.overview,
+    openGraph: {
+      title: movie.title,
+      description: movie.overview,
+      images: [`https://image.tmdb.org/t/p/w500${movie.poster_path}`],
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title: movie.title,
+      description: movie.overview,
+      images: [`https://image.tmdb.org/t/p/w500${movie.poster_path}`],
+    },
+  };
 }
 
 export default async function MoviePage({ params }: MoviePageProps) {
@@ -29,7 +55,26 @@ export default async function MoviePage({ params }: MoviePageProps) {
       cast: movie.cast ?? [],
       crew: movie.crew ?? [],
     };
-    return <MovieInfo movie={movie} config={config} credits={credits} />;
+     return (
+      <>
+        {/* ✅ JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Movie",
+              name: movie.title,
+              dateCreated: movie.release_date,
+              description: movie.overview,
+              image: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : undefined,
+            }),
+          }}
+        />
+
+        <MovieInfo movie={movie} config={config} credits={credits} />
+      </>
+    );
   } catch (err) {
     console.error(err);
     return <p>Failed to fetch movie data</p>;

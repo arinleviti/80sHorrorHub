@@ -40,12 +40,12 @@ const Footer: FC = () => {
             <h5 className={styles.footerTitle}>Contact</h5>
             <p className={styles.textContent}>
               Email:{' '}
-              <a href="mailto:retrohorrorhub@outlook.com" className={styles.link}>
-                retrohorrorhub[at]outlook.com
+              <a href="mailto:retrohorrorhub@gmail.com" className={styles.link}>
+                retrohorrorhub[at]gmail.com
               </a>
             </p>
             <p className={styles.textContent}>
-              Follow us on social media for updates and collector highlights.
+              Socials coming soon!
             </p>
           </Col>
         </Row>

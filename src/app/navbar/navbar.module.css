@@ -6,7 +6,7 @@
   min-height: 0 !important;
   font-family: 'Eighties Horror', sans-serif;
   min-height: 0;         /* remove default Bootstrap min-height */
-  z-index: 99999;
+  z-index: 1000;
 }
 
 /* Container: Desktop = row, Mobile = column */
