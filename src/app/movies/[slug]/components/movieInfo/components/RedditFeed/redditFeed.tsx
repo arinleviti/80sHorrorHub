@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, ListGroup, Spinner, Alert, Stack } from "react-bootstrap";
-import { RedditPost } from "../../../../../../services/reddit";
+import { fetchRedditPosts, RedditPost, MovieForReddit } from "../../../../../../services/reddit";
 
-interface MovieInput {
+/* interface MovieInput {
   title: string;
   releaseDate?: string | null;
   castMembers?: { actor: { name: string } }[];
-}
+} */
 
 interface RedditFeedProps {
-  movie: MovieInput;
+  movie: MovieForReddit;
   limit?: number;
 }
 
@@ -20,7 +20,7 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  /* useEffect(() => {
     const loadPosts = async () => {
       setLoading(true);
       setError(null);
@@ -42,7 +42,25 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
     };
 
     loadPosts();
-  }, [movie.title, movie.releaseDate, movie.castMembers, limit]);
+  }, [movie.title, movie.releaseDate, movie.castMembers, limit]); */
+
+useEffect(() => {
+    const loadPosts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchRedditPosts(movie, limit);
+        setPosts(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load Reddit posts.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
+  },  [movie, limit]);
 
   if (loading)
     return (
