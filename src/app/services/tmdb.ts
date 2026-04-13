@@ -1,6 +1,6 @@
 import { prisma } from "@/app/services/prisma";
 import { imagekit } from "./imagekit";
-
+import { cache } from 'react';
 /* =========================
    TYPES
 ========================= */
@@ -87,7 +87,7 @@ async function fetchFromTMDB<T>(endpoint: string): Promise<T> {
    MAIN FUNCTION
 ========================= */
 
-export async function getMovie(movieId: number): Promise<Movie> {
+export const getMovie = cache(async(movieId: number): Promise<Movie> =>{
   // Check cache
   const cached = await prisma.movie.findUnique({
     where: { tmdbId: movieId },
@@ -151,7 +151,21 @@ export async function getMovie(movieId: number): Promise<Movie> {
       imagekitPosterUrl = upload.url;
     }
 
-    movieRecord = await prisma.movie.create({
+    movieRecord = await prisma.movie.upsert({
+  where: { tmdbId: movieId },
+  update: {},
+  create: {
+    tmdbId: movieId,
+    title: movieDataRaw.title,
+    releaseDate: movieDataRaw.release_date,
+    overview: movieDataRaw.overview,
+    posterPath: movieDataRaw.poster_path,
+    imagekitPosterPath: imagekitPosterUrl,
+    popularity: movieDataRaw.popularity,
+  },
+  include: { castMembers: { include: { actor: true } }, crewMembers: true },
+});
+    /* movieRecord = await prisma.movie.create({
       data: {
         tmdbId: movieId,
         title: movieDataRaw.title,
@@ -162,7 +176,7 @@ export async function getMovie(movieId: number): Promise<Movie> {
         popularity: movieDataRaw.popularity,
       },
       include: { castMembers: { include: { actor: true } }, crewMembers: true },
-    });
+    }); */
   }
 
   // Fill in missing cast
@@ -220,7 +234,7 @@ export async function getMovie(movieId: number): Promise<Movie> {
     cast: castWithImagekit,
     crew: crewResult,
   };
-}
+});
 
 /* =========================
    CONFIG

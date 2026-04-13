@@ -43,17 +43,17 @@ export const rawSlugToIdMap: Record<string, number> = {
   "they-live": 8337, 
   "videodrome": 837, 
   "christine": 8769, 
-  "full-moon-high": 107430, // no AI content.
-  "ghost-story": 24634, // no AI content.
-  "q:-the-winged-serpent": 27726, // no AI content.
-  "creepshow": 16281, // no AI content.
-  "friday-the-13th-part-III": 9728, // no AI content.
-  "parasite": 48311, // no AI content.
-  "the-huger": 11654, // no AI content.
+  "full-moon-high": 107430, // no AI content **.
+  "ghost-story": 24634, // no AI content **.
+  "q:-the-winged-serpent": 27726, // no AI content **.
+  "creepshow": 16281, // no AI content **.
+  "friday-the-13th-part-III": 9728, // no AI content **.
+  "parasite": 48311, // no AI content **.
+  "the-huger": 11654, // no AI content **.
   "psycho-II": 10576, // no AI content.
   "cujo": 10489, // no AI content.
   "amityville-3D": 27214, // no AI content. 
-  "jaws-3D": 17692, // no AI content.
+  "jaws-3D": 17692, // no AI content **.
   "firestarter": 11495, // no AI content.
   "gremlins": 927, // no AI content.
   "night-of-the-comet": 18462, // no AI content.
