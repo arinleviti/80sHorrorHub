@@ -16,7 +16,10 @@ export const authOptions: NextAuthOptions = {
       from: process.env.EMAIL_FROM!,
     }),
   ],
-  session: { strategy: "database" },
+  session: { 
+  strategy: "database",
+  maxAge: 30 * 24 * 60 * 60, // 30 days
+},
 
   /* events: {
     // Fixes 'null' emailVerified for Google users

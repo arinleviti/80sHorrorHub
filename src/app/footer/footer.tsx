@@ -2,10 +2,15 @@
 import { FC } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import styles from './footer.module.css';
+import { Button } from "react-bootstrap";
 
 const Footer: FC = () => {
   const currentYear: number = new Date().getFullYear();
-
+  const handleCookieSettings = () => {
+    localStorage.removeItem("cookieConsent");
+    localStorage.removeItem("cookieConsentDate");
+    window.location.reload();
+  };
   return (
     <footer className={styles.footer}>
       <Container>
@@ -15,6 +20,13 @@ const Footer: FC = () => {
             <p className={styles.textContent}>
               Bringing you the best of 80s horror, curated memorabilia, and fan insights.
             </p>
+            <Button
+              variant="link"
+              onClick={handleCookieSettings}
+              className={styles.textContent}
+            >
+            Cookie Settings
+            </Button>
           </Col>
 
           <Col md={4}>

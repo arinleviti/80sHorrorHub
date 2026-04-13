@@ -33,9 +33,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/app/movies/[slug]/components/movieInfo/components/streaming-avail",
+    /* "src/app/movies/[slug]/components/movieInfo/components/streaming-avail", */
     ".next/dev/types/**/*.ts"
-  ],
+/* , "src/app/movies/[slug]/components/CookieBanner" */  ],
   "exclude": [
     "node_modules"
   ]

@@ -55,28 +55,28 @@ const NavbarRHH = () => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
-useEffect(() => {
-  const applyPendingConsent = async () => {
-    if (!session?.user) return;
+  useEffect(() => {
+    const applyPendingConsent = async () => {
+      if (!session?.user) return;
 
-    const raw = localStorage.getItem("pendingConsent");
-    if (!raw) return;
+      const raw = localStorage.getItem("pendingConsent");
+      if (!raw) return;
 
-    try {
-      const { consentPrivacy, consentNewsletter } = JSON.parse(raw);
-      await fetch("/api/auth/update-consent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consentPrivacy, consentNewsletter }),
-      });
-      localStorage.removeItem("pendingConsent");
-    } catch (e) {
-      console.error("Failed to apply pending consent", e);
-    }
-  };
+      try {
+        const { consentPrivacy, consentNewsletter } = JSON.parse(raw);
+        await fetch("/api/auth/update-consent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consentPrivacy, consentNewsletter }),
+        });
+        localStorage.removeItem("pendingConsent");
+      } catch (e) {
+        console.error("Failed to apply pending consent", e);
+      }
+    };
 
-  applyPendingConsent();
-}, [session]);
+    applyPendingConsent();
+  }, [session]);
 
   // Email login handler
   const handleEmailLogin = async () => {
@@ -117,43 +117,43 @@ useEffect(() => {
   };
 
   // Google login handler
- /*  const handleGoogleLogin = async () => {
+  /*  const handleGoogleLogin = async () => {
+     if (!consentPrivacy) {
+       setShowGoogleConsent(true);
+       return;
+     }
+     const result = await signIn("google", { redirect: false, callbackUrl: "/" });
+     if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
+   }; */
+  const handleGoogleLogin = async () => {
     if (!consentPrivacy) {
       setShowGoogleConsent(true);
       return;
     }
-    const result = await signIn("google", { redirect: false, callbackUrl: "/" });
-    if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
-  }; */
-  const handleGoogleLogin = async () => {
-  if (!consentPrivacy) {
-    setShowGoogleConsent(true);
-    return;
-  }
-  await signIn("google", { callbackUrl: "/" });
-};
+    await signIn("google", { callbackUrl: "/" });
+  };
 
   // Google consent submit handler
- /*  const handleGoogleConsentSubmit = async () => {
+  /*  const handleGoogleConsentSubmit = async () => {
+     if (!consentPrivacy) {
+       alert("You must agree to the Privacy Policy to continue.");
+       return;
+     }
+     setShowGoogleConsent(false);
+     const result = await signIn("google", { redirect: false, callbackUrl: "/" });
+     if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
+   }; */
+  const handleGoogleConsentSubmit = async () => {
     if (!consentPrivacy) {
       alert("You must agree to the Privacy Policy to continue.");
       return;
     }
     setShowGoogleConsent(false);
-    const result = await signIn("google", { redirect: false, callbackUrl: "/" });
-    if (result?.error) alert("Login blocked: Please accept the Privacy Policy first.");
-  }; */
-const handleGoogleConsentSubmit = async () => {
-  if (!consentPrivacy) {
-    alert("You must agree to the Privacy Policy to continue.");
-    return;
-  }
-  setShowGoogleConsent(false);
 
-  localStorage.setItem("pendingConsent", JSON.stringify({ consentPrivacy, consentNewsletter }));
+    localStorage.setItem("pendingConsent", JSON.stringify({ consentPrivacy, consentNewsletter }));
 
-  await signIn("google", { callbackUrl: "/" });
-};
+    await signIn("google", { callbackUrl: "/" });
+  };
   // Load consent from session
   useEffect(() => {
     if (session?.user) {
@@ -218,12 +218,12 @@ const handleGoogleConsentSubmit = async () => {
           <Navbar.Collapse id="basic-navbar-nav" className={styles.collapse}>
             <Nav className={styles.navLinksContainer}>
               <span
-  className={styles.navLink}
-  onClick={() => setShowAboutModal(true)}
-  style={{ cursor: "pointer" }}
->
-  ABOUT
-</span>
+                className={styles.navLink}
+                onClick={() => setShowAboutModal(true)}
+                style={{ cursor: "pointer" }}
+              >
+                ABOUT
+              </span>
 
               {session ? (
                 <>
@@ -247,64 +247,64 @@ const handleGoogleConsentSubmit = async () => {
         </Container>
       </Navbar>
 
-{/* --- About Modal --- */}
-<Modal
-  show={showAboutModal}
-  onHide={() => setShowAboutModal(false)}
-  centered
-  className={styles.modalWrapper}
-  contentClassName={styles.modalContent}
->
-  <Modal.Header closeButton>
-    <Modal.Title className={styles.modalTitle}>
-      About Retro Horror Hub
-    </Modal.Title>
-  </Modal.Header>
+      {/* --- About Modal --- */}
+      <Modal
+        show={showAboutModal}
+        onHide={() => setShowAboutModal(false)}
+        centered
+        className={styles.modalWrapper}
+        contentClassName={styles.modalContent}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className={styles.modalTitle}>
+            About Retro Horror Hub
+          </Modal.Title>
+        </Modal.Header>
 
-  <Modal.Body className={styles.modalBody} style={{ maxHeight: "60vh", overflowY: "auto" }}>
-    <p>
-      Retro Horror Hub is a space for people who already love these films.
-    </p>
+        <Modal.Body className={styles.modalBody} style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <p>
+            Retro Horror Hub is a space for people who already love these films.
+          </p>
 
-    <p>
-      This isn’t about reviews, ratings, or deciding what to watch next. If
-      you’re here, chances are you already know the movie—you’ve seen it,
-      you remember it, and you care about it. The goal is simple: go deeper.
-    </p>
+          <p>
+            This isn’t about reviews, ratings, or deciding what to watch next. If
+            you’re here, chances are you already know the movie—you’ve seen it,
+            you remember it, and you care about it. The goal is simple: go deeper.
+          </p>
 
-    <p>
-      This project is still in its early stages, and it’s being built and
-      curated by one person. New movies are being added every day, so the hub is constantly evolving. What you see is a mix of structured data and
-      custom systems designed to surface the most interesting and relevant
-      content around each film—whether that’s rare collectibles, standout
-      videos, or hard-to-find details.
-    </p>
+          <p>
+            This project is still in its early stages, and it’s being built and
+            curated by one person. New movies are being added every day, so the hub is constantly evolving. What you see is a mix of structured data and
+            custom systems designed to surface the most interesting and relevant
+            content around each film—whether that’s rare collectibles, standout
+            videos, or hard-to-find details.
+          </p>
 
-    <p>
-      The platform uses algorithms to filter and prioritize quality over
-      noise, but it’s not just about pulling data from APIs. The real
-      ambition goes beyond that.
-    </p>
+          <p>
+            The platform uses algorithms to filter and prioritize quality over
+            noise, but it’s not just about pulling data from APIs. The real
+            ambition goes beyond that.
+          </p>
 
-    <p>
-      Over time, the hub aims to become a curated, fan-driven knowledge
-      base. Not comments, not generic reviews—but meaningful contributions:
-      behind-the-scenes facts, personal insights, obscure trivia, and
-      anything that adds real value.
-    </p>
+          <p>
+            Over time, the hub aims to become a curated, fan-driven knowledge
+            base. Not comments, not generic reviews—but meaningful contributions:
+            behind-the-scenes facts, personal insights, obscure trivia, and
+            anything that adds real value.
+          </p>
 
-    <p>
-      If you create an account, you’ll be able to contribute. Submissions
-      are reviewed to keep the quality high, with the long-term vision of
-      building something shaped by fans who genuinely care.
-    </p>
+          <p>
+            If you create an account, you’ll be able to contribute. Submissions
+            are reviewed to keep the quality high, with the long-term vision of
+            building something shaped by fans who genuinely care.
+          </p>
 
-    <p>
-      This is a work in progress, and feedback is not just welcome—it’s
-      essential.
-    </p>
-  </Modal.Body>
-</Modal>
+          <p>
+            This is a work in progress, and feedback is not just welcome—it’s
+            essential.
+          </p>
+        </Modal.Body>
+      </Modal>
 
       {/* --- Email Login Modal --- */}
       <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)} centered className={styles.modalWrapper} contentClassName={styles.modalContent}>
@@ -316,9 +316,9 @@ const handleGoogleConsentSubmit = async () => {
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email" className={styles.modalInput} />
           <label className={styles.modalLabel}>
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} /> I agree to the{" "}
-            <a href="/privacy" target="_blank">
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
               Privacy Policy
-            </a>{" "}
+            </Link>{" "}
             (required)
           </label>
           <label className={styles.modalLabel}>
@@ -340,9 +340,9 @@ const handleGoogleConsentSubmit = async () => {
         <Modal.Body>
           <label className={styles.modalLabel}>
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} /> I agree to the{" "}
-            <a href="/privacy" target="_blank">
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
               Privacy Policy
-            </a>{" "}
+            </Link>{" "}
             (required)
           </label>
           <label className={styles.modalLabel}>

@@ -5,7 +5,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./navbar/navbar";
 import Providers from "./providers";
 import Footer from "./footer/footer";
-import Script from 'next/script';
+import AnalyticsTracker from "./AnalyticsTracker/analyticsTracker";
+import CookieBanner from './CookieBanner/cookieBanner';
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -36,8 +37,10 @@ export default function RootLayout({
       <body className={`${merriweather.variable} ${bebasNeue.variable}`}>
         <Providers>
           <Navbar />
+          <AnalyticsTracker />
           {children}
-          <Script
+          <CookieBanner />
+         {/*  <Script
             src="https://www.googletagmanager.com/gtag/js?id=G-1Q15D7ZWMZ"
             strategy="afterInteractive"
           />
@@ -48,7 +51,7 @@ export default function RootLayout({
             gtag('js', new Date());
             gtag('config', 'G-1Q15D7ZWMZ');
           `}
-          </Script>
+          </Script> */}
           <Footer />
         </Providers>
       </body>
