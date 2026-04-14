@@ -7,18 +7,17 @@ import Providers from "./providers";
 import Footer from "./footer/footer";
 import AnalyticsTracker from "./AnalyticsTracker/analyticsTracker";
 import CookieBanner from './CookieBanner/cookieBanner';
+import Script from "next/script";
 
 const merriweather = Merriweather({
   subsets: ["latin"],
-  weight: ["400", "700"],  // normal and bold
+  weight: ["400", "700"],
   variable: "--font-body",
 });
 
-
-
 const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
-  weight: ["400"], // usually one weight is enough
+  weight: ["400"],
   variable: "--font-menu",
 });
 
@@ -40,20 +39,24 @@ export default function RootLayout({
           <AnalyticsTracker />
           {children}
           <CookieBanner />
-         {/*  <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-1Q15D7ZWMZ"
-            strategy="afterInteractive"
-          />
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-1Q15D7ZWMZ');
-          `}
-          </Script> */}
           <Footer />
         </Providers>
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied'
+            });
+            gtag('js', new Date());
+            gtag('config', 'G-1Q15D7ZWMZ', { anonymize_ip: true });
+          `}
+        </Script>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-1Q15D7ZWMZ"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
