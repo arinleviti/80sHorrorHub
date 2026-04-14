@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, ListGroup, Spinner, Alert, Stack } from "react-bootstrap";
-import { fetchRedditPosts, RedditPost, MovieForReddit } from "../../../../../../services/reddit";
+import { RedditPost, MovieForReddit } from "../../../../../../services/reddit";
 
 /* interface MovieInput {
   title: string;
@@ -20,7 +20,7 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* useEffect(() => {
+  useEffect(() => {
     const loadPosts = async () => {
       setLoading(true);
       setError(null);
@@ -42,9 +42,9 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
     };
 
     loadPosts();
-  }, [movie.title, movie.releaseDate, movie.castMembers, limit]); */
+  }, [movie.title,limit]);
 
-useEffect(() => {
+/* useEffect(() => {
     const loadPosts = async () => {
       setLoading(true);
       setError(null);
@@ -60,7 +60,7 @@ useEffect(() => {
     };
 
     loadPosts();
-  },  [movie, limit]);
+  },  [movie, limit]); */
 
   if (loading)
     return (

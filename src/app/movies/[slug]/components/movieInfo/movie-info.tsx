@@ -42,7 +42,9 @@ type ContributionWithUser = Prisma.ContributionGetPayload<{
 }>;
 
 export default async function MovieInfo({ movie, config, credits }: MovieInfoProps) {
-  const posterUrl = movie.poster_path
+ const posterUrl = movie.imagekitPosterPath
+  ? movie.imagekitPosterPath
+  : movie.poster_path
     ? `${config.secure_base_url}w500${movie.poster_path}`
     : "/placeholder-poster.png";
 

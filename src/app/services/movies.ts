@@ -50,23 +50,23 @@ export const rawSlugToIdMap: Record<string, number> = {
   "friday-the-13th-part-III": 9728, // no AI content **.
   "parasite": 48311, // no AI content **.
   "the-huger": 11654, // no AI content **.
-  "psycho-II": 10576, // no AI content.
-  "cujo": 10489, // no AI content.
-  "amityville-3D": 27214, // no AI content. 
+  "psycho-II": 10576, // no AI content **.
+  "cujo": 10489, // no AI content **.
+  "amityville-3D": 27214, // no AI content **. 
   "jaws-3D": 17692, // no AI content **.
-  "firestarter": 11495, // no AI content.
-  "gremlins": 927, // no AI content.
-  "night-of-the-comet": 18462, // no AI content.
-  "the-company-of-wolves": 11905, // no AI content.
-  "the-stuff": 18502, // no AI content.
-  "day-of-the-dead": 8408, // no AI content.
-  "howling-II": 29794, // no AI content.
-  "silver-bullet": 17898, // no AI content.
-  "chopping-mall": 28941, // no AI content.
-  "the-toxic-avenger": 15239, // no AI content.
-  "psycho-III": 12662, // no AI content.
-  "friday-the-13th-part-VI:-jason-lives": 10225, // no AI content.
-  "night-of-the-creeps": 15762, // no AI content.
+  "firestarter": 11495, // no AI content **.
+  "gremlins": 927, // no AI content**.
+  "night-of-the-comet": 18462, // no AI content **.
+  "the-company-of-wolves": 11905, // no AI content **.
+  "the-stuff": 18502, // no AI content **.
+  "day-of-the-dead": 8408, // no AI content **.
+  "howling-II": 29794, // no AI content **.
+  "silver-bullet": 17898, // no AI content **.
+  "chopping-mall": 28941, // no AI content **.
+  "the-toxic-avenger": 15239, // no AI content**.
+  "psycho-III": 12662, // no AI content **.
+  "friday-the-13th-part-VI:-jason-lives": 10225, // no AI content**.
+  "night-of-the-creeps": 15762, // no AI content **.
   "the-taxas-chainsaw-massacre-2": 16337, // no AI content.
   "from-beyond": 14510, // no AI content.
   "a-nightmare-on-elm-street-3:-dream-warriors": 10072, // no AI content.

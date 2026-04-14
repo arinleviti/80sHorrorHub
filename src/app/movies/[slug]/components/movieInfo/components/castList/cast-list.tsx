@@ -9,6 +9,7 @@ export interface CastMember {
   actorName: string;
   character: string;
   profile_path?: string | null;
+  imagekitProfilePath?: string | null;  // add this
 }
 
 interface CastListProps {
@@ -37,7 +38,7 @@ export default function CastList({ cast, config }: CastListProps) {
           >
             {member.profile_path ? (
               <Image
-                src={`${config.secure_base_url}w185${member.profile_path}`}
+                src={member.imagekitProfilePath ?? `${config.secure_base_url}w185${member.profile_path}`}
                 alt={member.actorName}
                 width={50}
                 height={70}
