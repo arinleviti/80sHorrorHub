@@ -11,21 +11,27 @@ const isWindowAvailable = (): boolean => typeof window !== "undefined";
 export default function CookieBanner() {
   const [show, setShow] = useState(false);
 
-  useEffect(() => {
-    if (!isWindowAvailable()) return;
+ useEffect(() => {
+  if (!isWindowAvailable()) return;
 
-    const stored = localStorage.getItem("cookieConsent") as ConsentStatus | null;
+  const stored = localStorage.getItem("cookieConsent") as ConsentStatus | null;
 
-    if (!stored) {
-      setShow(true);
-      return;
-    }
-
-    if (stored === "accepted") {
-      enableAnalytics();
-    }
-  }, []);
-
+  fetch('/api/region')
+    .then(res => res.json())
+    .then(({ isEU }) => {
+      if (!isEU) {
+        enableAnalytics();
+        return;
+      }
+      if (!stored) {
+        setShow(true);
+        return;
+      }
+      if (stored === "accepted") {
+        enableAnalytics();
+      }
+    });
+}, []);
   const handleAccept = () => {
     if (!isWindowAvailable()) return;
 

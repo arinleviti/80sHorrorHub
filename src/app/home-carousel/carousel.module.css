@@ -4,50 +4,53 @@
   margin-top: 40px;
   padding: 60px 0;
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
   position: relative;
 }
 
-/* 1. Opacità base per tutte le slide "lontane" */
+/* Suppress all transitions during init so Swiper's class-churning is invisible */
+.carouselWrapper :global(.swiper:not(.swiper-initialized) .swiper-slide) {
+  transition: none !important;
+  opacity: 1 !important;
+}
+
+/* Width must be on the slide itself — slidesPerView="auto" measures this element */
 .carouselWrapper :global(.swiper-slide) {
-  transition: transform 0.3s ease, opacity 0.3s ease !important;
-  opacity: 0.3; /* Molto trasparenti quelle ai bordi */
+  width: 200px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0.3;
   display: flex;
   justify-content: center;
   align-items: center;
-  pointer-events: auto !important;
   user-select: none;
+  visibility: visible !important;
 }
 
-/* 2. Slide ATTIVA (la centrale) - 100% visibile */
 .carouselWrapper :global(.swiper-slide-active) {
-  opacity: 1 !important;
+  opacity: 1;
   z-index: 10;
 }
 
-/* 3. Slide PRECEDENTE e SUCCESSIVA (le 2 vicine alla centrale) - 100% visibili */
 .carouselWrapper :global(.swiper-slide-prev),
 .carouselWrapper :global(.swiper-slide-next) {
-  opacity: 1 !important;
+  opacity: 1;
   z-index: 5;
 }
 
-/* Frecce di navigazione */
 .carouselWrapper :global(.swiper-button-next),
 .carouselWrapper :global(.swiper-button-prev) {
-  color: var(--color-primary) !important;
+  color: var(--color-primary);
   z-index: 100;
 }
 
-/* Area cliccabile: forziamo dimensioni fisse per non perdere il click */
 .slideLink {
   display: block;
-  width: 200px; /* Deve combaciare con lo style={{width: 200}} della SwiperSlide */
+  width: 200px;
   height: 300px;
   text-decoration: none;
   cursor: pointer;
   position: relative;
-  z-index: 20; /* Sopra tutto per catturare il click */
+  z-index: 20;
 }
 
 .poster {
@@ -59,14 +62,11 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Effetto hover solo sulla slide attiva (opzionale, ma consigliato per chiarezza) */
 .carouselWrapper :global(.swiper-slide-active) .slideLink:hover .poster {
   transform: scale(1.05);
-  box-shadow: 0 0 15px var(--color-primary), 0 0 30px rgba(0, 0, 0, 0.8);
   filter: brightness(1.1);
 }
-
-/* Evita che le slide laterali "morte" catturino il mouse se non sono cliccabili */
-.carouselWrapper :global(.swiper-slide):not(.swiper-slide-active):not(.swiper-slide-next):not(.swiper-slide-prev) {
-  cursor: default;
+.carouselWrapper :global(.swiper),
+.carouselWrapper :global(.swiper-wrapper) {
+  overflow: visible;
 }
