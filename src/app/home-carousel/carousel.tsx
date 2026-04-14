@@ -64,11 +64,20 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
           <SwiperSlide key={`${slide.id}-${index}`} style={{ width: 200 }}>
             <a href={`/movies/${slide.slug}`}>
               <Image
-                src={slide.posterPath ? TMDB_BASE_URL + slide.posterPath : '/fallback.jpg'}
+                src={slide.imagekitPosterPath ?? (slide.posterPath ? TMDB_BASE_URL + slide.posterPath : '/fallback.jpg')}
                 alt={slide.title}
                 width={200}
                 height={300}
                 className={styles.poster}
+                onError={(e) => {
+    const target = e.currentTarget;
+    // If ImageKit fails, try TMDB
+    if (slide.posterPath && !target.src.includes('tmdb.org')) {
+      target.src = `${TMDB_BASE_URL}${slide.posterPath}`;
+    } else {
+      target.src = '/fallback.jpg';
+    }
+  }}
               />
             </a>
           </SwiperSlide>

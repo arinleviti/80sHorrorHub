@@ -67,30 +67,30 @@ export const rawSlugToIdMap: Record<string, number> = {
   "psycho-III": 12662, // no AI content **.
   "friday-the-13th-part-VI:-jason-lives": 10225, // no AI content**.
   "night-of-the-creeps": 15762, // no AI content **.
-  "the-taxas-chainsaw-massacre-2": 16337, // no AI content.
-  "from-beyond": 14510, // no AI content.
-  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, // no AI content.
-  "dolls": 24341, // no AI content.
-  "evil-dead-2": 765, // no AI content.
-  "the-monster-squad": 13509, // no AI content.
-  "near-dark": 11879, // no AI content.
-  "critters-2": 10127, // no AI content.
-  "friday-the-13th-part-VII:-the-new-blood": 10281, // no AI content.
-  "killer-klowns-from-outer-space": 16296, // no AI content.
-  "phantasm-II": 15158, // no AI content.
-  "the-blob": 9599, // no AI content.
-  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, // no AI content.
-  "the-lair-of-the-white-worm": 11347, // no AI content.
-  "elvira:-mistress-of-the-dark": 5680, // no AI content.
-  "pumpkinhead": 26515, // no AI content.
-  "halloween-IV:-the-return-of-michael-myers": 11357, // no AI content.
-  "child's-play": 10585, // no AI content.
-  "hellbound:-hellraiser-ii": 9064, // no AI content.
-  "the-burbs": 11974, // no AI content.
-  "976-evil": 24038, // no AI content.
-  "pet-sematary": 8913, // no AI content.
-  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, // no AI content.
-  "stepfather-ii": 30666, // no AI content.
+  "the-taxas-chainsaw-massacre-2": 16337, // no AI content **.
+  "from-beyond": 14510, // no AI content **.
+  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, // no AI content **.
+  "dolls": 24341, // no AI content **.
+  "evil-dead-2": 765, // no AI content **.
+  "the-monster-squad": 13509, // no AI content **.
+  "near-dark": 11879, // no AI content **.
+  "critters-2": 10127, // no AI content **.
+  "friday-the-13th-part-VII:-the-new-blood": 10281, // no AI content **.
+  "killer-klowns-from-outer-space": 16296, // no AI content **.
+  "phantasm-II": 15158, // no AI content **.
+  "the-blob": 9599, // no AI content **.
+  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, // no AI content **.
+  "the-lair-of-the-white-worm": 11347, // no AI content **.
+  "elvira:-mistress-of-the-dark": 5680, // no AI content **.
+  "pumpkinhead": 26515, // no AI content **.
+  "halloween-IV:-the-return-of-michael-myers": 11357, // no AI content **.
+  "child's-play": 10585, // no AI content **.
+  "hellbound:-hellraiser-ii": 9064, // no AI content **.
+  "the-burbs": 11974, // no AI content **.
+  "976-evil": 24038, // no AI content **.
+  "pet-sematary": 8913, // no AI content **.
+  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, // no AI content **.
+  "stepfather-ii": 30666, // no AI content **.
   "society": 22244, // no AI content.
 };
 // Precompute normalized map

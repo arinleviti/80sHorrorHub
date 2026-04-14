@@ -11,6 +11,7 @@ export type DBMovie = {
   id: string;
   tmdbId?: number;
   title: string;
+  imagekitPosterPath?: string | null; // New field for ImageKit poster path
   overview: string;
   releaseDate: string | null;
   posterPath: string | null;
@@ -73,6 +74,7 @@ export default function Home() {
         overview: m.overview,
         releaseDate: m.releaseDate,
         posterPath: m.posterPath,
+        imagekitPosterPath: m.imagekitPosterPath,
         slug: m.slug ?? m.title.toLowerCase().replace(/\s+/g, '-'),
         popularity: m.popularity,
       }));
