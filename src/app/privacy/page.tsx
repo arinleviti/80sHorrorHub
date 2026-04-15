@@ -5,10 +5,7 @@ export default function PrivacyPage() {
   return (
     <Container style={{ maxWidth: "800px", padding: "40px 20px", lineHeight: "1.7" }}>
       
-      {/* TOP CLOSE BUTTON */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
-       <CloseTabButton />
-      </div>
+    
 
       <h1>Privacy Policy</h1>
       <p><strong>Last updated:</strong> April 2026</p>
@@ -150,11 +147,6 @@ export default function PrivacyPage() {
         <br />
         <strong>retrohorrorhub@gmail.com</strong>
       </p>
-
-      {/* BOTTOM CLOSE BUTTON */}
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
-        <CloseTabButton />
-      </div>
 
     </Container>
   );

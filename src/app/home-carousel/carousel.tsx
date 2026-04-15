@@ -41,6 +41,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
       className={styles.carouselWrapper}
       style={{ opacity: ready ? 1 : 0 }}
     >
+     
       <Swiper
         key={pathname}
         modules={[Navigation, EffectCoverflow]}
@@ -84,6 +85,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
           </SwiperSlide>
         ))}
       </Swiper>
+      
     </div>
   );
 }

@@ -11,6 +11,10 @@ export function usePageView(): void {
     if (typeof window === "undefined") return;
     if (!window.gtag) return;
 
+    // Check if user has explicitly accepted analytics via Silktide
+    const analyticsConsent = window.localStorage.getItem("silktideCookieChoice_analytics");
+    if (analyticsConsent !== "true") return;
+
     // Always send pageview
     window.gtag("config", "G-1Q15D7ZWMZ", {
       page_path: pathname,
