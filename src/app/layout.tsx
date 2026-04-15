@@ -24,6 +24,7 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   title: "Retro Horror Hub – Horror Movies & Collectibles for Fans",
   description: "Discover cult horror films from the 70s, 80s and 90s. Explore cast & crew, trailers, fan contributions, collectibles, vinyls, and rare memorabilia in a curated horror archive for fans and collectors.",
+
 };
 
 export default function RootLayout({
@@ -33,6 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="impact-site-verification" content="ce9cc761-2c62-493a-bddc-58beddb9f633" />
+      </head>
       <body className={`${merriweather.variable} ${bebasNeue.variable}`}>
         <Providers>
           <Navbar />
