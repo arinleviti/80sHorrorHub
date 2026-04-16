@@ -66,55 +66,90 @@ export const fetchRedditPosts = async (
   movie: MovieForReddit,
   limit = 5
 ): Promise<RedditPost[]> => {
-  const allPosts: RedditPost[] = [];
-
-  for (const subreddit of allowedSubreddits) {
-    try {
+  console.log("[Reddit] fetchRedditPosts START", {
+  title: movie.title,
+  limit,
+  subreddits: allowedSubreddits,
+});
+  try {
+    const requests = allowedSubreddits.map(async (subreddit) => {
+       // 🔥 2. BEFORE REQUEST
+      console.log(`[Reddit] querying r/${subreddit}`);
       const url = `https://www.reddit.com/r/${subreddit}/search.json`;
-      
-      // Pass the interface to axios.get for type-safe data access
-      const res = await axios.get<RedditSearchResponse>(url, {
-        params: {
-          q: movie.title,
-          restrict_sr: 1,
-          sort: "relevance",
-          limit: 15,
-        },
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-          "Accept": "application/json",
-          "Referer": "https://www.google.com/" 
-        },
-        timeout: 6000,
-      });
 
-      if (res.data?.data?.children) {
-        const posts: RedditPost[] = res.data.data.children.map((child: RedditChild) => ({
-          id: child.data.id,
-          title: child.data.title,
-          author: child.data.author,
-          subreddit: child.data.subreddit,
-          upvotes: child.data.ups || 0,
-          url: `https://reddit.com${child.data.permalink}`,
-        }));
-        allPosts.push(...posts);
+      try {
+        const res = await axios.get<RedditSearchResponse>(url, {
+          params: {
+            q: movie.title,
+            restrict_sr: 1,
+            sort: "relevance",
+            limit: 15,
+          },
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Accept": "application/json",
+            "Referer": "https://www.google.com/",
+          },
+          timeout: 9000,
+        });
+ // 🔥 3. AFTER SUCCESS RESPONSE
+        console.log(
+          `[Reddit] SUCCESS r/${subreddit} ->`,
+          res.data?.data?.children?.length ?? 0
+        );
+        return res.data?.data?.children ?? [];
+      } catch (err) {
+         // 🔥 4. ERROR PER SUBREDDIT
+        console.warn(
+          `[Reddit] FAILED r/${subreddit}`,
+          err instanceof Error ? err.message : err
+        );
+        if (axios.isAxiosError(err)) {
+          console.warn(`[Reddit] Failed for r/${subreddit}: ${err.message}`);
+        }
+        return [];
       }
-    } catch (err) {
-      // Use axios.isAxiosError to handle the catch block without 'any'
-      if (axios.isAxiosError(err)) {
-        console.warn(`[Reddit] Failed for r/${subreddit}: ${err.message}`);
-      }
-      continue; 
-    }
+    });
+
+    const results = await Promise.allSettled(requests);
+
+    const allChildren: RedditChild[] = results
+      .flatMap(r => (r.status === "fulfilled" ? r.value : []))
+      .flat();
+
+    const allPosts: RedditPost[] = allChildren.map((child) => ({
+      id: child.data.id,
+      title: child.data.title,
+      author: child.data.author,
+      subreddit: child.data.subreddit,
+      upvotes: child.data.ups || 0,
+      url: `https://reddit.com${child.data.permalink}`,
+    }));
+
+    const scored = allPosts
+      .map(post => ({
+        post,
+        score: scorePost(post, movie),
+      }))
+      .filter(({ score }) => score > 0);
+
+    const unique = Array.from(
+      new Map(scored.map(s => [s.post.id, s])).values()
+    );
+
+    unique.sort(
+      (a, b) =>
+        b.score - a.score || b.post.upvotes - a.post.upvotes
+    );
+console.log("[Reddit] FINAL", {
+      raw: allChildren.length,
+      posts: allPosts.length,
+      scored: scored.length,
+      returned: Math.min(limit, scored.length),
+    });
+    return unique.slice(0, limit).map(u => u.post);
+  } catch (err) {
+    console.warn("[Reddit] Global fetch failure:", err);
+    return [];
   }
-
-  const scored = allPosts
-    .map(post => ({ post, score: scorePost(post, movie) }))
-    .filter(({ score }) => score > 0);
-
-  const unique = Array.from(new Map(scored.map(s => [s.post.id, s])).values());
-  
-  unique.sort((a, b) => b.score - a.score || b.post.upvotes - a.post.upvotes);
-
-  return unique.slice(0, limit).map(u => u.post);
 };
