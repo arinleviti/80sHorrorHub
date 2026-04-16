@@ -9,40 +9,44 @@ export interface RedditPost {
   url: string;
 }
 
-interface RedditAPIResponse {
-  data: {
-    children: {
-      data: {
-        id: string;
-        title: string;
-        author: string;
-        subreddit: string;
-        ups: number;
-        permalink: string;
-      };
-    }[];
-  };
-}
-
-const allowedSubreddits = ["horror", "80shorror", "movies"];
-const junkWords = /meme|shitpost|gif|funny|bot|disney/i;
-
 export interface MovieForReddit {
   title: string;
   releaseDate?: string | null;
   castMembers?: { actor: { name: string }; character: string }[];
 }
 
+// --- NEW INTERNAL TYPES TO REMOVE 'ANY' ---
+interface RedditChild {
+  data: {
+    id: string;
+    title: string;
+    author: string;
+    subreddit: string;
+    ups: number;
+    permalink: string;
+  };
+}
+
+interface RedditSearchResponse {
+  data: {
+    children: RedditChild[];
+  };
+}
+
+const allowedSubreddits = ["horror", "80shorror", "movies"];
+const junkWords = /meme|shitpost|gif|funny|bot|disney/i;
+
+const fuzzy = (str: string): string => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   let score = 0;
   const titleLower = post.title.toLowerCase();
-
-  const movieTitle = movie.title.toLowerCase();
   const movieYear = movie.releaseDate?.slice(0, 4);
 
   if (junkWords.test(titleLower)) return -100;
 
-  if (titleLower.includes(movieTitle)) score += 3;
+  if (fuzzy(post.title).includes(fuzzy(movie.title))) score += 3;
+  
   if (movieYear && titleLower.includes(movieYear)) score += 2;
 
   if (movie.castMembers) {
@@ -66,33 +70,41 @@ export const fetchRedditPosts = async (
 
   for (const subreddit of allowedSubreddits) {
     try {
-      const res = await axios.get<RedditAPIResponse>(
-        `https://www.reddit.com/r/${subreddit}/search.json`,
-        {
-          params: {
-            q: movie.title,
-            restrict_sr: 1,
-            sort: "relevance",
-            limit: 15,
-          },
-          headers: {
-            "User-Agent": "VintageHorrorApp/1.0",
-          },
-        }
-      );
+      const url = `https://www.reddit.com/r/${subreddit}/search.json`;
+      
+      // Pass the interface to axios.get for type-safe data access
+      const res = await axios.get<RedditSearchResponse>(url, {
+        params: {
+          q: movie.title,
+          restrict_sr: 1,
+          sort: "relevance",
+          limit: 15,
+        },
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+          "Accept": "application/json",
+          "Referer": "https://www.google.com/" 
+        },
+        timeout: 6000,
+      });
 
-      const posts = res.data.data.children.map(child => ({
-        id: child.data.id,
-        title: child.data.title,
-        author: child.data.author,
-        subreddit: child.data.subreddit,
-        upvotes: child.data.ups,
-        url: `https://reddit.com${child.data.permalink}`,
-      }));
-
-      allPosts.push(...posts);
+      if (res.data?.data?.children) {
+        const posts: RedditPost[] = res.data.data.children.map((child: RedditChild) => ({
+          id: child.data.id,
+          title: child.data.title,
+          author: child.data.author,
+          subreddit: child.data.subreddit,
+          upvotes: child.data.ups || 0,
+          url: `https://reddit.com${child.data.permalink}`,
+        }));
+        allPosts.push(...posts);
+      }
     } catch (err) {
-      console.error(`Error fetching ${subreddit}`, err);
+      // Use axios.isAxiosError to handle the catch block without 'any'
+      if (axios.isAxiosError(err)) {
+        console.warn(`[Reddit] Failed for r/${subreddit}: ${err.message}`);
+      }
+      continue; 
     }
   }
 
@@ -101,11 +113,8 @@ export const fetchRedditPosts = async (
     .filter(({ score }) => score > 0);
 
   const unique = Array.from(new Map(scored.map(s => [s.post.id, s])).values());
-
-  unique.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    return b.post.upvotes - a.post.upvotes;
-  });
+  
+  unique.sort((a, b) => b.score - a.score || b.post.upvotes - a.post.upvotes);
 
   return unique.slice(0, limit).map(u => u.post);
 };
