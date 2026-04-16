@@ -61,7 +61,7 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
 
   return score;
 };
-
+// --- END OF NEW INTERNAL TYPES ---
 export const fetchRedditPosts = async (
   movie: MovieForReddit,
   limit = 5
