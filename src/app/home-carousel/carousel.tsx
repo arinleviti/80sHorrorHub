@@ -77,8 +77,8 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
                     : '/fallback.jpg')
                 }
                 alt={slide.title}
-                width={200}
-                height={300}
+                fill
+                sizes="200px"
                 className={styles.poster}
               />
             </a>

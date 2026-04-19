@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, ListGroup, Spinner, Alert, Stack } from "react-bootstrap";
-import { RedditPost, MovieForReddit } from "../../../../../../services/reddit";
+import { Card, ListGroup, Stack } from "react-bootstrap";
+import { RedditPost, MovieForReddit, fetchRedditPosts } from "../../../../../../services/reddit";
 
 /* interface MovieInput {
   title: string;
@@ -15,12 +15,11 @@ interface RedditFeedProps {
   limit?: number;
 }
 
-export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
+export const RedditFeed = ({ movie, limit = 5 }: RedditFeedProps) => {
   const [posts, setPosts] = useState<RedditPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+ /*  useEffect(() => {
     const loadPosts = async () => {
       setLoading(true);
       setError(null);
@@ -42,38 +41,35 @@ export const RedditFeed: React.FC<RedditFeedProps> = ({ movie, limit = 5 }) => {
     };
 
     loadPosts();
-  }, [movie.title,limit]);
+  }, [movie.title,limit]); */
 
-/* useEffect(() => {
-    const loadPosts = async () => {
-      setLoading(true);
-      setError(null);
+// Fetching from the client directly, no API route, to avoid CORS and add better logging and control
+useEffect(() => {
+
+   let cancelled = false;
+    const loadPosts = async () => {     
       try {
         const data = await fetchRedditPosts(movie, limit);
-        setPosts(data);
+         if (!cancelled) {
+          setPosts(data);
+        }
       } catch (err) {
         console.error(err);
-        setError("Failed to load Reddit posts.");
+        console.warn("[RedditFeed] Silent failure:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadPosts();
-  },  [movie, limit]); */
+    return () => {
+      cancelled = true;
+    };
+  },  [movie, limit]);
 
-  if (loading)
-    return (
-      <div className="text-center my-3">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading Reddit posts...</span>
-        </Spinner>
-      </div>
-    );
-
-  if (error) return <Alert variant="danger">{error}</Alert>;
-  if (posts.length === 0)
-    return <Alert variant="info">No relevant Reddit discussions found.</Alert>;
+  // 🔥 KEY CHANGE: render NOTHING if no data
+  if (loading) return null;
+  if (!posts || posts.length === 0) return null;
 
   return (
     <Card className="contributioncard my-3">

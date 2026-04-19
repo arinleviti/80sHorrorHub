@@ -46,7 +46,7 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   if (junkWords.test(titleLower)) return -100;
 
   if (fuzzy(post.title).includes(fuzzy(movie.title))) score += 3;
-  
+
   if (movieYear && titleLower.includes(movieYear)) score += 2;
 
   if (movie.castMembers) {
@@ -67,13 +67,13 @@ export const fetchRedditPosts = async (
   limit = 5
 ): Promise<RedditPost[]> => {
   console.log("[Reddit] fetchRedditPosts START", {
-  title: movie.title,
-  limit,
-  subreddits: allowedSubreddits,
-});
+    title: movie.title,
+    limit,
+    subreddits: allowedSubreddits,
+  });
   try {
     const requests = allowedSubreddits.map(async (subreddit) => {
-       // 🔥 2. BEFORE REQUEST
+      // 🔥 2. BEFORE REQUEST
       console.log(`[Reddit] querying r/${subreddit}`);
       const url = `https://www.reddit.com/r/${subreddit}/search.json`;
 
@@ -85,21 +85,16 @@ export const fetchRedditPosts = async (
             sort: "relevance",
             limit: 15,
           },
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "Accept": "application/json",
-            "Referer": "https://www.google.com/",
-          },
           timeout: 9000,
         });
- // 🔥 3. AFTER SUCCESS RESPONSE
+        // 🔥 3. AFTER SUCCESS RESPONSE
         console.log(
           `[Reddit] SUCCESS r/${subreddit} ->`,
           res.data?.data?.children?.length ?? 0
         );
         return res.data?.data?.children ?? [];
       } catch (err) {
-         // 🔥 4. ERROR PER SUBREDDIT
+        // 🔥 4. ERROR PER SUBREDDIT
         console.warn(
           `[Reddit] FAILED r/${subreddit}`,
           err instanceof Error ? err.message : err
@@ -141,7 +136,7 @@ export const fetchRedditPosts = async (
       (a, b) =>
         b.score - a.score || b.post.upvotes - a.post.upvotes
     );
-console.log("[Reddit] FINAL", {
+    console.log("[Reddit] FINAL", {
       raw: allChildren.length,
       posts: allPosts.length,
       scored: scored.length,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { TMDBImageConfig } from "@/app/services/tmdb";
 import { ListGroup, Button, Stack } from "react-bootstrap";
+import style from "./cast-list.module.css";
 
 export interface CastMember {
   actorName: string;
@@ -37,13 +38,14 @@ export default function CastList({ cast, config }: CastListProps) {
             className="d-flex align-items-center gap-2 py-2"
           >
             {member.profile_path ? (
+              <div className={style["cast-img-wrapper"]}>
               <Image
                 src={member.imagekitProfilePath ?? `${config.secure_base_url}w185${member.profile_path}`}
                 alt={member.actorName}
                 width={50}
                 height={70}
-                style={{ objectFit: "cover", borderRadius: "4px" }}
-              />
+                className={style["cast-img"]}
+              /></div>
             ) : (
               <div className="placeholder-img" />
             )}
