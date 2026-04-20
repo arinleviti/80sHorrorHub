@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ListGroup, Button, Stack } from "react-bootstrap";
+import { ListGroup, Stack } from "react-bootstrap";
+import style from "./crew-list.module.css";
 
 export interface CrewMember {
   id?: number;
@@ -20,7 +21,7 @@ export default function CrewList({ crew }: CrewListProps) {
     return null;
   }
 
-  const visibleCrew = expanded ? crew : crew.slice(0, 10);
+  const visibleCrew = expanded ? crew : crew.slice(0, 5);
 
   return (
     <Stack gap={3}>
@@ -30,7 +31,7 @@ export default function CrewList({ crew }: CrewListProps) {
         {visibleCrew.map((member, index) => (
           <ListGroup.Item
             key={member.id ?? `${member.name}-${member.job}-${index}`}
-            className="d-flex justify-content-between align-items-center py-2"
+            className="d-flex justify-content-between align-items-center"
           >
             <span className="fw-semibold text-accent">{member.job}</span>
             <span>{member.name}</span>
@@ -38,15 +39,15 @@ export default function CrewList({ crew }: CrewListProps) {
         ))}
       </ListGroup>
 
-      {crew.length > 10 && (
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={() => setExpanded((prev) => !prev)}
-          className="align-self-start"
-        >
-          {expanded ? "Show less" : `Show all (${crew.length})`}
-        </Button>
+      {crew.length > 5 && (
+        <div className={style.toggleWrapper}>
+          <button
+            className={style.toggleBtn}
+            onClick={() => setExpanded((prev) => !prev)}
+          >
+            {expanded ? "Show less" : `Show all (${crew.length})`}
+          </button>
+        </div>
       )}
     </Stack>
   );

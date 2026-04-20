@@ -1,0 +1,16 @@
+.toggleWrapper {
+  text-align: center;
+  margin-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.toggleBtn {
+  all: unset;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+}
+
+.toggleBtn:hover {
+  color: var(--color-text);
+}

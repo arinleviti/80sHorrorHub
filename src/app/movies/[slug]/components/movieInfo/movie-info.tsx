@@ -27,6 +27,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { RedditFeed } from "./components/RedditFeed/redditFeed";
 import { Prisma } from "@prisma/client";
+import ShareButtons from "./shareButtons/share-buttons";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -116,6 +117,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
                 height={900}
                 className="img-fluid rounded shadow"
               />
+              <ShareButtons title={`${movie.title} — Retro Horror Hub`} />
             </Col>
 
             {/* LEFT CONTENT */}
@@ -127,7 +129,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
             </Col>
 
             {/* RIGHT CONTENT (SPOTIFY) */}
-            <Col xs={12} md={3} lg={3}>
+            <Col xs={12} md={3} lg={3} className="d-flex justify-content-center align-items-start">
               {spotifyPlaylist && (
                 <div className="spotify-wrapper">
                   <SpotifyEmbed playlist={spotifyPlaylist} />
@@ -160,7 +162,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       </Row>
 
       {/* 💿 Merchandise & Streaming + Reddit */}
-      <Row className="mb-5">
+      <Row className="mb-3">
         <Col md={6}>
           <Row><Col><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
         </Col>
@@ -171,11 +173,12 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <Row><Col><RedditFeed movie={movie} limit={5} /></Col></Row>
 
           {hfSuggestions && hfSuggestions.length > 0 && (
-            <Row className="mb-5">
+            <Row className="mb-3">
               <Col><HFSuggestionsList suggestions={hfSuggestions} /></Col>
             </Row>
           )}
         </Col>
+        <ShareButtons title={`${movie.title} — Retro Horror Hub`} />
       </Row>
     </Container>
   );

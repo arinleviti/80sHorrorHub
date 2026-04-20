@@ -1,21 +1,18 @@
-/* contributionForm.module.css */
-
 .inputField {
   background-color: var(--color-background) !important;
   color: rgba(255, 255, 255, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  /* This ensures the arrow and the box stay dark */
 }
-
+.desktopTitle {
+  display: none;
+}
 .inputField:focus {
   background-color: var(--color-background) !important;
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 5px var(--color-primary);
   outline: none;
-  
 }
 
-/* This ensures the actual dropdown list (options) match on most browsers */
 .inputField option {
   background-color: var(--color-background) !important;
   color: rgba(255, 255, 255, 0.6) !important;
@@ -25,5 +22,65 @@
   font-size: 0.85rem;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 2px; /* Tightens space between label and field */
+  margin-bottom: 2px;
+}
+
+/* Mobile toggle button — visible only on mobile */
+.mobileToggle {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.mobileToggleIcon {
+  color: var(--color-accent);
+  font-size: 0.85rem;
+}
+
+/* Form hidden by default on mobile */
+.formBody {
+  display: none;
+}
+
+.formBodyOpen {
+  display: block;
+}
+.submitBtn {
+  all: unset;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary);
+  color: var(--color-text);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.submitBtn:hover {
+  background-color: var(--color-secondary);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Desktop: always show form, hide toggle */
+@media (min-width: 768px) {
+  .mobileToggle {
+    display: none;
+  }
+.desktopTitle {
+    display: block;
+  }
+  .formBody {
+    display: block;
+  }
 }

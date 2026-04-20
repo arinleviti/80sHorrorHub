@@ -22,8 +22,12 @@
 .movie-title {
   font-family: 'Eighties Horror';
   text-transform: uppercase !important;
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
   font-weight: 700;
   line-height: 1.2;
   color: #e61c6f;
+}
+.director {
+  font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+  color: var(--color-accent);
 }

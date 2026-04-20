@@ -88,3 +88,19 @@
   font-size: 0.7rem;
   padding: 0.25rem 0.5rem;
 }
+@media (max-width: 767px) {
+  .contributionSection {
+    padding: 0 0.40rem;
+  }
+
+  .contributionCard {
+    flex: 0 0 100%;
+  }
+   .contributionSectionTitle,
+  .userContributionsHeader {
+    padding-left: 0.5rem;
+  }
+  .contributionWrapper {
+    padding: 0 0.5rem;
+  }
+}

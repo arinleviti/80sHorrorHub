@@ -18,7 +18,7 @@ const EbayItemsList: React.FC<EbayItemsListProps> = ({ ebayItems }) => {
 
   return (
     <Card className="contributioncard">
-      <Card.Header className="heading-secondary">eBay Items</Card.Header>
+      <Card.Header className="heading-secondary">Collector&apos;s pick from eBay</Card.Header>
       
       <ListGroup variant="flush">
         {ebayItems.map((item) => (

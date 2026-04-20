@@ -25,6 +25,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
   const slides = moviesArray
     .filter((m) => m.posterPath)
     .map((movie) => {
+      //Object.entries() converts an object into an array of [key, value] pairs.
       const rawEntry = Object.entries(rawSlugToIdMap).find(
         ([, id]) => id === movie.tmdbId
       );
