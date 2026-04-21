@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         <meta name="impact-site-verification" content="ce9cc761-2c62-493a-bddc-58beddb9f633" />
         <link rel="stylesheet" href="/silktide-consent-manager.css" />

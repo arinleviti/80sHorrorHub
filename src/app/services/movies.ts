@@ -43,55 +43,122 @@ export const rawSlugToIdMap: Record<string, number> = {
   "they-live": 8337, 
   "videodrome": 837, 
   "christine": 8769, 
-  "full-moon-high": 107430, // no AI content **.
-  "ghost-story": 24634, // no AI content **.
-  "q:-the-winged-serpent": 27726, // no AI content **.
-  "creepshow": 16281, // no AI content **.
-  "friday-the-13th-part-III": 9728, // no AI content **.
-  "parasite": 48311, // no AI content **.
-  "the-huger": 11654, // no AI content **.
-  "psycho-II": 10576, // no AI content **.
-  "cujo": 10489, // no AI content **.
-  "amityville-3D": 27214, // no AI content **. 
-  "jaws-3D": 17692, // no AI content **.
-  "firestarter": 11495, // no AI content **.
-  "gremlins": 927, // no AI content**.
-  "night-of-the-comet": 18462, // no AI content **.
-  "the-company-of-wolves": 11905, // no AI content **.
-  "the-stuff": 18502, // no AI content **.
-  "day-of-the-dead": 8408, // no AI content **.
-  "howling-II": 29794, // no AI content **.
-  "silver-bullet": 17898, // no AI content **.
-  "chopping-mall": 28941, // no AI content **.
-  "the-toxic-avenger": 15239, // no AI content**.
-  "psycho-III": 12662, // no AI content **.
-  "friday-the-13th-part-VI:-jason-lives": 10225, // no AI content**.
-  "night-of-the-creeps": 15762, // no AI content **.
-  "the-taxas-chainsaw-massacre-2": 16337, // no AI content **.
-  "from-beyond": 14510, // no AI content **.
-  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, // no AI content **.
-  "dolls": 24341, // no AI content **.
-  "evil-dead-2": 765, // no AI content **.
-  "the-monster-squad": 13509, // no AI content **.
-  "near-dark": 11879, // no AI content **.
-  "critters-2": 10127, // no AI content **.
-  "friday-the-13th-part-VII:-the-new-blood": 10281, // no AI content **.
-  "killer-klowns-from-outer-space": 16296, // no AI content **.
-  "phantasm-II": 15158, // no AI content **.
-  "the-blob": 9599, // no AI content **.
-  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, // no AI content **.
-  "the-lair-of-the-white-worm": 11347, // no AI content **.
-  "elvira:-mistress-of-the-dark": 5680, // no AI content **.
-  "pumpkinhead": 26515, // no AI content **.
-  "halloween-IV:-the-return-of-michael-myers": 11357, // no AI content **.
-  "child's-play": 10585, // no AI content **.
-  "hellbound:-hellraiser-ii": 9064, // no AI content **.
-  "the-burbs": 11974, // no AI content **.
-  "976-evil": 24038, // no AI content **.
-  "pet-sematary": 8913, // no AI content **.
-  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, // no AI content **.
-  "stepfather-ii": 30666, // no AI content **.
-  "society": 22244, // no AI content.
+  "full-moon-high": 107430, 
+  "ghost-story": 24634, 
+  "q:-the-winged-serpent": 27726,
+  "creepshow": 16281, 
+  "friday-the-13th-part-III": 9728, 
+  "parasite": 48311, 
+  "the-huger": 11654, 
+  "psycho-II": 10576, 
+  "cujo": 10489, 
+  "amityville-3D": 27214,  
+  "jaws-3D": 17692, 
+  "firestarter": 11495, 
+  "gremlins": 927, 
+  "night-of-the-comet": 18462, 
+  "the-company-of-wolves": 11905,
+  "the-stuff": 18502, 
+  "day-of-the-dead": 8408, 
+  "howling-II": 29794, 
+  "silver-bullet": 17898, 
+  "chopping-mall": 28941, 
+  "the-toxic-avenger": 15239, 
+  "psycho-III": 12662, 
+  "friday-the-13th-part-VI:-jason-lives": 10225, 
+  "night-of-the-creeps": 15762, 
+  "the-taxas-chainsaw-massacre-2": 16337, 
+  "from-beyond": 14510, 
+  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, 
+  "dolls": 24341, 
+  "evil-dead-2": 765, 
+  "the-monster-squad": 13509, 
+  "near-dark": 11879, 
+  "critters-2": 10127, 
+  "friday-the-13th-part-VII:-the-new-blood": 10281, 
+  "killer-klowns-from-outer-space": 16296, 
+  "phantasm-II": 15158,
+  "the-blob": 9599, 
+  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, 
+  "the-lair-of-the-white-worm": 11347, 
+  "elvira:-mistress-of-the-dark": 5680, 
+  "pumpkinhead": 26515, 
+  "halloween-IV:-the-return-of-michael-myers": 11357,
+  "child's-play": 10585, 
+  "hellbound:-hellraiser-ii": 9064, 
+  "the-burbs": 11974, 
+  "976-evil": 24038,
+  "pet-sematary": 8913, 
+  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, 
+  "stepfather-ii": 30666,
+  "society": 22244, 
+
+  "inferno": 16395, //no AI content yet ** 1980 director Dario Argento
+  "humanoids-from-the-deep": 29343, //no AI content yet ** 1980 director Barbara Peeters
+  "mothers-day": 14929, //no AI content yet ** 1980 director Charles Kaufman
+  "terror-train": 40969, //no AI content yet ** 1980 director Roger Spottiswoode
+  "alligator": 33518, //no AI content yet ** 1980 director Lewis Teague
+  "altered-states": 11542, //no AI content yet ** 1980 director Ken Russell
+
+  "the-funhouse": 13555, //no AI content yet ** 1981
+  "omen-III:-the-final-conflict": 10768, //no AI content yet ** 1981
+  "friday-the-13th-part-2": 9725, //no AI content yet ** 1981
+  "graduation-day": 27420, //no AI content yet ** 1981
+  "the-boogens": 33721, //no AI content yet ** 1981
+  "dead-and-buried": 24274, //no AI content yet ** 1981
+  "nightmare": 40368, //no AI content yet ** 1981 DIrector Romano Scavolini
+  "saturday-the-14th": 20472, //no AI content yet ** 1981
+
+  "the-beast-within": 40219, //no AI content yet ** 1982
+  "evilspeak": 39868, //no AI content yet ** 1981
+  "the-slumber-party-massacre": 27475, //no AI content yet ** 1982
+  "alone-in-the-dark": 40952, //no AI content yet ** 1982
+  "nightbeast": 66881, //no AI content yet ** 1982
+
+  "the-entity": 24740, //no AI content yet ** 1982
+  "city-of-the-living-dead": 24920, //no AI content yet ** 1980
+  "pieces": 47886, //no AI content yet ** 1982 Director Juan Piquer Simon
+  "the-being": 73218, //no AI content yet ** 1983
+  "the-keep": 26198, //no AI content yet ** 1983
+
+  "the-black-cat": 26503, //no AI content yet ** 1981 director Lucio Fulci
+  "tenebrae": 29702, //no AI content yet ** 1982 director Dario Argento
+  "terror-in-the-aisles": 47894, //no AI content yet ** 1984 director ANdrew J. Kuehn
+  "silent-night-deadly-night": 27414, //no AI content yet ** 1984
+  "razorback": 26178, //no AI content yet ** 1984 director Russel Mulchay
+
+  "ghoulies": 18498, //no AI content yet ** 1985 director Luca Bercovici
+  "cannibal-holocaust": 8689, //no AI content yet ** 1980 director Ruggero Deodato
+  "the-bride": 29077, //no AI content yet ** 1985 director Franc Roddam
+  "the-hills-have-eyes-part-2": 18477, //no AI content yet ** 1985 director Wes Craven
+
+  "house": 11415, //no AI content yet ** 1985 director Steve Miner
+  "april-fools-day": 24913, //no AI content yet ** 1986 director Fred Walton
+  "demons": 14029, //no AI content yet ** 1985 director Lamberto Bava
+  "vamp": 34223, //no AI content yet ** 1986 director Richard Wenk
+  "the-seventh-curse": 39900, //no AI content yet ** 1986 director Lam Nai-Choi
+  "little-shop-of-horrors": 10776, //no AI content yet ** 1986 director Frank Oz
+  "henry:-portrait-of-a-serial-killer": 10692, //no AI content yet ** 1986 director John McNaughton
+
+  "angel-heart": 635, //no AI content yet ** 1987 director Alan Parker
+  "creepshow-2": 16288, //no AI content yet ** 1987 director Michael Gornick
+  "blood-diner": 62132, //no AI content yet ** 1987 director Jackie Kong
+  "hello-mary-lou:-prom-night-II": 39929, //no AI content yet ** 1987 director Bruce Pittman
+  "prince-of-darkness": 8852, //no AI content yet ** 1987 director John Carpenter
+
+  "beetlejuice": 4011, //no AI content yet ** 1988
+  "hollywood-chainsaw-hookers": 27412, //no AI content yet ** 1988
+  "dead-heat": 40095, //no AI content yet ** 1988 director Mark Goldblatt
+  "maniac-cop": 14240, //no AI content yet ** 1988 director William Lustig
+  "poltergeist-III": 10306, //no AI content yet ** 1988 director Gary Sherman
+  "waxwork": 29095, //no AI content yet ** 1988 director Anthony Hickox
+  "cellar-dweller": 58797, //no AI content yet ** 1988 director John Carl Buechler
+
+  "bad-taste": 9964, //no AI content yet ** 1987 director Peter Jackson
+  "tetsuo:-the-iron-man": 41428, //no AI content yet ** 1989 director Shinya Tsukamoto
+  "halloween-5:-the-revenge-of-michael-myers": 11361, //no AI content yet ** 1989 director Dominique Othenin-Girard
+  "shocker": 12521, //no AI content yet ** 1989 director Wes Craven
+  "silent-night-deadly-night-III:-better-watch-out": 42709, //no AI content yet ** 1989 director Monte Hellman
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

@@ -1,6 +1,6 @@
 'use client';
 import Styles from './page.module.css';
-import { moviesArray} from '@/app/services/movies';
+import { moviesArray } from '@/app/services/movies';
 import { useState, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import Fuse from 'fuse.js';
@@ -20,19 +20,19 @@ export type DBMovie = {
 };
 
 export default function Home() {
-  const [search, setSearch] = useState('');
+ /*  const [search, setSearch] = useState('');
   const [results, setResults] = useState<{ slug: string; id: number; title: string }[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-   const [mapped, setMovies] = useState<DBMovie[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null); */
+  const [mapped, setMovies] = useState<DBMovie[]>([]);
   // Fuse.js setup
-  const fuse = new Fuse(moviesArray, {
+ /*  const fuse = new Fuse(moviesArray, {
     keys: ['slug', 'title'],
     threshold: 0.4,
     getFn: (obj, path) => (path === 'slug' ? obj.slug : obj.title),
-  });
+  }); */
 
-  // Live search
+ /*  // Live search
   useEffect(() => {
     if (!search.trim()) {
       setResults([]);
@@ -41,7 +41,7 @@ export default function Home() {
     }
 
     const fuseResults = fuse.search(search.trim());
-    setResults(fuseResults.map((r) => ({ ...r.item })));
+    setResults(fuseResults.slice(0, 2).map((r) => ({ ...r.item })));
     setShowDropdown(true);
   }, [search]);
 
@@ -54,30 +54,30 @@ export default function Home() {
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  }, []); */
 
-  
+
 
   useEffect(() => {
     console.log('Running homepageMovies fetch...');
     fetch('/api/homepageMovies')
       .then((res) => {
-      console.log('Response status:', res.status);
-      return res.json();
-    })
+        console.log('Response status:', res.status);
+        return res.json();
+      })
       .then((data: DBMovie[]) => {
         // Map fields to match the Movie type used by the carousel
-      const mapped :DBMovie[] = data.map(m => ({
-         id: m.id,
-         tmdbId: m.tmdbId,  // 👈 add this
-        title: m.title,
-        overview: m.overview,
-        releaseDate: m.releaseDate,
-        posterPath: m.posterPath,
-        imagekitPosterPath: m.imagekitPosterPath,
-        slug: m.slug ?? m.title.toLowerCase().replace(/\s+/g, '-'),
-        popularity: m.popularity,
-      }));
+        const mapped: DBMovie[] = data.map(m => ({
+          id: m.id,
+          tmdbId: m.tmdbId,  // 👈 add this
+          title: m.title,
+          overview: m.overview,
+          releaseDate: m.releaseDate,
+          posterPath: m.posterPath,
+          imagekitPosterPath: m.imagekitPosterPath,
+          slug: m.slug ?? m.title.toLowerCase().replace(/\s+/g, '-'),
+          popularity: m.popularity,
+        }));
         console.log('Fetched movies:', mapped);
         setMovies(mapped);
       })
@@ -87,7 +87,7 @@ export default function Home() {
     <div className={Styles.container}>
       <h1 className={Styles.title}>RETRO HORROR HUB</h1>
 
-      <Container className={Styles.searchContainer} style={{ position: 'relative' }}>
+     {/*  <Container className={Styles.searchContainer} style={{ position: 'relative' }}>
         <input
           type="text"
           value={search}
@@ -115,15 +115,15 @@ export default function Home() {
         {showDropdown && results.length === 0 && (
           <div className={Styles.noResults}>No results found</div>
         )}
-      </Container>
+      </Container> */}
 
       {/* Carousel */}
       <div className={Styles.carouselWrapper}>
-  {mapped.length > 0 && <MovieCarousel 
-  moviesArray={mapped}       // fetched from /api/homepageMovies (DB)
-  
- />}
-</div>
+        {mapped.length > 0 && <MovieCarousel
+          moviesArray={mapped}       // fetched from /api/homepageMovies (DB)
+
+        />}
+      </div>
     </div>
   );
 }

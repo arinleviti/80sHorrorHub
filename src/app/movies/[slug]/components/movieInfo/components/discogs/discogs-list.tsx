@@ -21,8 +21,8 @@ interface DiscogsListProps {
 export function DiscogsList({ results }: DiscogsListProps) {
   // 1. Guard clause for empty/null states
   if (!results || results.length === 0) {
-    return <p className="text-muted-custom">No results found.</p>;
-  }
+  return null;
+}
 
   return (
     <Card className="contributioncard">

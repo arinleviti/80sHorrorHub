@@ -13,7 +13,7 @@ const Footer: FC = () => {
           <Col md={4}>
             <h5 className={styles.footerTitle}>Retro Horror Hub</h5>
             <p className={styles.textContent}>
-              Bringing you the best of 80s horror, curated memorabilia, and fan insights.
+              Bringing you the best of retro horror, curated memorabilia, and fan insights.
             </p>
         <p className={styles.textContent}>
               <a href="/AboutPage" className={styles.link}>About</a>
@@ -49,9 +49,9 @@ const Footer: FC = () => {
                 retrohorrorhub[at]gmail.com
               </a>
             </p>
-            <p className={styles.textContent}>
+            {/* <p className={styles.textContent}>
               Socials coming soon!
-            </p>
+            </p> */}
           </Col>
         </Row>
 

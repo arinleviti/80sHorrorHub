@@ -21,7 +21,7 @@ export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
       <div className={styles.iframeWrapper}>
         <iframe
           src={playlist.embedUrl}
-          width="300"
+          width="100%"
           height="380"
           allow="encrypted-media"
           title={playlist.name}

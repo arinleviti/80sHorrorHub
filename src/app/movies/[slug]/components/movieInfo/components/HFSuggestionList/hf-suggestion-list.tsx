@@ -15,7 +15,7 @@ const HFSuggestionsList: React.FC<HFSuggestionsListProps> = ({ suggestions }) =>
 
   return (
     <Card className={`${styles.hfSuggestionsCard} my-4`}>
-      <Card.Header className={styles.hfSuggestionsHeader}>
+      <Card.Header className="heading-secondary">
         AI Suggested Movies
       </Card.Header>
 

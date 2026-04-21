@@ -1,5 +1,6 @@
 import { AiDescription } from '../../../../../../services/AiGeneratedMainContent';
 import { Stack } from "react-bootstrap";
+import style from "./ai-content.module.css";
 
 interface AiContentProps {
   content: AiDescription | null;
@@ -11,7 +12,7 @@ export default function AiContent({ content }: AiContentProps) {
   }
 
   return (
-    <Stack gap={2}>
+    <Stack gap={2}  className={style.aiContent}>
       <section>
         <h2 className="heading-secondary">Synopsis</h2>
         <p className="text-content-muted">{content.synopsis}</p>

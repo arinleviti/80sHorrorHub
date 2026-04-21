@@ -5,6 +5,8 @@ export async function GET() {
   try {
     const movies = await prisma.movie.findMany({
       where: { posterPath: { not: null } },
+      take: 40,
+      skip: 0,
     });
  
     const randomMovies = movies.sort(() => Math.random() - 0.5);

@@ -6,6 +6,7 @@
   align-items: center; /* Centers the iframe and title */
   margin-top: 1rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .title {
@@ -25,4 +26,10 @@
   border-radius: 12px; /* Smooths out the Spotify player corners */
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.spotifyIframe {
+  display: block;
 }

@@ -49,6 +49,7 @@ export default function ContributionList({ grouped }: ContributionListProps) {
   };
   const hasContributions = Object.values(grouped).some((items) => items.length > 0);
   return (
+    <div className={styles.contributionWrapper}>
     <div>
        {hasContributions ? (
       <h2 className="heading-secondary">User Contributions</h2>
@@ -114,6 +115,7 @@ export default function ContributionList({ grouped }: ContributionListProps) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

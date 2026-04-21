@@ -27,6 +27,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { RedditFeed } from "./components/RedditFeed/redditFeed";
 import { Prisma } from "@prisma/client";
+import ShareButtons from "./shareButtons/share-buttons";
+import BackToTop from "./components/BackToTop/back-to-top";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -116,6 +118,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
                 height={900}
                 className="img-fluid rounded shadow"
               />
+              
             </Col>
 
             {/* LEFT CONTENT */}
@@ -124,10 +127,11 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
               {director && <h4 className={`${styles.director} mb-1`}>{director.name}</h4>}
               {movie.release_date && <p className={`${styles.year} mb-3 text-muted`}>({movie.release_date.slice(0, 4)})</p>}
               <p className={styles.textContent}>{movie.overview}</p>
+              <ShareButtons title={`${movie.title} — Retro Horror Hub`} />
             </Col>
 
             {/* RIGHT CONTENT (SPOTIFY) */}
-            <Col xs={12} md={3} lg={3}>
+            <Col xs={12} md={3} lg={3} className="d-flex justify-content-center align-items-start">
               {spotifyPlaylist && (
                 <div className="spotify-wrapper">
                   <SpotifyEmbed playlist={spotifyPlaylist} />
@@ -160,9 +164,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       </Row>
 
       {/* 💿 Merchandise & Streaming + Reddit */}
-      <Row className="mb-5">
+      <Row className="mb-3">
         <Col md={6}>
-          <Row><Col><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
+          <Row><Col className="pb-3 pb-md-0"><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
         </Col>
 
         <Col md={6}>
@@ -171,12 +175,14 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <Row><Col><RedditFeed movie={movie} limit={5} /></Col></Row>
 
           {hfSuggestions && hfSuggestions.length > 0 && (
-            <Row className="mb-5">
+            <Row className="mb-3">
               <Col><HFSuggestionsList suggestions={hfSuggestions} /></Col>
             </Row>
           )}
         </Col>
+        <ShareButtons title={`${movie.title} — Retro Horror Hub`} />
       </Row>
+      <BackToTop />
     </Container>
   );
 }
