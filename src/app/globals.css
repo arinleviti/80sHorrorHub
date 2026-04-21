@@ -34,9 +34,11 @@ body {
   font-size: var(--font-size-body);
   background-color: var(--color-background) !important;
   color: var(--color-text);
-  text-align: justify;
-}
 
+}
+p, li {
+  text-align: justify; /* only justify actual body text */
+}
 h1 {
   font-family: var(--font-title);
   font-size: var(--font-size-h1);

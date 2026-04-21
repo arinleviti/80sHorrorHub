@@ -17,7 +17,13 @@ const TMDB_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 interface CarouselProps {
   moviesArray: DBMovie[];
 }
-
+const idToSlug = Object.fromEntries(
+  Object.entries(rawSlugToIdMap).map(([slug, id]) => [id, slug])
+);
+//1. Start with object: `{ "the-fog": 790 }`
+//2. Transform to array of arrays: `[["the-fog", 790]]`
+//3. Swap key/value: `[[790, "the-fog"]]`
+//4. Transform back to object: `{ 790: "the-fog" }`
 export default function MovieCarousel({ moviesArray }: CarouselProps) {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
@@ -25,15 +31,9 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
   const slides = moviesArray
     .filter((m) => m.posterPath)
     .map((movie) => {
-      //Object.entries() converts an object into an array of [key, value] pairs.
-      const rawEntry = Object.entries(rawSlugToIdMap).find(
-        ([, id]) => id === movie.tmdbId
-      );
-
-      const slug = rawEntry
-        ? normalizeSlug(rawEntry[0])
+      const slug = movie.tmdbId && idToSlug[movie.tmdbId]
+        ? normalizeSlug(idToSlug[movie.tmdbId])
         : normalizeSlug(movie.title);
-
       return { ...movie, slug };
     });
 
@@ -42,7 +42,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
       className={styles.carouselWrapper}
       style={{ opacity: ready ? 1 : 0 }}
     >
-     
+
       <Swiper
         key={pathname}
         modules={[Navigation, EffectCoverflow]}
@@ -50,7 +50,12 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
         grabCursor={true}
         initialSlide={Math.floor(slides.length / 2)}
         centeredSlides={true}
-        slidesPerView={5}
+        slidesPerView={3}
+        breakpoints={{
+          640: {
+            slidesPerView: 5,
+          },
+        }}
         centeredSlidesBounds={true}
         loop={false}
         loopAdditionalSlides={slides.length}
@@ -86,7 +91,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
           </SwiperSlide>
         ))}
       </Swiper>
-      
+
     </div>
   );
 }

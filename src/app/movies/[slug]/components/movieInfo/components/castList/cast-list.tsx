@@ -87,7 +87,7 @@ export default function CastList({ cast, config }: CastListProps) {
                   alt={member.actorName}
                   width={50}
                   height={70}
-                  className={style.castToggleBtn}
+                  className={style.castImg}
                 />
               </div>
             ) : (

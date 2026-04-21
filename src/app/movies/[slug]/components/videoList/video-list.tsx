@@ -42,6 +42,7 @@ const showModal = selectedVideo !== null;
               src={v.thumbnail}
               alt={v.title}
               fill
+              sizes="(max-width: 576px) 50vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
               style={{ objectFit: "cover", borderRadius: "0.25rem" }}
             />
           </div>

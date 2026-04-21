@@ -6,6 +6,7 @@
   width: 100%;
   overflow-x: hidden;
   position: relative;
+  isolation: isolate; /* 👈 add this here */
 }
 
 /* Suppress all transitions during init so Swiper's class-churning is invisible */
@@ -16,7 +17,7 @@
 
 /* Width must be on the slide itself — slidesPerView="auto" measures this element */
 .carouselWrapper :global(.swiper-slide) {
-  width: 200px;
+  width: 120px; /* mobile */
   transition: transform 0.3s ease, opacity 0.3s ease;
   opacity: 0.3;
   display: flex;
@@ -45,8 +46,8 @@
 
 .slideLink {
   display: block;
-  width: 200px;
-  height: 300px;
+ width: 120px;   /* mobile */
+  height: 180px;  /* keeps 2:3 ratio */
   text-decoration: none;
   cursor: pointer;
   position: relative;
@@ -67,4 +68,14 @@
 .carouselWrapper :global(.swiper),
 .carouselWrapper :global(.swiper-wrapper) {
   overflow: visible;
+}
+@media (min-width: 640px) {
+  .carouselWrapper :global(.swiper-slide) {
+    width: 200px;
+  }
+
+  .slideLink {
+    width: 200px;
+    height: 300px;
+  }
 }
