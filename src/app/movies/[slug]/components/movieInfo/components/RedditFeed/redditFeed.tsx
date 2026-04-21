@@ -81,7 +81,7 @@ const fetchRedditPosts = async (
 
   try {
     const requests = allowedSubreddits.map(async subreddit => {
-      const url = `https://api.reddit.com/r/${subreddit}/search?q=${encodeURIComponent(movie.title)}&restrict_sr=1&sort=relevance&limit=15`;
+      const url = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(movie.title)}&restrict_sr=1&sort=relevance&limit=15`;
 
       try {
         console.log(`[Reddit] FETCHING r/${subreddit}...`);
