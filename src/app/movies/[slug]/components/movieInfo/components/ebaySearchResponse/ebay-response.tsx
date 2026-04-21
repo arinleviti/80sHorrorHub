@@ -24,7 +24,7 @@ const EbayItemsList: React.FC<EbayItemsListProps> = ({ ebayItems }) => {
         {ebayItems.map((item) => (
           <ListGroup.Item 
             key={item.itemAffiliateWebUrl} 
-            className="d-flex align-items-center"
+            className="d-flex align-items-center "
           >
             {/* Image Thumbnail */}
             {item.image?.imageUrl && (

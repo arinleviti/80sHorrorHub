@@ -43,55 +43,55 @@ export const rawSlugToIdMap: Record<string, number> = {
   "they-live": 8337, 
   "videodrome": 837, 
   "christine": 8769, 
-  "full-moon-high": 107430, // no AI content **.
-  "ghost-story": 24634, // no AI content **.
-  "q:-the-winged-serpent": 27726, // no AI content **.
-  "creepshow": 16281, // no AI content **.
-  "friday-the-13th-part-III": 9728, // no AI content **.
-  "parasite": 48311, // no AI content **.
-  "the-huger": 11654, // no AI content **.
-  "psycho-II": 10576, // no AI content **.
-  "cujo": 10489, // no AI content **.
-  "amityville-3D": 27214, // no AI content **. 
-  "jaws-3D": 17692, // no AI content **.
-  "firestarter": 11495, // no AI content **.
-  "gremlins": 927, // no AI content**.
-  "night-of-the-comet": 18462, // no AI content **.
-  "the-company-of-wolves": 11905, // no AI content **.
-  "the-stuff": 18502, // no AI content **.
-  "day-of-the-dead": 8408, // no AI content **.
-  "howling-II": 29794, // no AI content **.
-  "silver-bullet": 17898, // no AI content **.
-  "chopping-mall": 28941, // no AI content **.
-  "the-toxic-avenger": 15239, // no AI content**.
-  "psycho-III": 12662, // no AI content **.
-  "friday-the-13th-part-VI:-jason-lives": 10225, // no AI content**.
-  "night-of-the-creeps": 15762, // no AI content **.
-  "the-taxas-chainsaw-massacre-2": 16337, // no AI content **.
-  "from-beyond": 14510, // no AI content **.
-  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, // no AI content **.
-  "dolls": 24341, // no AI content **.
-  "evil-dead-2": 765, // no AI content **.
-  "the-monster-squad": 13509, // no AI content **.
-  "near-dark": 11879, // no AI content **.
-  "critters-2": 10127, // no AI content **.
-  "friday-the-13th-part-VII:-the-new-blood": 10281, // no AI content **.
-  "killer-klowns-from-outer-space": 16296, // no AI content **.
-  "phantasm-II": 15158, // no AI content **.
-  "the-blob": 9599, // no AI content **.
-  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, // no AI content **.
-  "the-lair-of-the-white-worm": 11347, // no AI content **.
-  "elvira:-mistress-of-the-dark": 5680, // no AI content **.
-  "pumpkinhead": 26515, // no AI content **.
-  "halloween-IV:-the-return-of-michael-myers": 11357, // no AI content **.
-  "child's-play": 10585, // no AI content **.
-  "hellbound:-hellraiser-ii": 9064, // no AI content **.
-  "the-burbs": 11974, // no AI content **.
-  "976-evil": 24038, // no AI content **.
-  "pet-sematary": 8913, // no AI content **.
-  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, // no AI content **.
-  "stepfather-ii": 30666, // no AI content **.
-  "society": 22244, // no AI content.
+  "full-moon-high": 107430, 
+  "ghost-story": 24634, 
+  "q:-the-winged-serpent": 27726,
+  "creepshow": 16281, 
+  "friday-the-13th-part-III": 9728, 
+  "parasite": 48311, 
+  "the-huger": 11654, 
+  "psycho-II": 10576, 
+  "cujo": 10489, 
+  "amityville-3D": 27214,  
+  "jaws-3D": 17692, 
+  "firestarter": 11495, 
+  "gremlins": 927, 
+  "night-of-the-comet": 18462, 
+  "the-company-of-wolves": 11905,
+  "the-stuff": 18502, 
+  "day-of-the-dead": 8408, 
+  "howling-II": 29794, 
+  "silver-bullet": 17898, 
+  "chopping-mall": 28941, 
+  "the-toxic-avenger": 15239, 
+  "psycho-III": 12662, 
+  "friday-the-13th-part-VI:-jason-lives": 10225, 
+  "night-of-the-creeps": 15762, 
+  "the-taxas-chainsaw-massacre-2": 16337, 
+  "from-beyond": 14510, 
+  "a-nightmare-on-elm-street-3:-dream-warriors": 10072, 
+  "dolls": 24341, 
+  "evil-dead-2": 765, 
+  "the-monster-squad": 13509, 
+  "near-dark": 11879, 
+  "critters-2": 10127, 
+  "friday-the-13th-part-VII:-the-new-blood": 10281, 
+  "killer-klowns-from-outer-space": 16296, 
+  "phantasm-II": 15158,
+  "the-blob": 9599, 
+  "a-nightmare-on-elm-street-4:-the-dream-master": 10131, 
+  "the-lair-of-the-white-worm": 11347, 
+  "elvira:-mistress-of-the-dark": 5680, 
+  "pumpkinhead": 26515, 
+  "halloween-IV:-the-return-of-michael-myers": 11357,
+  "child's-play": 10585, 
+  "hellbound:-hellraiser-ii": 9064, 
+  "the-burbs": 11974, 
+  "976-evil": 24038,
+  "pet-sematary": 8913, 
+  "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, 
+  "stepfather-ii": 30666,
+  "society": 22244, 
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

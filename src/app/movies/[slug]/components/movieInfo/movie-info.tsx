@@ -166,7 +166,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       {/* 💿 Merchandise & Streaming + Reddit */}
       <Row className="mb-3">
         <Col md={6}>
-          <Row><Col><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
+          <Row><Col className="pb-3 pb-md-0"><EbayItemsList ebayItems={curatedEbayItems} /></Col></Row>
         </Col>
 
         <Col md={6}>
