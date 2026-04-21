@@ -92,6 +92,73 @@ export const rawSlugToIdMap: Record<string, number> = {
   "friday-the-13th-part-VIII:-jason-takes-manhattan": 10283, 
   "stepfather-ii": 30666,
   "society": 22244, 
+
+  "inferno": 16395, //no AI content yet ** 1980 director Dario Argento
+  "humanoids-from-the-deep": 29343, //no AI content yet ** 1980 director Barbara Peeters
+  "mothers-day": 14929, //no AI content yet ** 1980 director Charles Kaufman
+  "terror-train": 40969, //no AI content yet ** 1980 director Roger Spottiswoode
+  "alligator": 33518, //no AI content yet ** 1980 director Lewis Teague
+  "altered-states": 11542, //no AI content yet ** 1980 director Ken Russell
+
+  "the-funhouse": 13555, //no AI content yet ** 1981
+  "omen-III:-the-final-conflict": 10768, //no AI content yet ** 1981
+  "friday-the-13th-part-2": 9725, //no AI content yet ** 1981
+  "graduation-day": 27420, //no AI content yet ** 1981
+  "the-boogens": 33721, //no AI content yet ** 1981
+  "dead-and-buried": 24274, //no AI content yet ** 1981
+  "nightmare": 40368, //no AI content yet ** 1981 DIrector Romano Scavolini
+  "saturday-the-14th": 20472, //no AI content yet ** 1981
+
+  "the-beast-within": 40219, //no AI content yet ** 1982
+  "evilspeak": 39868, //no AI content yet ** 1981
+  "the-slumber-party-massacre": 27475, //no AI content yet ** 1982
+  "alone-in-the-dark": 40952, //no AI content yet ** 1982
+  "nightbeast": 66881, //no AI content yet ** 1982
+
+  "the-entity": 24740, //no AI content yet ** 1982
+  "city-of-the-living-dead": 24920, //no AI content yet ** 1980
+  "pieces": 47886, //no AI content yet ** 1982 Director Juan Piquer Simon
+  "the-being": 73218, //no AI content yet ** 1983
+  "the-keep": 26198, //no AI content yet ** 1983
+
+  "the-black-cat": 26503, //no AI content yet ** 1981 director Lucio Fulci
+  "tenebrae": 29702, //no AI content yet ** 1982 director Dario Argento
+  "terror-in-the-aisles": 47894, //no AI content yet ** 1984 director ANdrew J. Kuehn
+  "silent-night-deadly-night": 27414, //no AI content yet ** 1984
+  "razorback": 26178, //no AI content yet ** 1984 director Russel Mulchay
+
+  "ghoulies": 18498, //no AI content yet ** 1985 director Luca Bercovici
+  "cannibal-holocaust": 8689, //no AI content yet ** 1980 director Ruggero Deodato
+  "the-bride": 29077, //no AI content yet ** 1985 director Franc Roddam
+  "the-hills-have-eyes-part-2": 18477, //no AI content yet ** 1985 director Wes Craven
+
+  "house": 11415, //no AI content yet ** 1985 director Steve Miner
+  "april-fools-day": 24913, //no AI content yet ** 1986 director Fred Walton
+  "demons": 14029, //no AI content yet ** 1985 director Lamberto Bava
+  "vamp": 34223, //no AI content yet ** 1986 director Richard Wenk
+  "the-seventh-curse": 39900, //no AI content yet ** 1986 director Lam Nai-Choi
+  "little-shop-of-horrors": 10776, //no AI content yet ** 1986 director Frank Oz
+  "henry:-portrait-of-a-serial-killer": 10692, //no AI content yet ** 1986 director John McNaughton
+
+  "angel-heart": 635, //no AI content yet ** 1987 director Alan Parker
+  "creepshow-2": 16288, //no AI content yet ** 1987 director Michael Gornick
+  "blood-diner": 62132, //no AI content yet ** 1987 director Jackie Kong
+  "hello-mary-lou:-prom-night-II": 39929, //no AI content yet ** 1987 director Bruce Pittman
+  "prince-of-darkness": 8852, //no AI content yet ** 1987 director John Carpenter
+
+  "beetlejuice": 4011, //no AI content yet ** 1988
+  "hollywood-chainsaw-hookers": 27412, //no AI content yet ** 1988
+  "dead-heat": 40095, //no AI content yet ** 1988 director Mark Goldblatt
+  "maniac-cop": 14240, //no AI content yet ** 1988 director William Lustig
+  "poltergeist-III": 10306, //no AI content yet ** 1988 director Gary Sherman
+  "waxwork": 29095, //no AI content yet ** 1988 director Anthony Hickox
+  "cellar-dweller": 58797, //no AI content yet ** 1988 director John Carl Buechler
+
+  "bad-taste": 9964, //no AI content yet ** 1987 director Peter Jackson
+  "tetsuo:-the-iron-man": 41428, //no AI content yet ** 1989 director Shinya Tsukamoto
+  "halloween-5:-the-revenge-of-michael-myers": 11361, //no AI content yet ** 1989 director Dominique Othenin-Girard
+  "shocker": 12521, //no AI content yet ** 1989 director Wes Craven
+  "silent-night-deadly-night-III:-better-watch-out": 42709, //no AI content yet ** 1989 director Monte Hellman
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
