@@ -22,7 +22,7 @@ const bebasNeue = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: "Retro Horror Hub – Horror Movies & Collectibles for Fans",
-  description: "Discover cult horror films from the 70s, 80s and 90s. Explore cast & crew, trailers, fan contributions, collectibles, vinyls, and rare memorabilia in a curated horror archive for fans and collectors.",
+  description: "A curated horror hub for fans and collectors. Discover cult films from the 70s, 80s and 90s alongside handpicked eBay collectibles, rare memorabilia, vinyls, and high-value finds. Explore fan contributions, deep trivia, and carefully selected horror content all in one place.",
 };
 
 export default function RootLayout({

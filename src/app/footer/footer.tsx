@@ -2,6 +2,7 @@
 import { FC } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import styles from './footer.module.css';
+import { FaInstagram } from 'react-icons/fa';
 
 const Footer: FC = () => {
   const currentYear: number = new Date().getFullYear();
@@ -49,9 +50,9 @@ const Footer: FC = () => {
                 retrohorrorhub[at]gmail.com
               </a>
             </p>
-            {/* <p className={styles.textContent}>
-              Socials coming soon!
-            </p> */}
+            <a href="https://www.instagram.com/retrohorrorhub/" target="_blank" rel="noopener noreferrer">
+              <FaInstagram size={25} color="var(--color-primary)" />
+            </a>
           </Col>
         </Row>
 
