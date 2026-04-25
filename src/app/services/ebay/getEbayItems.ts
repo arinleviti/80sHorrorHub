@@ -2,29 +2,50 @@ import { prisma } from "../prisma";
 import axios from "axios";
 import qs from "qs";
 
-interface RawEbayPrice { value: string; currency: string; }
-interface RawEbayImage { imageUrl: string; }
+interface RawEbayPrice {
+  value: string;
+  currency: string;
+}
+
+interface RawEbayImage {
+  imageUrl: string;
+}
+
 interface RawEbayItem {
   title: string;
   price: RawEbayPrice;
   thumbnailImages?: RawEbayImage[];
   itemWebUrl: string;
+  itemAffiliateWebUrl?: string;
   itemEndDate?: string; // This is the field returned by MATCHING_ITEMS
 }
-interface RawEbaySearchResponse { itemSummaries: RawEbayItem[]; }
 
-export interface EbayItemPrice { value: string; currency: string; }
-export interface EbayItemImage { imageUrl: string; }
+interface RawEbaySearchResponse {
+  itemSummaries: RawEbayItem[];
+}
+
+export interface EbayItemPrice {
+  value: string;
+  currency: string;
+}
+
+export interface EbayItemImage {
+  imageUrl: string;
+}
+
 export interface EbayItemSummary {
   title: string;
   price: EbayItemPrice;
   image: EbayItemImage;
   itemAffiliateWebUrl: string;
-   listing?: {
+  listing?: {
     endDate?: string; // ISO string from eBay API
   };
 }
-export interface EbaySearchResponse { itemSummaries: EbayItemSummary[]; }
+
+export interface EbaySearchResponse {
+  itemSummaries: EbayItemSummary[];
+}
 
 /**
  * Maps the raw API response to our internal EbayItemSummary type
@@ -32,17 +53,17 @@ export interface EbaySearchResponse { itemSummaries: EbayItemSummary[]; }
 function mapEbayItem(item: RawEbayItem): EbayItemSummary {
   return {
     title: item.title,
-    price: { 
-      value: item.price.value, 
-      currency: item.price.currency 
+    price: {
+      value: item.price.value,
+      currency: item.price.currency
     },
-    image: { 
-      imageUrl: item.thumbnailImages?.[0]?.imageUrl || '' 
+    image: {
+      imageUrl: item.thumbnailImages?.[0]?.imageUrl || ''
     },
-    itemAffiliateWebUrl: item.itemWebUrl,
+    itemAffiliateWebUrl: item.itemAffiliateWebUrl || item.itemWebUrl, // ← prefer affiliate
     listing: {
       // Mapping the raw 'itemEndDate' to our structured 'listing.endDate'
-      endDate: item.itemEndDate 
+      endDate: item.itemEndDate
     }
   };
 }
@@ -58,13 +79,18 @@ export async function getEbayAccessToken(): Promise<string> {
   }
 
   console.log("⏳ Requesting new eBay token...");
+
   const clientId = process.env.EBAY_CLIENT_ID!;
   const clientSecret = process.env.EBAY_CLIENT_SECRET!;
 
   const tokenResponse = await axios.post(
     'https://api.ebay.com/identity/v1/oauth2/token',
-    qs.stringify({ grant_type: 'client_credentials', scope: 'https://api.ebay.com/oauth/api_scope' }),
-    { headers: {
+    qs.stringify({
+      grant_type: 'client_credentials',
+      scope: 'https://api.ebay.com/oauth/api_scope'
+    }),
+    {
+      headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
       }
@@ -76,8 +102,15 @@ export async function getEbayAccessToken(): Promise<string> {
 
   await prisma.ebayToken.upsert({
     where: { id: 1 },
-    create: { id: 1, token, expiresAt: new Date(now + expiresInMs - 60000) },
-    update: { token, expiresAt: new Date(now + expiresInMs - 60000) }
+    create: {
+      id: 1,
+      token,
+      expiresAt: new Date(now + expiresInMs - 60000)
+    },
+    update: {
+      token,
+      expiresAt: new Date(now + expiresInMs - 60000)
+    }
   });
 
   return token;
@@ -87,9 +120,10 @@ export async function getEbayAccessToken(): Promise<string> {
  * Fetches eBay items with the MATCHING_ITEMS fieldgroup to unlock expiry dates
  */
 export async function getEbayItems(
-  query: string, 
+  query: string,
   accessToken: string
 ): Promise<EbaySearchResponse> {
+
   // CRITICAL: Added &fieldgroups=MATCHING_ITEMS to unlock itemEndDate
   const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=15&fieldgroups=MATCHING_ITEMS`;
 
@@ -97,7 +131,7 @@ export async function getEbayItems(
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
-      "X-EBAY-C-ENDUSERCTX": "contextualLocation=country=US,zip=10001"
+      "X-EBAY-C-ENDUSERCTX": `affiliateCampaignId=${process.env.EBAY_CAMPAIGN_ID},contextualLocation=country=US,zip=10001`
     }
   });
 
@@ -109,7 +143,7 @@ export async function getEbayItems(
 
   const data: RawEbaySearchResponse = await res.json();
 
-  return { 
-    itemSummaries: (data.itemSummaries || []).map(mapEbayItem) 
+  return {
+    itemSummaries: (data.itemSummaries || []).map(mapEbayItem)
   };
 }
