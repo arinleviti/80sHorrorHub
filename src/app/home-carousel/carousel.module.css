@@ -1,81 +1,79 @@
-/* carousel.module.css */
-
 .carouselWrapper {
-  margin-top: 40px;
-  padding: 60px 0;
   width: 100%;
-  overflow-x: hidden;
+  margin-top: 1rem;
+  padding: 2rem 0 3rem 0;
   position: relative;
-  isolation: isolate; /* 👈 add this here */
+  overflow: visible;
+  isolation: isolate;
 }
 
-/* Suppress all transitions during init so Swiper's class-churning is invisible */
-.carouselWrapper :global(.swiper:not(.swiper-initialized) .swiper-slide) {
-  transition: none !important;
-  opacity: 1 !important;
+/* Swiper must NOT clip hover */
+.carouselWrapper :global(.swiper) {
+  overflow: visible !important;
 }
 
-/* Width must be on the slide itself — slidesPerView="auto" measures this element */
+.carouselWrapper :global(.swiper-wrapper) {
+  overflow: visible !important;
+  padding: 40px 0;
+}
+
+/* SLIDES */
 .carouselWrapper :global(.swiper-slide) {
-  width: 120px; /* mobile */
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0.3;
+  width: 140px;
+  opacity: 0.4;
   display: flex;
   justify-content: center;
   align-items: center;
-  user-select: none;
-  visibility: visible !important;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  overflow: visible;
 }
 
 .carouselWrapper :global(.swiper-slide-active) {
   opacity: 1;
-  z-index: 10;
+  z-index: 50;
 }
 
-.carouselWrapper :global(.swiper-slide-prev),
-.carouselWrapper :global(.swiper-slide-next) {
-  opacity: 1;
-  z-index: 5;
-}
-
+/* NAV BUTTONS */
 .carouselWrapper :global(.swiper-button-next),
 .carouselWrapper :global(.swiper-button-prev) {
   color: var(--color-primary);
   z-index: 100;
 }
 
+/* LINK WRAPPER */
 .slideLink {
+  width: 140px;
+  height: 210px;
   display: block;
- width: 120px;   /* mobile */
-  height: 180px;  /* keeps 2:3 ratio */
-  text-decoration: none;
-  cursor: pointer;
   position: relative;
-  z-index: 20;
+  overflow: visible;
+  cursor: pointer;
 }
 
+/* POSTER */
 .poster {
   object-fit: cover;
   border-radius: 10px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
 }
 
-.carouselWrapper :global(.swiper-slide-active) .slideLink:hover .poster {
-  transform: scale(1.05);
+/* HOVER EFFECT (NO CLIPPING) */
+.carouselWrapper :global(.swiper-slide-active) .poster {
+  transform: scale(1.08);
   filter: brightness(1.1);
 }
-.carouselWrapper :global(.swiper),
-.carouselWrapper :global(.swiper-wrapper) {
-  overflow: visible;
-}
+
+/* DESKTOP */
 @media (min-width: 640px) {
   .carouselWrapper :global(.swiper-slide) {
-    width: 200px;
+    width: 220px;
   }
 
   .slideLink {
-    width: 200px;
-    height: 300px;
+    width: 220px;
+    height: 330px;
   }
 }
