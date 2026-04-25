@@ -1,4 +1,65 @@
-/* === MAIN SEARCH INPUT === */
+.container {
+  min-height: 100vh;
+  position: relative;
+  padding-top: 1.5rem;
+}
+
+/* BACKGROUND */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+    url('/static_imgs/vhs_background.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  z-index: 0;
+
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, black 120px, black calc(100% - 120px), transparent 100%),
+    linear-gradient(to right, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, black 120px, black calc(100% - 120px), transparent 100%),
+    linear-gradient(to right, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%);
+}
+
+/* EVERYTHING ABOVE BACKGROUND */
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* TITLE */
+.title {
+  font-family: var(--font-title);
+  text-align: center;
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0.5rem 0 1rem 0;
+  color: #ff3b3b;
+  text-shadow:
+    2px 2px 0 #000,
+    0 0 10px #ff3b3b;
+}
+
+/* CAROUSEL WRAPPER */
+.carouselWrapper {
+  margin-top: 1rem;
+  padding-bottom: 3rem;
+}
+
+/* SEARCH (unchanged, safe) */
+.searchContainer {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2rem;
+  z-index: 10000;
+}
+
 .searchInputMain {
   width: 420px;
   padding: 0.8rem 1rem;
@@ -8,7 +69,6 @@
   font-size: 1.1rem;
   letter-spacing: 1px;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  transition: all 0.3s ease;
 }
 
 .searchInputMain:focus {
@@ -19,127 +79,45 @@
     0 0 20px rgba(230,28,111,0.3);
 }
 
-/* === SEARCH CONTAINER WRAPPER === */
-.searchContainer {
-  display: flex;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 2rem;
-  z-index: 10000;
-}
-
-/* === DROPDOWN === */
-.searchDropdown {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 420px;
-  background: rgba(0,0,0,0.9);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  z-index: 10001;
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-/* === DROPDOWN ITEM === */
-.searchItem {
-  display: block;
-  padding: 0.6rem;
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.6);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  transition: background 0.2s ease;
-}
-
-.searchItem:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-/* === NO RESULTS === */
+.searchDropdown,
 .noResults {
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   width: 420px;
-  z-index: 10001;
   background: rgba(0,0,0,0.9);
   border: 1px solid rgba(255,255,255,0.1);
+  z-index: 10001;
+}
+
+.searchDropdown {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.searchItem {
+  display: block;
+  padding: 0.6rem;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+}
+
+.searchItem:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.noResults {
   padding: 0.6rem;
   color: var(--color-secondary);
-}
-
-/* === PAGE CONTAINER === */
-.container {
-  min-height: 100vh;
-  position: relative;
-}
-
-/* Background image + dark overlay combined — masked edges */
-.container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
-    url('/static_imgs/vhs_background.png');
-  background-size: cover;
-  background-position: top center;
-  background-repeat: no-repeat;
-  z-index: 0;
-
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%),
-    linear-gradient(to right, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%);
-  mask-composite: intersect;
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%),
-    linear-gradient(to right, transparent 0%, black 80px, black calc(100% - 80px), transparent 100%);
-  -webkit-mask-composite: source-in;
-}
-
-
-
-/* All direct children above the two pseudo-element layers */
-.container > * {
-  position: relative;
-  z-index: 1;
-}
-
-.title {
-  font-family: var(--font-title);
-  position: absolute;
-  top: 4rem;        /* adjust this to move the title */
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin: 0;
-  color: #ff3b3b;
-  text-shadow:
-    2px 2px 0 #000,
-    0 0 10px #ff3b3b;
-  z-index: 1;
-}
-
-.carouselWrapper {
-  position: relative;
-  z-index: 1;
-  padding-top: 6rem; /* should be roughly title top + title height */
 }
 
 @media (max-width: 639px) {
   .searchContainer {
     display: none;
   }
+
   .title {
-    font-size: 2rem;
-    top: 4rem;
-  }
-  .carouselWrapper {
-    padding-top: 8rem;
+    font-size: 2.2rem;
   }
 }
