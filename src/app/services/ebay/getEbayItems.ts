@@ -69,7 +69,7 @@ function mapEbayItem(item: RawEbayItem): EbayItemSummary {
 }
 
 // Get eBay OAuth token
-export async function getEbayAccessToken(): Promise<string> {
+export async function getEbayAccessToken(): Promise<string | null> {
   const record = await prisma.ebayToken.findFirst();
   const now = Date.now();
 
@@ -83,37 +83,44 @@ export async function getEbayAccessToken(): Promise<string> {
   const clientId = process.env.EBAY_CLIENT_ID!;
   const clientSecret = process.env.EBAY_CLIENT_SECRET!;
 
-  const tokenResponse = await axios.post(
-    'https://api.ebay.com/identity/v1/oauth2/token',
-    qs.stringify({
-      grant_type: 'client_credentials',
-      scope: 'https://api.ebay.com/oauth/api_scope'
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+  try {
+    const tokenResponse = await axios.post(
+      'https://api.ebay.com/identity/v1/oauth2/token',
+      qs.stringify({
+        grant_type: 'client_credentials',
+        scope: 'https://api.ebay.com/oauth/api_scope'
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+        },
+        timeout: 5000 // 🔥 prevent hanging
       }
-    }
-  );
+    );
 
-  const token = tokenResponse.data.access_token;
-  const expiresInMs = tokenResponse.data.expires_in * 1000;
+    const token = tokenResponse.data.access_token;
+    const expiresInMs = tokenResponse.data.expires_in * 1000;
 
-  await prisma.ebayToken.upsert({
-    where: { id: 1 },
-    create: {
-      id: 1,
-      token,
-      expiresAt: new Date(now + expiresInMs - 60000)
-    },
-    update: {
-      token,
-      expiresAt: new Date(now + expiresInMs - 60000)
-    }
-  });
+    await prisma.ebayToken.upsert({
+      where: { id: 1 },
+      create: {
+        id: 1,
+        token,
+        expiresAt: new Date(now + expiresInMs - 60000)
+      },
+      update: {
+        token,
+        expiresAt: new Date(now + expiresInMs - 60000)
+      }
+    });
 
-  return token;
+    return token;
+
+  } catch (error) {
+    console.error("❌ eBay token fetch failed:", error);
+    return null; // 🔥 CRITICAL
+  }
 }
 
 /**

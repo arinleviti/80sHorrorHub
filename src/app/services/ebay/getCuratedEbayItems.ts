@@ -433,6 +433,10 @@ export async function getCuratedEbayItems(
   // 2️⃣ Fetch fresh data
   const queries = buildEbayQueries(movieTitle, year);
   const accessToken = await getEbayAccessToken();
+  if (!accessToken) {
+  console.warn(`⚠️ eBay unavailable for "${movieTitle}" → skipping`);
+  return []; // 🔥 CRITICAL: don't proceed
+}
   const results: EbaySearchResponse[] = await Promise.all(
     queries.map(q => getEbayItems(q, accessToken))
   );
