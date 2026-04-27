@@ -12,11 +12,13 @@ import { prisma } from "../prisma";
 //
 export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
   "the being":   ["horror", "slasher", "film", "movie", "rare"],
-  "pieces":      ["horror", "slasher", "vestron", "htf", "cult", "film", "movie"],
+  "pieces":      ["horror", "slasher", "1982","vestron", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón"],
   "the hunger":  ["horror", "bowie", "deneuve", "sarandon", "film", "movie"],
   "parasite":    ["demi moore", "3-d", "3d", "horror"],
   "demons":      ["argento", "bava", "lamberto", "horror", "dario"],
   "prey":        ["horror", "film", "movie", "1978", "1977"],
+  "the stuff":   ["larry cohen", "1985", "1986", "horror", "vhs", "dvd"],
+  "inferno":     ["dario argento", "horror", "giallo","vhs", "dvd"],
   // Add more as you encounter noisy titles
 };
 
@@ -225,7 +227,15 @@ function getYearScore(itemTitle: string, movieYear: string): number {
   if (minDiff <= 8)   return -4;   // different era
   return -10;                      // near-disqualifying
 }
-
+function normalizeTitle(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, "")
+    .replace(/\b\d+x\d+\b/g, "")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 /**
  * Franchise contamination scoring.
  *
@@ -337,7 +347,7 @@ function scoreItem(item: EbayItemSummary, movieTitle: string, movieYear: string)
 
   // Keyword penalties
   if (title.includes("reprint"))                                score -= 3;
-  if (title.includes("replica"))                                score -= 3;
+  if (title.includes("replica"))                                score -= 6;
   if (title.includes("reproduction") || title.includes("repro")) score -= 4;
 
   // Context-aware scoring
@@ -433,13 +443,21 @@ export async function getCuratedEbayItems(
   // 2️⃣ Fetch fresh data
   const queries = buildEbayQueries(movieTitle, year);
   const accessToken = await getEbayAccessToken();
-  if (!accessToken) {
-  console.warn(`⚠️ eBay unavailable for "${movieTitle}" → skipping`);
-  return []; // 🔥 CRITICAL: don't proceed
+
+if (!accessToken) {
+  console.error("🚨🚨 EBAY TOKEN FAILURE — FALLING BACK TO CACHE");
+  return getStaleCache(movieId);
 }
-  const results: EbaySearchResponse[] = await Promise.all(
+  let results: EbaySearchResponse[];
+
+try {
+  results = await Promise.all(
     queries.map(q => getEbayItems(q, accessToken))
   );
+} catch (err) {
+  console.error("🚨🚨 EBAY API FETCH FAILED — USING STALE CACHE", err);
+  return getStaleCache(movieId);
+}
   const merged = results.flatMap(r => r.itemSummaries);
 
   // Filter expired listings
@@ -455,6 +473,15 @@ export async function getCuratedEbayItems(
     .filter(item => !isBadItem(item.title, movieTitle, year))
     .map(item => ({ item, score: scoreItem(item, movieTitle, year) }))
     .sort((a, b) => b.score - a.score);
+
+  const seen = new Set<string>();
+
+const dedupedScored = scored.filter(({ item }) => {
+  const key = normalizeTitle(item.title);
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+});
 
   const typeLimits: Record<ItemType, number> = {
   physical_media: 5,
@@ -479,7 +506,7 @@ export async function getCuratedEbayItems(
   const HIGH_SCORE = 8;
   const MAX_ITEMS = 20;
 
-  for (const { item, score } of scored) {
+  for (const { item, score } of dedupedScored) {
     if (score < MIN_SCORE) break;
     if (curated.length >= 15 && score < HIGH_SCORE) break;
     if (curated.length >= MAX_ITEMS) break;
@@ -525,4 +552,29 @@ export async function getCuratedEbayItems(
   });
 
   return final;
+}
+
+// ─────────────────────────────────────────────
+// 🚨 STALE CACHE FALLBACK (NEW)
+// ─────────────────────────────────────────────
+
+async function getStaleCache(movieId: string) {
+  const cached = await prisma.ebayQuery.findUnique({
+    where: { movieId },
+    include: { items: true },
+  });
+
+  if (!cached?.items?.length) {
+    console.error("❌ NO STALE CACHE AVAILABLE");
+    return [];
+  }
+
+  console.warn("🚨🚨🚨🚨 USING STALE EBAY CACHE (API FAILURE MODE) 🚨🚨🚨🚨");
+
+  return cached.items.map(i => ({
+    title: i.title,
+    price: { value: i.priceValue, currency: i.priceCurrency },
+    image: { imageUrl: i.imageUrl },
+    itemAffiliateWebUrl: i.itemUrl,
+  }));
 }
