@@ -1,4 +1,9 @@
 import axios from "axios";
+import { parseStringPromise } from "xml2js";
+
+/* =========================================================
+   🔴 CORE TYPES
+   ========================================================= */
 
 export interface RedditPost {
   id: string;
@@ -15,7 +20,37 @@ export interface MovieForReddit {
   castMembers?: { actor: { name: string }; character: string }[];
 }
 
-// --- NEW INTERNAL TYPES TO REMOVE 'ANY' ---
+/* =========================================================
+   🟡 RSS TYPES (STRICT - NO ANY)
+   ========================================================= */
+
+interface RSSLink {
+  $: {
+    href: string;
+  };
+}
+
+interface RSSAuthor {
+  name: string[];
+}
+
+interface RSSEntry {
+  id?: string[];
+  title: string[];
+  author?: RSSAuthor[];
+  link: RSSLink[];
+}
+
+interface RSSFeed {
+  feed: {
+    entry?: RSSEntry[];
+  };
+}
+
+/* =========================================================
+   🔴 API TYPES (KEPT FOR FUTURE USE)
+   ========================================================= */
+
 interface RedditChild {
   data: {
     id: string;
@@ -33,10 +68,19 @@ interface RedditSearchResponse {
   };
 }
 
+/* =========================================================
+   🟡 CONFIG
+   ========================================================= */
+
 const allowedSubreddits = ["horror", "80shorror", "movies"];
 const junkWords = /meme|shitpost|gif|funny|bot|disney/i;
 
-const fuzzy = (str: string): string => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+const fuzzy = (str: string): string =>
+  str.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/* =========================================================
+   🧠 SCORING (UNCHANGED)
+   ========================================================= */
 
 const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   let score = 0;
@@ -50,10 +94,16 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   if (movieYear && titleLower.includes(movieYear)) score += 2;
 
   if (movie.castMembers) {
-    const topActors = movie.castMembers.slice(0, 5).map(c => c.actor.name.toLowerCase());
+    const topActors = movie.castMembers
+      .slice(0, 5)
+      .map(c => c.actor.name.toLowerCase());
+
     if (topActors.some(a => titleLower.includes(a))) score += 2;
 
-    const topChars = movie.castMembers.slice(0, 5).map(c => c.character.toLowerCase());
+    const topChars = movie.castMembers
+      .slice(0, 5)
+      .map(c => c.character.toLowerCase());
+
     if (topChars.some(c => titleLower.includes(c))) score += 2;
   }
 
@@ -61,65 +111,95 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
 
   return score;
 };
-// --- END OF NEW INTERNAL TYPES ---
+
+/* =========================================================
+   🟣 RSS FETCH (TYPE-SAFE)
+   ========================================================= */
+
+const fetchSubredditRSS = async (subreddit: string): Promise<RedditPost[]> => {
+  const url = `https://www.reddit.com/r/${subreddit}.rss`;
+
+  const res = await axios.get<string>(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (HorrorHubRSS/1.0)",
+    },
+    timeout: 9000,
+  });
+
+  const parsed = await parseStringPromise(res.data) as RSSFeed;
+
+  const entries = parsed.feed.entry ?? [];
+
+  return entries.map((entry: RSSEntry): RedditPost => {
+    const title = entry.title[0];
+
+    const author =
+      entry.author?.[0]?.name?.[0] ?? "unknown";
+
+    const id =
+      entry.id?.[0] ?? title;
+
+    const url =
+      entry.link[0].$.href;
+
+    return {
+      id,
+      title,
+      author,
+      subreddit,
+      upvotes: 0,
+      url,
+    };
+  });
+};
+
+/* =========================================================
+   🔵 API MODE (COMMENTED OUT - NO ANY)
+   ========================================================= */
+
+/*
+const fetchSubredditAPI = async (
+  subreddit: string,
+  movieTitle: string
+): Promise<RedditChild[]> => {
+  const url = `https://www.reddit.com/r/${subreddit}/search.json`;
+
+  const res = await axios.get<RedditSearchResponse>(url, {
+    params: {
+      q: movieTitle,
+      restrict_sr: 1,
+      sort: "relevance",
+      limit: 15,
+    },
+    timeout: 9000,
+  });
+
+  return res.data.data.children;
+};
+*/
+
+/* =========================================================
+   🚀 MAIN FUNCTION (RSS ACTIVE)
+   ========================================================= */
+
 export const fetchRedditPosts = async (
   movie: MovieForReddit,
   limit = 5
 ): Promise<RedditPost[]> => {
-  console.log("[Reddit] fetchRedditPosts START", {
+  console.log("[Reddit RSS] START", {
     title: movie.title,
-    limit,
     subreddits: allowedSubreddits,
   });
-  try {
-    const requests = allowedSubreddits.map(async (subreddit) => {
-      // 🔥 2. BEFORE REQUEST
-      console.log(`[Reddit] querying r/${subreddit}`);
-      const url = `https://www.reddit.com/r/${subreddit}/search.json`;
 
-      try {
-        const res = await axios.get<RedditSearchResponse>(url, {
-          params: {
-            q: movie.title,
-            restrict_sr: 1,
-            sort: "relevance",
-            limit: 15,
-          },
-          timeout: 9000,
-        });
-        // 🔥 3. AFTER SUCCESS RESPONSE
-        console.log(
-          `[Reddit] SUCCESS r/${subreddit} ->`,
-          res.data?.data?.children?.length ?? 0
-        );
-        return res.data?.data?.children ?? [];
-      } catch (err) {
-        // 🔥 4. ERROR PER SUBREDDIT
-        console.warn(
-          `[Reddit] FAILED r/${subreddit}`,
-          err instanceof Error ? err.message : err
-        );
-        if (axios.isAxiosError(err)) {
-          console.warn(`[Reddit] Failed for r/${subreddit}: ${err.message}`);
-        }
-        return [];
-      }
-    });
+  try {
+    const requests = allowedSubreddits.map(sub =>
+      fetchSubredditRSS(sub)
+    );
 
     const results = await Promise.allSettled(requests);
 
-    const allChildren: RedditChild[] = results
-      .flatMap(r => (r.status === "fulfilled" ? r.value : []))
-      .flat();
-
-    const allPosts: RedditPost[] = allChildren.map((child) => ({
-      id: child.data.id,
-      title: child.data.title,
-      author: child.data.author,
-      subreddit: child.data.subreddit,
-      upvotes: child.data.ups || 0,
-      url: `https://reddit.com${child.data.permalink}`,
-    }));
+    const allPosts: RedditPost[] = results
+      .flatMap(r => (r.status === "fulfilled" ? r.value : []));
 
     const scored = allPosts
       .map(post => ({
@@ -136,15 +216,21 @@ export const fetchRedditPosts = async (
       (a, b) =>
         b.score - a.score || b.post.upvotes - a.post.upvotes
     );
-    console.log("[Reddit] FINAL", {
-      raw: allChildren.length,
-      posts: allPosts.length,
+
+    console.log("[Reddit RSS] FINAL", {
+      raw: allPosts.length,
       scored: scored.length,
       returned: Math.min(limit, scored.length),
     });
+
     return unique.slice(0, limit).map(u => u.post);
-  } catch (err) {
-    console.warn("[Reddit] Global fetch failure:", err);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.warn("[Reddit RSS] ERROR:", err.message);
+    } else {
+      console.warn("[Reddit RSS] UNKNOWN ERROR");
+    }
+
     return [];
   }
 };
