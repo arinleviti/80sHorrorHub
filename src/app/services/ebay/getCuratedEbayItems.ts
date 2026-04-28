@@ -11,14 +11,21 @@ import { prisma } from "../prisma";
 // Keys are lowercase movie titles exactly as stored in your DB.
 //
 export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
-  "the being":   ["horror", "slasher", "film", "movie", "rare"],
-  "pieces":      ["horror", "slasher", "1982","vestron", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón"],
-  "the hunger":  ["horror", "bowie", "deneuve", "sarandon", "film", "movie"],
-  "parasite":    ["demi moore", "3-d", "3d", "horror"],
-  "demons":      ["argento", "bava", "lamberto", "horror", "dario"],
-  "prey":        ["horror", "film", "movie", "1978", "1977"],
-  "the stuff":   ["larry cohen", "1985", "1986", "horror", "vhs", "dvd"],
-  "inferno":     ["dario argento", "horror", "giallo","vhs", "dvd"],
+  "the being":   ["horror", "slasher", "film","vhs", "dvd", "movie", "rare", "lobby"],
+  "pieces":      ["horror", "slasher","vestron","vhs", "dvd", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón", "lobby"],
+  "the hunger":  ["horror", "bowie", "deneuve","vhs", "dvd", "sarandon", "film", "movie", "lobby"],
+  "parasite":    ["demi moore", "3-d", "3d","vhs", "dvd", "horror", "lobby"],
+  "demons":      ["argento", "bava", "lamberto", "horror","vhs", "dvd", "dario", "lobby"],
+  "prey":        ["horror", "film", "movie", "1978", "1977", "lobby"],
+  "the stuff":   ["larry cohen","movie","film", "horror", "vhs", "dvd", "lobby"],
+  "inferno":     ["dario argento", "horror", "giallo","vhs", "dvd", "movie", "film", "lobby"],
+  "dolls":       ["horror", "film", "movie","vhs", "dvd", "stuart gordon", "cult", "lobby"],
+  "society":     ["brian yuzna", "horror", "film", "movie","vhs", "dvd", "cult", "1989", "rare", "lobby"],
+  "mothers-day":  ["charles kaufman","horror", "film", "movie","vhs", "dvd", "cult", "troma", "rare", "cult", "1980", "lobby"],
+  "alligator":    ["horror", "film", "movie","vhs", "dvd", "cult", "Lewis Teague", "lobby"],
+  "graduation day":["horror", "film", "movie","vhs", "dvd", "cult", "Herb Freed", "lobby"],
+  "house":        ["horror", "film", "movie","vhs", "dvd", "cult","Steve Miner", "lobby"],
+  "shocker":      ["horror", "film", "movie","vhs", "dvd", "cult","lobby","Wes Craven", "poster","lobby"]
   // Add more as you encounter noisy titles
 };
 
