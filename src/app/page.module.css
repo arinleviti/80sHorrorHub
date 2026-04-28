@@ -40,9 +40,7 @@
   font-weight: bold;
   margin: 0.5rem 0 1rem 0;
   color: #ff3b3b;
-  text-shadow:
-    2px 2px 0 #000,
-    0 0 10px #ff3b3b;
+  
 }
 
 /* CAROUSEL WRAPPER */
