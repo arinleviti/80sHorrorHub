@@ -197,7 +197,7 @@ async function fetchHFSuggestions(movieTitle: string, year: string) {
         messages: [
           {
             role: "user",
-            content: `Suggest exactly 5 horror movies released between 1975 and 1995 that are similar in tone, style, and themes to "${movieTitle}" (${yearString}).
+            content: `Suggest exactly 5 horror movies released between 1965 and 1995 that are similar in tone, style, and themes to "${movieTitle}" (${yearString}).
 Return your answer as a valid JSON array with 5 objects.
 Each object must have two fields: "title" (string) and "year" (string).
 Do not include any extra text or explanation.`,
