@@ -21,8 +21,35 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://retrohorrorhub.com"),
   title: "Retro Horror Hub – Horror Movies & Collectibles for Fans",
-  description: "A curated horror hub for fans and collectors. Discover cult films from the 70s, 80s and 90s alongside handpicked eBay collectibles, rare memorabilia, vinyls, and high-value finds. Explore fan contributions, deep trivia, and carefully selected horror content all in one place.",
+  description: "The curated authority on retro horror collecting, updated daily. Handpicked eBay finds, Discogs picks, rare VHS, posters, vinyl — the top of the crop, refreshed continuously.",
+  openGraph: {                                          // ← wrap everything here
+    title: "Retro Horror Hub – Horror Movies & Collectibles for Fans",
+    description: "The curated authority on retro horror collecting, updated daily. Handpicked eBay finds, Discogs picks, rare VHS, posters, vinyl — the top of the crop, refreshed continuously.",
+    url: "https://retrohorrorhub.com",
+    siteName: "Retro Horror Hub",                       // ← capital N in siteName
+    images: [
+      {
+        url: "https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp", // ← must be absolute
+        width: 300,
+        height: 300,
+        alt: "Retro Horror Hub",
+      },
+    ],
+    type: "website",
+  },                                                    // ← comma, not semicolon
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://retrohorrorhub.com",
+  },
 };
 
 export default function RootLayout({
@@ -35,6 +62,27 @@ export default function RootLayout({
       <head>
         <meta name="impact-site-verification" content="ce9cc761-2c62-493a-bddc-58beddb9f633" />
         <link rel="stylesheet" href="/silktide-consent-manager.css" />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Retro Horror Hub",
+              "url": "https://retrohorrorhub.com",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Retro Horror Hub",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp"
+                }
+              }
+            })
+          }}
+        />
+
       </head>
       <body className={`${merriweather.variable} ${bebasNeue.variable}`}>
         <Providers>
