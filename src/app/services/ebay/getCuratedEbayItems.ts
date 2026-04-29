@@ -11,44 +11,51 @@ import { prisma } from "../prisma";
 // Keys are lowercase movie titles exactly as stored in your DB.
 //
 export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
-  "the being":   ["horror", "slasher", "film","vhs", "dvd", "movie", "rare", "lobby"],
-  "pieces":      ["horror", "slasher","vestron","vhs", "dvd", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón", "lobby"],
-  "the hunger":  ["horror", "bowie", "deneuve","vhs", "dvd", "sarandon", "film", "movie", "lobby"],
-  "parasite":    ["demi moore", "3-d", "3d","vhs", "dvd", "horror", "lobby"],
-  "demons":      ["argento", "bava", "lamberto", "horror","vhs", "dvd", "dario", "lobby"],
-  "prey":        ["horror", "film", "movie", "1978", "1977", "lobby"],
-  "the stuff":   ["larry cohen","movie","film", "horror", "vhs", "dvd", "lobby"],
-  "inferno":     ["dario argento", "horror", "giallo","vhs", "dvd", "movie", "film", "lobby"],
-  "dolls":       ["horror", "film", "movie","vhs", "dvd", "stuart gordon", "cult", "lobby"],
-  "society":     ["brian yuzna", "horror", "film", "movie","vhs", "dvd", "cult", "1989", "rare", "lobby"],
-  "mothers-day":  ["charles kaufman","horror", "film", "movie","vhs", "dvd", "cult", "troma", "rare", "cult", "1980", "lobby"],
-  "alligator":    ["horror", "film", "movie","vhs", "dvd", "cult", "Lewis Teague", "lobby"],
-  "graduation day":["horror", "film", "movie","vhs", "dvd", "cult", "Herb Freed", "lobby"],
-  "house":        ["horror", "film", "movie","vhs", "dvd", "cult","Steve Miner", "lobby"],
-  "shocker":      ["horror", "film", "movie","vhs", "dvd", "cult","lobby","Wes Craven", "poster","lobby"]
+  /* "the being": ["horror", "slasher", "film", "vhs", "dvd", "rare", "lobby"],
+  "pieces": ["horror", "slasher", "vestron", "vhs", "dvd", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón", "lobby"],
+  "the hunger": ["horror", "bowie", "deneuve", "vhs", "dvd", "sarandon", "film", "lobby"],
+  "parasite": ["demi moore", "3-d", "3d", "vhs", "dvd", "horror", "lobby"],
+  "demons": ["argento", "bava", "lamberto", "horror", "vhs", "dvd", "dario", "lobby"],
+  "prey": ["horror", "film",  "1978", "1977", "lobby"],
+  "the stuff": ["larry cohen",  "film", "horror", "vhs", "dvd", "lobby"],
+  "inferno": ["dario argento", "horror", "giallo", "vhs", "dvd",  "film", "lobby"],
+  "dolls": ["horror", "film", "vhs", "dvd", "stuart gordon", "cult", "lobby"],
+  "society": ["brian yuzna", "horror", "film","movie"],
+  "mothers-day": ["charles kaufman", "horror", "film", "vhs", "dvd", "cult", "troma", "rare", "cult", "1980", "lobby"],
+  "alligator": ["poster", "vhs", "lobby", "press", "laserdisc"],
+  "graduation day": ["horror", "film", "vhs", "dvd", "cult", "Herb Freed", "lobby"],
+  "house": ["horror", "film", "vhs", "dvd", "cult", "Steve Miner", "lobby"],
+  "shocker": ["horror", "film", "vhs", "dvd", "cult", "lobby", "Wes Craven", "poster", "lobby"] */
   // Add more as you encounter noisy titles
 };
 
 // ─── Query Builder ─────────────────────────────────────────────────────────────
-
+/* 
 export function buildEbayQueries(movieTitle: string, year: string): string[] {
   return [
-    `${movieTitle} ${year} poster vintage`,
-    `${movieTitle} ${year} VHS original`,
-    `${movieTitle} ${year} collectible`,
-    `${movieTitle} ${year} memorabilia`,
-    `${movieTitle} ${year} action figure`,
-    `${movieTitle} ${year} poster original theatrical`,
-    `${movieTitle} ${year} VHS first release`,
-    `${movieTitle} ${year} laserdisc`,
-    `${movieTitle} ${year} press kit`,
-    `${movieTitle} ${year} lobby card`,
-    `${movieTitle} ${year} rare horror collectible`,
-    `${movieTitle} ${year} screener tape`,
-    `${movieTitle} ${year} promo`,
+    `${movieTitle} ${year} poster original movie`,
+    `${movieTitle} ${year} VHS original first release`,
+    `${movieTitle} ${year} (betamax,super 8,laserdisc)`,
+    `${movieTitle} ${year} (press kit,lobby card)`,
+    `${movieTitle} ${year} (fotobusta,daybill)`,
+   
   ];
 }
-
+ */
+export function buildEbayQueries(movieTitle: string, year: string): string[] {
+  return [
+    `${movieTitle} ${year} poster original movie`,
+    `${movieTitle} ${year} VHS original first release`,
+    `${movieTitle} ${year} lobby card`,
+    `${movieTitle} ${year} press kit`,
+    `${movieTitle} ${year} pressbook`,
+    `${movieTitle} ${year} betamax`,
+    `${movieTitle} ${year} laserdisc`,
+    `${movieTitle} ${year} fotobusta`,
+    `${movieTitle} ${year} daybill`,
+    `${movieTitle} ${year} movie action figure`,
+  ];
+}
 // ─── Type Detection ────────────────────────────────────────────────────────────
 
 type ItemType =
@@ -93,15 +100,15 @@ function getBaseScore(type: ItemType): number {
   switch (type) {
     case "press_kit":
     case "lobby_card":
-    case "promo":          return 5;
+    case "promo": return 5;
     case "physical_media": return 4;
-    case "print":          return 3;
-    case "prop":           return 3;
+    case "print": return 3;
+    case "prop": return 3;
     case "toy":
-    case "apparel":        return 2;
-    case "home_media":     return -2;
-    case "junk":           return -3;
-    default:               return 1;
+    case "apparel": return 2;
+    case "home_media": return -2;
+    case "junk": return -3;
+    default: return 1;
   }
 }
 
@@ -229,9 +236,9 @@ function getYearScore(itemTitle: string, movieYear: string): number {
 
   const minDiff = Math.min(...years.map(y => Math.abs(y - target)));
 
-  if (minDiff === 0)  return  3;   // exact year match
-  if (minDiff <= 2)   return  1;   // release/distribution lag
-  if (minDiff <= 8)   return -4;   // different era
+  if (minDiff === 0) return 3;   // exact year match
+  if (minDiff <= 2) return 1;   // release/distribution lag
+  if (minDiff <= 8) return -4;   // different era
   return -10;                      // near-disqualifying
 }
 function normalizeTitle(title: string) {
@@ -279,8 +286,8 @@ function getSequelScore(itemTitle: string, movieTitle: string): number {
   //     → "ii" found as standalone word → itemSequel = 2 → +1 bonus ✓
   if (itemSequel === null && targetSequel !== null) {
     const romanForm = INT_TO_ROMAN[targetSequel]; // e.g. 2 → "ii"
-    const arabicRx  = new RegExp(`\\b${targetSequel}\\b`);
-    const romanRx   = romanForm ? new RegExp(`\\b${romanForm}\\b`) : null;
+    const arabicRx = new RegExp(`\\b${targetSequel}\\b`);
+    const romanRx = romanForm ? new RegExp(`\\b${romanForm}\\b`) : null;
     if (arabicRx.test(itemLower) || romanRx?.test(itemLower)) {
       itemSequel = targetSequel;
     }
@@ -319,11 +326,15 @@ function getTitleRelevanceScore(itemTitle: string, movieTitle: string): number {
 
   if (movieWords.length === 0) return 0;
 
-  const matchCount = movieWords.filter(w => itemLower.includes(w)).length;
+  /* const matchCount = movieWords.filter(w => itemLower.includes(w)).length; */
+  const matchCount = movieWords.filter(w => {
+  const regex = new RegExp(`\\b${w}\\b`, "i");
+  return regex.test(itemTitle);
+}).length;
   const ratio = matchCount / movieWords.length;
 
-  if (ratio >= 0.8)  return  3;
-  if (ratio >= 0.5)  return  0;
+  if (ratio >= 0.8) return 3;
+  if (ratio >= 0.5) return 0;
   if (ratio >= 0.25) return -5;
   return -15;  // title essentially absent → disqualifying
 }
@@ -336,25 +347,25 @@ function scoreItem(item: EbayItemSummary, movieTitle: string, movieYear: string)
   let score = getBaseScore(type);
 
   // Keyword bonuses
-  if (title.includes("original"))                               score += 3;
-  if (title.includes("vintage"))                                score += 3;
-  if (title.includes("rare"))                                   score += 3;
-  if (title.includes("first release"))                          score += 2;
-  if (title.includes("screener"))                               score += 2;
-  if (title.includes("promo"))                                  score += 2;
-  if (title.includes("signed") || title.includes("autograph"))  score += 4;
+  if (title.includes("original")) score += 5;
+  if (title.includes("vintage")) score += 3;
+  if (title.includes("rare")) score += 4;
+  if (title.includes("first release")) score += 2;
+  if (title.includes("screener")) score += 2;
+  if (title.includes("promo")) score += 2;
+  if (title.includes("signed") || title.includes("autograph")) score += 4;
   if (title.includes("screen used") || title.includes("screen worn")) score += 5;
-  if (title.includes("sealed") || title.includes("shrink"))     score += 3;
+  if (title.includes("sealed") || title.includes("shrink")) score += 3;
   if (title.includes("big box") || title.includes("clamshell")) score += 3;
   if (title.includes("one sheet") || title.includes("one-sheet")) score += 3;
   if (title.includes("daybill") || title.includes("fotobusta") || title.includes("fotobuste")) score += 3;
-  if (title.includes("crew"))                                   score += 2;
-  if (title.includes("cast"))                                   score += 1;
-  if (title.includes("insert") && type === "print")             score += 2;
+  if (title.includes("crew")) score += 2;
+  if (title.includes("cast")) score += 1;
+  if (title.includes("insert") && type === "print") score += 2;
 
   // Keyword penalties
-  if (title.includes("reprint"))                                score -= 3;
-  if (title.includes("replica"))                                score -= 6;
+  if (title.includes("reprint")) score -= 3;
+  if (title.includes("replica")) score -= 6;
   if (title.includes("reproduction") || title.includes("repro")) score -= 4;
 
   // Context-aware scoring
@@ -383,11 +394,11 @@ function scoreItem(item: EbayItemSummary, movieTitle: string, movieYear: string)
 function isBadItem(title: string, movieTitle: string, movieYear: string): boolean {
   const lower = title.toLowerCase();
 
-  if (lower.includes("fan art"))          return true;
-  if (lower.includes("bootleg"))          return true;
-  if (lower.includes("digital code"))     return true;
+  if (lower.includes("fan art")) return true;
+  if (lower.includes("bootleg")) return true;
+  if (lower.includes("digital code")) return true;
   if (lower.includes("digital download")) return true;
-  if (lower.includes("print on demand"))  return true;
+  if (lower.includes("print on demand")) return true;
 
   // Hard year filter
   const years = [...lower.matchAll(/\b(19[5-9]\d|20[0-2]\d)\b/g)].map(m => parseInt(m[1]));
@@ -420,7 +431,7 @@ export async function getCuratedEbayItems(
   year: string
 ): Promise<EbayItemSummary[]> {
   const CACHE_TTL_MS_10M = 10 * 60 * 1000; // 10 minutes
- const CACHE_TTL_MS_12H = 12 * 60 * 60 * 1000; // 12 hours
+  const CACHE_TTL_MS_12H = 12 * 60 * 60 * 1000; // 12 hours
   const now = new Date();
 
   // 1️⃣ Check cache
@@ -451,20 +462,30 @@ export async function getCuratedEbayItems(
   const queries = buildEbayQueries(movieTitle, year);
   const accessToken = await getEbayAccessToken();
 
-if (!accessToken) {
-  console.error("🚨🚨 EBAY TOKEN FAILURE — FALLING BACK TO CACHE");
-  return getStaleCache(movieId);
-}
+  if (!accessToken) {
+    console.error("🚨🚨 EBAY TOKEN FAILURE — FALLING BACK TO CACHE");
+    return getStaleCache(movieId);
+  }
   let results: EbaySearchResponse[];
-
 try {
-  results = await Promise.all(
-    queries.map(q => getEbayItems(q, accessToken))
-  );
-} catch (err) {
-  console.error("🚨🚨 EBAY API FETCH FAILED — USING STALE CACHE", err);
-  return getStaleCache(movieId);
-}
+    results = await Promise.all(
+      queries.map(async (q) => {
+        const result = await getEbayItems(q, accessToken);
+        console.log(`🔍 "${q}" → ${result.itemSummaries.length} items`);
+        return result;
+      })
+    );
+  } catch (err) {
+  /* try {
+    results = await Promise.all(
+      queries.map(q => getEbayItems(q, accessToken))
+      
+    );
+  } catch (err) { */
+    console.error("🚨🚨 EBAY API FETCH FAILED — USING STALE CACHE", err);
+    return getStaleCache(movieId);
+  }
+  // results = [{ itemSummaries: [A, B] },{ itemSummaries: [C, D] }] with map:[[A, B], [C, D]], with flatmap: [A, B, C, D]
   const merged = results.flatMap(r => r.itemSummaries);
 
   // Filter expired listings
@@ -474,7 +495,8 @@ try {
 
   // Deduplicate
   const unique = dedupeItems(availableItems);
-
+console.log(`📦 Raw merged: ${merged.length}`);
+console.log(`✅ After dedup: ${unique.length}`);
   // Hard filter → score → soft filter
   const scored = unique
     .filter(item => !isBadItem(item.title, movieTitle, year))
@@ -483,49 +505,68 @@ try {
 
   const seen = new Set<string>();
 
-const dedupedScored = scored.filter(({ item }) => {
-  const key = normalizeTitle(item.title);
-  if (seen.has(key)) return false;
-  seen.add(key);
-  return true;
-});
+  const dedupedScored = scored.filter(({ item }) => {
+    const key = normalizeTitle(item.title);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   const typeLimits: Record<ItemType, number> = {
-  physical_media: 5,
-  print:          4,
-  lobby_card:     5,
-  press_kit:      3,
-  promo:          3,
-  toy:            2,
-  apparel:        1,
-  prop:           2,
-  home_media:     0,
-  junk:           0,
-  unknown:        1,
-};
+    physical_media: 6,
+    print: 8,
+    lobby_card: 6,
+    press_kit: 4,
+    promo: 4,
+    toy: 3,
+    apparel: 3,
+    prop: 3,
+    home_media: 0,
+    junk: 0,
+    unknown: 4,
+  };
 
   const typeCounts: Record<ItemType, number> = {} as Record<ItemType, number>;
   const curated: EbayItemSummary[] = [];
 
-  // collect up to 15 items freely, then keep going up to 20 only if the next item scores 8 or above.
+  // collect up to 15 items freely, then keep going up to 30 only if the next item scores 8 or above.
   //  Anything below 8 after position 15 stops the loop.
-    const MIN_SCORE = 3;
+  const MIN_SCORE = 3;
   const HIGH_SCORE = 8;
-  const MAX_ITEMS = 20;
+  const MAX_ITEMS = 30;
 
-  for (const { item, score } of dedupedScored) {
-    if (score < MIN_SCORE) break;
-    if (curated.length >= 15 && score < HIGH_SCORE) break;
-    if (curated.length >= MAX_ITEMS) break;
-    const type = detectItemType(item.title.toLowerCase());
-    if ((typeCounts[type] || 0) < (typeLimits[type] || 1)) {
-      curated.push(item);
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
+  let midTierCount = 0;
+const MID_TIER_LIMIT = 5;
+
+for (const { item, score } of dedupedScored) {
+  if (score < MIN_SCORE) continue;
+
+  if (curated.length >= 15) {
+    if (score >= HIGH_SCORE) {
+      // good → always allow
+    } else {
+      if (midTierCount >= MID_TIER_LIMIT) continue;
+      midTierCount++;
     }
   }
 
-  const final = shuffle(curated);
+  if (curated.length >= MAX_ITEMS) break;
 
+  const type = detectItemType(item.title.toLowerCase());
+
+  if (type === "unknown" && score >= 8) {
+    curated.push(item);
+    continue;
+  }
+
+  if ((typeCounts[type] || 0) < (typeLimits[type] || 1)) {
+    curated.push(item);
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+  }
+}
+
+  const final = shuffle(curated);
+console.log(`🏆 Final curated: ${final.length}`);
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
     where: { movieId },
