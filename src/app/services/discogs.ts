@@ -257,7 +257,7 @@ function getSequelParts(movieTitle: string): { base: string; num: number } | nul
 
 function hasWrongSequel(listingTitle: string, movieTitle: string): boolean {
   const parts = getSequelParts(movieTitle);
-  console.log(`🔢 hasWrongSequel: movieTitle="${movieTitle}" parts=${JSON.stringify(parts)}`);
+  
   if (!parts) return false;
 
   const escaped = escapeRegex(parts.base.toLowerCase());
@@ -281,24 +281,19 @@ function isRelevantDiscogs(
 ): boolean {
   const titleLower = item.title.toLowerCase();
 
-  const reject = (reason: string) => {
-    console.log(`❌ REJECTED [${reason}]: ${item.title}`);
-    return false;
-  };
+
 
   if (isBadDiscogs(item))
-    return reject("isBadDiscogs");
+   return false;
 
   if (!titleContainsNumber(movieTitle) && hasSequelSuffix(titleLower, movieTitle))
-    return reject("hasSequelSuffix");
+    return false;
 
   if (hasWrongSequel(titleLower, movieTitle))
-    return reject("hasWrongSequel");
+    return false;
 
   const { phraseMatch, wordRatio, meaningfulWordCount } =
     computeMovieMatch(titleLower, movieTitle);
-
-  console.log(`🔍 CHECK: ${item.title} | phraseMatch=${phraseMatch} wordRatio=${wordRatio.toFixed(2)} meaningfulWordCount=${meaningfulWordCount}`);
 
   const hasSoundtrackSignal =
     titleLower.includes("soundtrack")             ||
@@ -310,36 +305,32 @@ function isRelevantDiscogs(
     titleLower.includes(a.toLowerCase())
   );
 
-  console.log(`   hasSoundtrackSignal=${hasSoundtrackSignal} hasArtistMatch=${hasArtistMatch}`);
-
   const noisePatterns = ["box set", "compilation", "best of", "greatest hits"];
   if (noisePatterns.some(p => titleLower.includes(p)) && !phraseMatch)
-    return reject("noisePattern");
+    return false;
 
  if (titleLower.includes("various")) {
-  if (!phraseMatch) return reject("various-noPhrase");
+  if (!phraseMatch) return false;
   return true;
 }
 
   if (!hasArtistMatch && !phraseMatch && wordRatio < 0.5)
-    return reject("noAnchor");
+    return false;
 
   if (hasArtistMatch && !phraseMatch && wordRatio === 0)
-    return reject("artistOnly-noMovieWord");
+   return false;
 
   if (!hasSoundtrackSignal) {
     if (!hasArtistMatch)
-      return reject("noOST-noArtist");
+      return false;
     if (!phraseMatch && wordRatio < 0.5)
-      return reject("noOST-weakMatch");
+      return false;
   }
 
   if (!hasArtistMatch && !phraseMatch) {
     if (meaningfulWordCount < 2 || wordRatio < 0.5)
-      return reject("singleWord");
+      return false;
   }
-
-  console.log(`✅ PASSED: ${item.title}`);
   return true;
 }
 /* ================= SCORING ================= */
@@ -421,7 +412,7 @@ async function getCachedVynils(
     include: { items: true },
   });
 
-  if (cached && Date.now() - cached.updatedAt.getTime() < TEN_MINUTES_MS) {
+  if (cached && Date.now() - cached.updatedAt.getTime() < ONE_WEEK_MS) {
     console.log("📦 Using cached Discogs data");
     return cached.items.map(i => ({
       title:  i.title,
