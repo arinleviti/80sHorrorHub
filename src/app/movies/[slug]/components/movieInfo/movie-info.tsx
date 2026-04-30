@@ -24,6 +24,7 @@ import DiscogsSection from "./components/discogs/discogs-section";
 import HFSection from "./components/HFSuggestionList/hf-section";
 import StreamingSection from "./components/streaming-avail/streaming-section";
 import LoadingBlock from "../../../../LoadingBlock/loading-block";
+import { extractMusicPeople } from "@/utils/extractMusicPpl";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -64,6 +65,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
   const director = credits.crew.find(member => member.job === "Director");
 
+  const musicPeople = extractMusicPeople(credits.crew);
+
   return (
     <Container className={`${styles.moviePage} my-2`}>
       {/* 🎬 HERO */}
@@ -93,9 +96,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
             {/* RIGHT CONTENT (SPOTIFY) */}
             <Col xs={12} md={3} lg={3} className="d-flex justify-content-center align-items-start">
-              <Suspense fallback={<LoadingBlock height={200} />}>
+              
                 <SpotifySection movie={movie} credits={credits} />
-              </Suspense>
+              
             </Col>
           </Row>
         </Container>
@@ -134,7 +137,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
         <Col md={6}>
           <Row className="mb-3"><Col><Suspense fallback={<LoadingBlock height={200} />}>
-            <DiscogsSection movie={movie} />
+            <DiscogsSection movie={movie} musicPeople={musicPeople} />
           </Suspense></Col></Row>
           <Row className="mb-3"><Col><Suspense fallback={<LoadingBlock height={150} />}>
             <StreamingSection movie={movie} />

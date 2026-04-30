@@ -132,7 +132,7 @@ export async function getEbayItems(
 ): Promise<EbaySearchResponse> {
 
   // CRITICAL: Added &fieldgroups=MATCHING_ITEMS to unlock itemEndDate
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=15&fieldgroups=MATCHING_ITEMS`;
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=50&fieldgroups=MATCHING_ITEMS`;
 
   const res = await fetch(url, {
     headers: {

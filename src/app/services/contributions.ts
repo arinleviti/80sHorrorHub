@@ -5,6 +5,7 @@ export async function getMovieContributions(movieId: string, userId?: string) {
   return prisma.contribution.findMany({
     where: {
       movieId,
+      status: "APPROVED",
     },
     include: {
       user: true,

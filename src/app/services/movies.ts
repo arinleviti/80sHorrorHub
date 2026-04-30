@@ -8,7 +8,7 @@ export const rawSlugToIdMap: Record<string, number> = {
   "sleepaway-camp": 13567,
   "fright-night": 11797,
   "the-fog": 790,
-  "A-Nightmare-on-Elm-Street-Part-2:Freddy's-Revenge": 10014,
+  "A-Nightmare-on-Elm-Street-2:-Freddy's-Revenge": 10014,
   "swamp-thing": 17918,
   "aliens": 679,
   "re-animator": 1694,
