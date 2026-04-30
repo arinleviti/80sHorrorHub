@@ -51,10 +51,8 @@ export default function ContributionList({ grouped }: ContributionListProps) {
   return (
     <div className={styles.contributionWrapper}>
     <div>
-       {hasContributions ? (
+       {hasContributions && (
       <h2 className="heading-secondary">User Contributions</h2>
-    ) : (
-      <h2 className="heading-secondary">Be the first to leave a contribution!</h2>
     )}
 
       {Object.entries(grouped).map(([section, items]) => {

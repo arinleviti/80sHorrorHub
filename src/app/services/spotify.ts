@@ -63,6 +63,45 @@ const getMovieWords = (movie: string) =>
     .split(" ")
     .filter(w => w && !STOPWORDS.includes(w));
 
+const OST_FOLLOWING_WORDS = new Set([
+  "soundtrack", "ost", "score", "original", "motion", "picture",
+  "film", "the", "a", "an", "and", "or", "volume", "vol"
+]);
+const ROMAN_MAP: Record<string, number> = {
+  ii:2, iii:3, iv:4, v:5, vi:6, vii:7, viii:8, ix:9, x:10
+};
+
+const getSequelNumber = (title: string): number | null => {
+  const roman = normalize(title).match(/\b(ii|iii|iv|v|vi|vii|viii|ix|x)\b/);
+  if (roman) return ROMAN_MAP[roman[1]];
+  const arabic = normalize(title).match(/\b(\d+)\b/);
+  if (arabic) return parseInt(arabic[1]);
+  return null;
+};
+
+const containsFullTitle = (itemTitle: string, movie: string): boolean => {
+ const normalizedItem  = normalize(itemTitle);
+  const normalizedMovie = normalize(movie);
+  const idx = normalizedItem.indexOf(normalizedMovie);
+  if (idx === -1) return false;
+
+  const after = normalizedItem.slice(idx + normalizedMovie.length).trimStart();
+  if (!after) return true;
+
+  // sequel number → not a match
+  if (/^(ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|\d+)\b/.test(after)) return false;
+
+  // for non-sequel movies, the next word must be an OST keyword
+  // this blocks "Halloween Kills", "Halloween Returns", etc.
+  if (getSequelNumber(movie) === null) {
+    const firstWord = after.split(" ")[0].replace(/[^a-z]/g, "");
+    if (firstWord && !OST_FOLLOWING_WORDS.has(firstWord)) return false;
+  }
+
+  return true;
+};
+
+
 const countMatchingWords = (title: string, movieWords: string[]) => {
   const titleNorm = normalize(title);
   return movieWords.filter(word => titleNorm.includes(word)).length;
@@ -135,6 +174,7 @@ const computeScore = ({
   title,
   artists,
   movieWords,
+  movieTitle,
   crewNames,
   itemYear,
   movieYear,
@@ -143,6 +183,7 @@ const computeScore = ({
   title: string;
   artists?: { name: string }[];
   movieWords: string[];
+  movieTitle: string;
   crewNames: string[];
   itemYear: number | null;
   movieYear?: number;
@@ -154,17 +195,44 @@ const computeScore = ({
   if (matchesCrew(title, artists, crewNames)) {
     score += 10;
   }
+// 🚫 WRONG SEQUEL — heavy penalty
+const movieSequel = getSequelNumber(movieTitle);
+const itemSequel  = getSequelNumber(title);
 
+if (movieSequel !== null && itemSequel !== null && movieSequel !== itemSequel) {
+  score -= 20;
+}
+// 🚫 SEQUEL MOVIE + UNNUMBERED ITEM — check what follows the base title
+if (movieSequel !== null && itemSequel === null) {
+  const base = normalize(movieTitle)
+    .replace(/\s+(ii|iii|iv|v|vi|vii|viii|ix|x|\d+).*$/, "")
+    .trim();
+  const normalizedItem = normalize(title);
+  const idx = normalizedItem.indexOf(base);
+  if (idx !== -1) {
+    const after = normalizedItem.slice(idx + base.length).trimStart();
+    const firstWord = after.split(" ")[0].replace(/[^a-z]/g, "");
+    if (firstWord && !OST_FOLLOWING_WORDS.has(firstWord)) {
+      score -= 20;
+    }
+  }
+}
   // 🎬 TITLE MATCH
   const wordMatches = countMatchingWords(title, movieWords);
   score += wordMatches * 2;
 
+  // 🎯 FULL TITLE MATCH bonus
+if (containsFullTitle(title, movieTitle)) {
+  score += 5;
+}
+
   // 📅 YEAR MATCH
-  if (movieYear && itemYear) {
-    const diff = Math.abs(itemYear - movieYear);
-    if (diff === 0) score += 5;
-    else if (diff <= YEAR_TOLERANCE) score += 2;
-  }
+  if (movieYear && itemYear && isAlbum) {
+  const diff = Math.abs(itemYear - movieYear);
+  if (diff === 0)              score += 5;
+  else if (diff <= YEAR_TOLERANCE) score += 2;
+  else if (diff > 10)          score -= 5;
+}
 
   // 🎵 Prefer albums over playlists
   if (isAlbum) score += 2;
@@ -231,6 +299,7 @@ async function searchOnce(
       title: album.name,
       artists: album.artists,
       movieWords,
+      movieTitle: movie,
       crewNames,
       itemYear: getAlbumYear(album),
       movieYear,
@@ -252,6 +321,7 @@ async function searchOnce(
     const score = computeScore({
       title: playlist.name,
       movieWords,
+      movieTitle: movie,
       crewNames,
       itemYear: extractYearFromTitle(playlist.name),
       movieYear,
