@@ -4,8 +4,9 @@ import styles from "./movie-info.module.css";
 import { Movie, TMDBImageConfig, CastMemberInfo, CrewMemberInfo } from "@/app/services/tmdb";
 import CastList from "./components/castList/cast-list";
 import CrewList from "./components/crewList/crew-list";
-import { fetchAIDescription } from "@/app/services/AiGeneratedMainContent";
-import AiContent from "./components/AIContent/ai-content";
+/* import { fetchAIDescription } from "@/app/services/AiGeneratedMainContent";
+import AiContent from "./components/AIContent/ai-content"; */
+import AICollectorContent from "./components/AICollectorsContent/AICollectorsContent";
 import ContributionForm from "./components/contribution/contributionForm";
 import { getMovieContributions } from "@/app/services/contributions";
 import { ContributionSection } from "@prisma/client";
@@ -25,6 +26,7 @@ import HFSection from "./components/HFSuggestionList/hf-section";
 import StreamingSection from "./components/streaming-avail/streaming-section";
 import LoadingBlock from "../../../../LoadingBlock/loading-block";
 import { extractMusicPeople } from "@/utils/extractMusicPpl";
+import { fetchCollectorDescription } from "@/app/services/collectorContentService";
 
 interface MovieInfoProps {
   movie: Movie;
@@ -46,8 +48,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
       ? `${config.secure_base_url}w500${movie.poster_path}`
       : "/placeholder-poster.png";
 
-  const aiDescription = await fetchAIDescription(movie.id);
-
+  /* const aiDescription = await fetchAIDescription(movie.id); */
+  const collectorDescription = await fetchCollectorDescription(movie.id);
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
@@ -112,7 +114,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
       {/* AI Content & Contributions Form */}
       <Row className="mb-5">
-        <Col md={6}><AiContent content={aiDescription} /></Col>
+        <Col md={6}><AICollectorContent content={collectorDescription} /></Col>
         <Col md={6}><ContributionForm movieId={movie.id} /></Col>
       </Row>
 

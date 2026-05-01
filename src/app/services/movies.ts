@@ -67,7 +67,7 @@ export const rawSlugToIdMap: Record<string, number> = {
   "psycho-III": 12662, 
   "friday-the-13th-part-VI:-jason-lives": 10225, 
   "night-of-the-creeps": 15762, 
-  "the-taxas-chainsaw-massacre-2": 16337, 
+  "the-texas-chainsaw-massacre-2": 16337, 
   "from-beyond": 14510, 
   "a-nightmare-on-elm-street-3:-dream-warriors": 10072, 
   "dolls": 24341, 
@@ -154,11 +154,56 @@ export const rawSlugToIdMap: Record<string, number> = {
   "waxwork": 29095, // 1988 director Anthony Hickox
   "cellar-dweller": 58797, // 1988 director John Carl Buechler
 
-  "bad-taste": 9964, // 1987 director Peter Jackson
-  "tetsuo:-the-iron-man": 41428, // 1989 director Shinya Tsukamoto
-  "halloween-5:-the-revenge-of-michael-myers": 11361, // 1989 director Dominique Othenin-Girard
-  "shocker": 12521, // 1989 director Wes Craven
-  "silent-night-deadly-night-III:-better-watch-out": 42709, // 1989 director Monte Hellman
+  "the-exorcist": 9552, // 1973 director William Friedkin
+"the-texas-chain-saw-massacre": 30497, // 1974 director Tobe Hooper
+"jaws": 578, // 1975 director Steven Spielberg
+"don't-look-now": 931, // 1973 director Nicolas Roeg
+"the-omen": 794, // 1976 director Richard Donner
+"suspiria": 11906, // 1977 director Dario Argento
+"carrie": 7340, // 1976 director Brian De Palma
+"the-wicker-man": 16307, // 1973 director Robin Hardy
+"last-house-on-the-left": 15516, // 1972 director Wes Craven
+
+"dawn-of-the-dead": 923, // 1978 director George A. Romero
+"martin": 26517, // 1977 director George A. Romero
+"the-amityville-horror": 11449, // 1979 director Stuart Rosenberg
+"phantasm": 9638, // 1979 director Don Coscarelli
+"the-brood": 28942, // 1979 director David Cronenberg
+"deep-red-profondo-rosso": 20126, // 1975 director Dario Argento
+"eraserhead": 985, // 1977 director David Lynch
+"black-christmas": 16938, // 1974 director Bob Clark
+"rabid": 29437, // 1977 director David Cronenberg
+
+"misery": 1700, // 1990 director Rob Reiner
+"the-silence-of-the-lambs": 274, // 1991 director Jonathan Demme
+"candyman": 9529, // 1992 director Bernard Rose
+"bram-stoker's-dracula": 6114, // 1992 director Francis Ford Coppola
+"army-of-darkness":766, // 1992 director Sam Raimi
+"twin-peaks:-fire-walk-with-me": 1923, // 1992 director David Lynch
+"sleepwalkers": 11428, // 1992 director Mick Garris
+"hellraiser-iii-hell-on-earth": 11569, // 1992 director Anthony Hickox
+"pet-sematary-ii": 10906, // 1992 director Mary Lambert
+"body-snatchers": 4722, // 1993 director Abel Ferrara
+
+"leprechaun": 11811, // 1993 director Mark Jones
+"the-nightmare-before-christmas": 9479, // 1993 director Henry Selick
+"cronos": 11655, // 1993 director Guillermo del Toro
+"child's-play-3": 11187, // 1991 director Jack Bender
+"freddy's-dead-the-final-nightmare": 11284, // 1991 director Rachel Talalay
+"leatherface:-the-texas-chainsaw-massacre-iii": 25018, // 1990 director Jeff Burr
+"jacob's-ladder": 2291, // 1990 director Adrian Lyne
+"tales-from-the-darkside:-the-movie": 20701, // 1990 director John Harrison
+
+"wolf": 10395, // 1994 director Mike Nichols
+"interview-with-the-vampire": 628, // 1994 director Neil Jordan
+"the-crow": 9495, // 1994 director Alex Proyas
+"wes-craven's-new-nightmare": 11596, // 1994 director Wes Craven
+"shrunken-heads": 79975, // 1994 director Richard Elfman
+"in-the-mouth-of-madness": 2654, // 1994 director John Carpenter
+"species": 9348, // 1995 director Roger Donaldson
+
+"night-of-the-living-dead-1990": 19185, //1990 director Tom Savini
+"night-of-the-living-dead": 10331, // 1968 director George A. Romero
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

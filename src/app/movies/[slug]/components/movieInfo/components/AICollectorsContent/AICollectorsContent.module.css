@@ -1,0 +1,13 @@
+.aiContent {
+  padding: 0 0.75rem;
+}
+
+.aiContent p {
+  text-align: justify;
+}
+
+@media (min-width: 768px) {
+  .aiContent {
+    padding: 0;
+  }
+}
