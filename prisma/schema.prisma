@@ -10,7 +10,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model YouTubeQuery {
@@ -92,6 +93,7 @@ model Movie {
 
   slug          String?        @unique
   aiDescription AiDescription?
+  collectorDescription CollectorDescription?
   contributions Contribution[]
   ratings       MovieRating[]
 
@@ -246,6 +248,18 @@ model AiDescription {
   movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
   movieId String @unique
 }
+model CollectorDescription {
+  id        String  @id @default(cuid())
+
+  movie     Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId   String  @unique
+
+  hook            String
+  identity        String
+  collectorFocus  String
+  context         String
+}
+
 model MovieRating {
   id      String @id @default(cuid())
   movieId String

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "prisma db seed",
+    "migrateCollectors": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" src/utils/migrateAICOllectorsContent.ts",
     "cleanupYoutube": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/cleanupYoutube.ts",
     "cleanupEbay": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/cleanupEbay.ts",
     "rebuildCast": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/refreshMovieCast.ts"
