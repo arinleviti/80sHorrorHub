@@ -74,7 +74,8 @@ type ItemType =
 function detectItemType(title: string): ItemType {
   title = title.toLowerCase();
   if (title.includes("vhs") || title.includes("laserdisc") || title.includes("betamax")) return "physical_media";
-  if (title.includes("press kit")) return "press_kit";
+  if (title.includes("press kit") || title.includes("pressbook") || title.includes("press book") || title.includes("movie program") || title.includes("film program")) return "press_kit";
+  if (title.includes("press photo") || title.includes("press photograph")) return "promo";
   if (
     title.includes("lobby card") ||
     title.includes("lobby cards") ||
@@ -131,7 +132,7 @@ function escapeRegex(str: string): string {
  * Extracts a sequel number using general heuristics (no franchise anchor).
  * Used on the *target* movie title ("Halloween 5" → 5, "Hills Have Eyes Part 2" → 2).
  *
- * Capped at 10 to avoid matching "Friday the 13th" (13 > 10 → null = original film).
+ * Capped at 8 to avoid matching "Friday the 13th" (13 > 8 → null = original film).
  */
 function extractSequelNumber(title: string): number | null {
   const lower = title.toLowerCase();
@@ -145,12 +146,9 @@ function extractSequelNumber(title: string): number | null {
     if (new RegExp(`\\b${roman}\\b`).test(lower)) return val;
   }
 
-  // Trailing arabic digit 2–10 at the very end of the string
-  const trailingMatch = lower.match(/\s(\d+)\s*$/);
-  if (trailingMatch) {
-    const n = parseInt(trailingMatch[1]);
-    if (n >= 2 && n <= 10) return n;
-  }
+   // Any arabic digit 2–8 anywhere in the title
+  const anyMatch = lower.match(/\b([2-8])\b/);
+  if (anyMatch) return parseInt(anyMatch[1]);
 
   return null;
 }
@@ -159,7 +157,7 @@ function extractSequelNumber(title: string): number | null {
  * Words that signal a number is a COUNT, not a sequel identifier.
  * Covers "8 Original French Lobby Cards", "6 B&W Stills", "4 Photos", etc.
  */
-const COUNT_WORD_PATTERN = /^(original|french|lobby|stills?|photos?|sets?|pieces?|cards?|glossy)\b/i;
+const COUNT_WORD_PATTERN = /^(french|italian|spanish|german|japanese|thai|greek|turkish|czech|belgian|dutch|yugoslavian|australian|british|polish|lobby|stills?|photos?|sets?|pieces?|cards?|glossy)\b/i;
 
 /**
  * Extracts the sequel number from an *item* title using the franchise base
@@ -178,7 +176,7 @@ const COUNT_WORD_PATTERN = /^(original|french|lobby|stills?|photos?|sets?|pieces
  */
 function extractSequelFromItem(itemTitle: string, franchiseBase: string): number | null {
   const itemLower = itemTitle.toLowerCase();
-  const baseLower = franchiseBase.toLowerCase();
+  const baseLower = franchiseBase.toLowerCase().replace(/^(a|an|the)\s+/, "");
 
   // Primary: find a digit immediately after the franchise base name
   const pattern = new RegExp(`${escapeRegex(baseLower)}\\s+(\\d+)(?:\\s+(\\S+))?`);
@@ -186,7 +184,7 @@ function extractSequelFromItem(itemTitle: string, franchiseBase: string): number
 
   if (match) {
     const n = parseInt(match[1]);
-    if (n >= 2 && n <= 10) {
+    if (n >= 2 && n <= 8) {
       const nextToken = match[2] || "";
       // Next token is another digit → sequel + count pattern (e.g. "Cop 2 8 Original…")
       if (/^\d+$/.test(nextToken)) return n;
@@ -211,9 +209,9 @@ function extractSequelFromItem(itemTitle: string, franchiseBase: string): number
 function getFranchiseBase(title: string): string {
   return title
     .toLowerCase()
-    .replace(/\bpart\s+\d+\b/g, "")
-    .replace(new RegExp(`\\b(${Object.keys(ROMAN_TO_INT).join("|")})\\b`, "g"), "")
-    .replace(/\s+\d+\s*$/, "")
+    .replace(/\bpart\s+\d+\b.*$/g, "")
+    .replace(new RegExp(`\\b(${Object.keys(ROMAN_TO_INT).join("|")})\\b.*$`, "g"), "")
+    .replace(/\b[2-8]\b.*$/, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -395,16 +393,38 @@ function isBadItem(title: string, movieTitle: string, movieYear: string): boolea
   const lower = title.toLowerCase();
 
   if (lower.includes("fan art")) return true;
+  if (lower.includes("art print")) return true;
+  if (lower.includes("anniversary")) return true;
   if (lower.includes("bootleg")) return true;
   if (lower.includes("digital code")) return true;
   if (lower.includes("digital download")) return true;
   if (lower.includes("print on demand")) return true;
+  if (lower.includes("poster print")) return true;
+if (lower.includes("print poster")) return true;
+if (lower.includes("wall decor")) return true;
+if (lower.includes("mondo")) return true;
 
   // Hard year filter
   const years = [...lower.matchAll(/\b(19[5-9]\d|20[0-2]\d)\b/g)].map(m => parseInt(m[1]));
   const target = parseInt(movieYear);
   if (years.length > 0 && Math.min(...years.map(y => Math.abs(y - target))) > 12) return true;
 
+   // Hard franchise sequel filter
+  const targetSequel = extractSequelNumber(movieTitle);
+  const franchiseBase = getFranchiseBase(movieTitle).toLowerCase().replace(/^(a|an|the)\s+/, "");
+  const franchiseWords = franchiseBase.split(" ").filter(w => w.length > 3);
+  const mentionsFranchise = franchiseWords.some(w => lower.includes(w));
+
+  if (mentionsFranchise && targetSequel !== null) {
+    const itemSequel = extractSequelFromItem(lower, franchiseBase);
+    if (itemSequel !== null && itemSequel !== targetSequel) return true;
+    if (itemSequel === null) return true;
+  }
+  // Hard filter for original film pages — kill any item with a sequel number
+  if (mentionsFranchise && targetSequel === null) {
+    const itemSequel = extractSequelFromItem(lower, franchiseBase);
+    if (itemSequel !== null && itemSequel >= 2) return true;
+  }
   // Per-movie required keyword filter
   const requiredKeywords = MOVIE_REQUIRED_KEYWORDS[movieTitle.toLowerCase()];
   if (requiredKeywords?.length) {
@@ -443,7 +463,7 @@ export async function getCuratedEbayItems(
   let useCache = false;
   if (cached) {
     const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
-    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_12H) {
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_10M) {
       useCache = true;
     }
   }

@@ -13,10 +13,10 @@ export default function AICollectorContent({ content }: CollectorContentProps) {
 
   return (
     <Stack gap={2} className={style.aiContent}>
-      <section>
+     {/*  <section>
         <h2 className="heading-secondary">Hook</h2>
         <p className="text-content-muted">{content.hook}</p>
-      </section>
+      </section> */}
 
       <section>
         <h2 className="heading-secondary">Identity</h2>

@@ -57,7 +57,7 @@ function arabicToRoman(str: string): string {
 function findMatch(allMovies: MovieForMatching[], normalizedSlug: string) {
   const direct = allMovies.find((m) => {
     const t = normalize(m.title);
-    return t === normalizedSlug || similarity(t, normalizedSlug) >= 0.7;
+    return t === normalizedSlug || similarity(t, normalizedSlug) >= 1;
   });
 
   if (direct) return direct;
@@ -65,7 +65,7 @@ function findMatch(allMovies: MovieForMatching[], normalizedSlug: string) {
   const slugArabic = romanToArabic(normalizedSlug);
   const arabic = allMovies.find((m) => {
     const t = romanToArabic(normalize(m.title));
-    return t === slugArabic || similarity(t, slugArabic) >= 0.7;
+    return t === slugArabic || similarity(t, slugArabic) >= 1;
   });
 
   if (arabic) return arabic;
@@ -73,7 +73,7 @@ function findMatch(allMovies: MovieForMatching[], normalizedSlug: string) {
   const slugRoman = arabicToRoman(normalizedSlug);
   const roman = allMovies.find((m) => {
     const t = arabicToRoman(normalize(m.title));
-    return t === slugRoman || similarity(t, slugRoman) >= 0.7;
+    return t === slugRoman || similarity(t, slugRoman) >= 1;
   });
 
   return roman ?? null;
