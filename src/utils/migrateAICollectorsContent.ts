@@ -8,7 +8,10 @@ const jsonPath = path.join(
   process.cwd(),
   "src/app/services/aiMovieDescriptions_collectors.json"
 );
-
+// 1. Add this map at the top of the file, after the imports
+const slugOverrides: Record<string, string> = {
+  "night-of-the-living-dead-1990": "night-of-the-living-dead-1990",
+};
 const movieDescriptions = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 
 type MovieForMatching = {
@@ -54,26 +57,26 @@ function arabicToRoman(str: string): string {
     .replace(/\b2\b/g, "ii");
 }
 
+// 2. Replace findMatch with this version
 function findMatch(allMovies: MovieForMatching[], normalizedSlug: string) {
-  const direct = allMovies.find((m) => {
-    const t = normalize(m.title);
-    return t === normalizedSlug || similarity(t, normalizedSlug) >= 1;
-  });
+  // Exact title match first
+  const exact = allMovies.find((m) => normalize(m.title) === normalizedSlug);
+  if (exact) return exact;
 
+  const direct = allMovies.find((m) => similarity(normalize(m.title), normalizedSlug) >= 0.7);
   if (direct) return direct;
 
   const slugArabic = romanToArabic(normalizedSlug);
   const arabic = allMovies.find((m) => {
     const t = romanToArabic(normalize(m.title));
-    return t === slugArabic || similarity(t, slugArabic) >= 1;
+    return t === slugArabic || similarity(t, slugArabic) >= 0.7;
   });
-
   if (arabic) return arabic;
 
   const slugRoman = arabicToRoman(normalizedSlug);
   const roman = allMovies.find((m) => {
     const t = arabicToRoman(normalize(m.title));
-    return t === slugRoman || similarity(t, slugRoman) >= 1;
+    return t === slugRoman || similarity(t, slugRoman) >= 0.7;
   });
 
   return roman ?? null;
@@ -88,7 +91,10 @@ async function main() {
     const { slug, aiDescription } = movieData;
     const normalizedSlug = normalize(slug);
 
-    const matchedMovie = findMatch(allMovies, normalizedSlug);
+    const dbSlug = slugOverrides[slug] ?? null;
+const matchedMovie = dbSlug
+  ? allMovies.find((m) => m.slug === dbSlug) ?? null
+  : findMatch(allMovies, normalizedSlug);
 
     if (!matchedMovie) {
       console.warn(`No matching movie found for slug: "${slug}"`);

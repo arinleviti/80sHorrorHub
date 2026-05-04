@@ -9,32 +9,23 @@ type Props = {
 };
 
 export default function ContributionForm({ movieId }: Props) {
-  const [section, setSection] = useState("SYNOPSIS");
-  const [type, setType] = useState("FAN_FACT");
-  const [source, setSource] = useState("UNKNOWN");
+  const [section, setSection] = useState("HORROR_LEGACY");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-  const MIN_LENGTH = 150;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (body.length < MIN_LENGTH) {
-      setStatus("error");
-      setMessage(`Contribution must be at least ${MIN_LENGTH} characters.`);
-      return;
-    }
 
     setStatus("loading");
     try {
       const res = await fetch("/api/contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ movieId, section, type, source, title, body }),
+        body: JSON.stringify({ movieId, section, title, body }),
       });
       if (!res.ok) throw new Error("Failed to submit");
       setStatus("success");
@@ -49,7 +40,6 @@ export default function ContributionForm({ movieId }: Props) {
 
   return (
     <div className={styles.formWrapper}>
-      {/* Mobile toggle header */}
       <button
         className={styles.mobileToggle}
         onClick={() => setFormOpen((prev) => !prev)}
@@ -64,7 +54,7 @@ export default function ContributionForm({ movieId }: Props) {
       >
         <h3 className={`heading-secondary mb-3 ${styles.desktopTitle}`}>Add your contribution</h3>
         <Form.Text className="text-muted">
-          <p>Share something specific: a detail, a story, or something most fans wouldn&apos;t know.</p>
+          <p>Share a collector&apos;s insight: a tip, a find, or something only fans would know.</p>
         </Form.Text>
 
         <Form.Group className="mb-1">
@@ -74,39 +64,11 @@ export default function ContributionForm({ movieId }: Props) {
             value={section}
             onChange={(e) => setSection(e.target.value)}
           >
-            <option value="SYNOPSIS">Synopsis</option>
-            <option value="FUN_FACTS">Fun Facts</option>
-            <option value="PRODUCTION_CONTEXT">Production Context</option>
-            <option value="RECEPTION">Reception</option>
+            <option value="HORROR_LEGACY">Horror Legacy</option>
+            <option value="COLLECTOR_MARKET">Collector Market</option>
+            <option value="MEMORABILIA">Memorabilia</option>
+            <option value="CULT_STATUS">Cult Status</option>
             <option value="OTHER">Other</option>
-          </Form.Select>
-        </Form.Group>
-
-        <Form.Group className="mb-1">
-          <Form.Label className={styles.label}>Type of Contribution</Form.Label>
-          <Form.Select
-            className={styles.inputField}
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            <option value="FAN_FACT">Fan Fact</option>
-            <option value="BEHIND_THE_SCENES">Behind the Scenes</option>
-            <option value="PRODUCTION_DETAIL">Production Detail</option>
-            <option value="PERSONAL_STORY">Personal Story</option>
-          </Form.Select>
-        </Form.Group>
-
-        <Form.Group className="mb-1">
-          <Form.Label className={styles.label}>Source</Form.Label>
-          <Form.Select
-            className={styles.inputField}
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          >
-            <option value="INTERVIEW">Interview</option>
-            <option value="ARTICLE">Article</option>
-            <option value="PERSONAL">Personal Knowledge</option>
-            <option value="UNKNOWN">Unknown</option>
           </Form.Select>
         </Form.Group>
 
@@ -130,9 +92,7 @@ export default function ContributionForm({ movieId }: Props) {
             onChange={(e) => setBody(e.target.value)}
             required
           />
-          <div className="text-muted mt-1" style={{ fontSize: "0.8rem" }}>
-            {body.length} / {MIN_LENGTH} characters
-          </div>
+          
         </Form.Group>
 
         <button

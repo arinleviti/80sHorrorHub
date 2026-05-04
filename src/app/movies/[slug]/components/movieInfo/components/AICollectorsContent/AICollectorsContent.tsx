@@ -19,17 +19,17 @@ export default function AICollectorContent({ content }: CollectorContentProps) {
       </section> */}
 
       <section>
-        <h2 className="heading-secondary">Identity</h2>
+        <h2 className="heading-secondary">Overview and Horror Legacy</h2>
         <p className="text-content-muted">{content.identity}</p>
       </section>
 
       <section>
-        <h2 className="heading-secondary">Collector Focus</h2>
+        <h2 className="heading-secondary">Collector Market and Memorabilia</h2>
         <p className="text-content-muted">{content.collectorFocus}</p>
       </section>
 
       <section>
-        <h2 className="heading-secondary">Context</h2>
+        <h2 className="heading-secondary">Cult Status</h2>
         <p className="text-content-muted">{content.context}</p>
       </section>
     </Stack>
