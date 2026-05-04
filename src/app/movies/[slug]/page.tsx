@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
   return {
     title: `Explore live, up-to-date collectibles for ${movie.title} (${movie.release_date?.slice(0, 4)}), including rare VHS tapes, vinyl soundtracks from Discogs, posters, and horror memorabilia sourced from eBay. Discover curated items and collector insights.`,
     description: movie.overview,
+    alternates: {
+    canonical: `https://retrohorrorhub.com/movies/${slug}`,
+  },
     openGraph: {
       title: movie.title,
       description: movie.overview,
