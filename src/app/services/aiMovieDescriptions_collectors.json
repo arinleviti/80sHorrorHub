@@ -1485,7 +1485,7 @@
     }
   },
   {
-    "slug": "deep-red-profondo-rosso",
+    "slug": "deep-red",
     "aiDescription": {
       "hook": "Color bleeds. The killer moves through a world of saturated surfaces and dark interiors, and no one is watching closely enough until it's far too late. This is horror as high fashion.",
       "identity": "The progressive rock band Goblin, in their first collaboration with Argento, composed the film's propulsive and iconic score, a landmark of Italian genre cinema that blended rock instrumentation with jazz and classical influences to create music that has remained enormously influential. Deep Red was a major commercial success in Italy upon its release and performed strongly in international markets, earning considerable praise from genre critics and enthusiasts who recognized it as a significant refinement and elevation of the giallo form.",
@@ -1745,7 +1745,8 @@
       "context": "Directed by Roger Donaldson, Species was produced on a budget of approximately $35 million, with the production offsetting its lean resources through craft and camera technique. The film more than proved its commercial viability at the box office, earning approximately $60 million."
     }
   },
-  {
+
+   {
     "slug": "night-of-the-living-dead-1990",
     "aiDescription": {
       "hook": "The world has already ended. What remains is an isolated farmhouse, a dwindling group of survivors, and the growing certainty that the living are more dangerous than the dead.",
@@ -1754,13 +1755,14 @@
       "context": "Directed by Tom Savini, Night of the Living Dead 1990 was produced on a budget of approximately $4.2 million, with the production offsetting its lean resources through craft and camera technique. Night of the Living Dead received a mixed critical response upon its October 1990 release, with reviewers divided between appreciation for its technical accomplishment, Tony Todd's performance, and the intelligent revision of Barbara's character on one hand, and a sense that the remake offered insufficient reason to exist alongside the untouchable original on the other."
     }
   },
-  {
-    "slug": "night-of-the-living-dead",
-    "aiDescription": {
-      "hook": "The world has already ended. What remains is an isolated farmhouse, a dwindling group of survivors, and the growing certainty that the living are more dangerous than the dead.",
-      "identity": "Over subsequent decades it has been recognized as one of the most important and influential American films of the twentieth century, inducted into the National Film Registry of the Library of Congress in 1999, and credited with effectively creating the modern zombie genre as it has been understood in virtually all subsequent fiction across every medium.",
-      "collectorFocus": "Shot for $114,000 and accidentally entered into the public domain, the film exists across dozens of versions — but original theatrical materials from 1968 carry enormous historical weight. Inducted into the National Film Registry, it effectively created the modern zombie genre, making its materials documents of cinema history.",
-      "context": "Directed by George A. Romero, Night of the Living Dead was produced on a budget of approximately $114,000, with the production offsetting its lean resources through craft and camera technique. It was nonetheless a significant commercial success relative to its tiny budget, earning millions of dollars in domestic and international distribution. Over subsequent decades it has been recognized as one of the most important and influential American films of the twentieth century, inducted into the National Film Registry of the Library of Congress in 1999, and credited with effectively creating the modern zombie genre as it has been understood in virtually all subsequent fiction across every medium."
+    {
+      "slug": "night-of-the-living-dead",
+      "aiDescription": {
+        "hook": "The world has already ended. What remains is an isolated farmhouse, a dwindling group of survivors, and the growing certainty that the living are more dangerous than the dead.",
+        "identity": "Over subsequent decades it has been recognized as one of the most important and influential American films of the twentieth century, inducted into the National Film Registry of the Library of Congress in 1999, and credited with effectively creating the modern zombie genre as it has been understood in virtually all subsequent fiction across every medium.",
+        "collectorFocus": "Shot for $114,000 and accidentally entered into the public domain, the film exists across dozens of versions — but original theatrical materials from 1968 carry enormous historical weight. Inducted into the National Film Registry, it effectively created the modern zombie genre, making its materials documents of cinema history.",
+        "context": "Directed by George A. Romero, Night of the Living Dead was produced on a budget of approximately $114,000, with the production offsetting its lean resources through craft and camera technique. It was nonetheless a significant commercial success relative to its tiny budget, earning millions of dollars in domestic and international distribution. Over subsequent decades it has been recognized as one of the most important and influential American films of the twentieth century, inducted into the National Film Registry of the Library of Congress in 1999, and credited with effectively creating the modern zombie genre as it has been understood in virtually all subsequent fiction across every medium."
+      }
     }
-  }
+ 
 ]

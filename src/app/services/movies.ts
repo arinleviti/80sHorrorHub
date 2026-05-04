@@ -153,7 +153,7 @@ export const rawSlugToIdMap: Record<string, number> = {
   "poltergeist-III": 10306, // 1988 director Gary Sherman
   "waxwork": 29095, // 1988 director Anthony Hickox
   "cellar-dweller": 58797, // 1988 director John Carl Buechler
-
+"bad-taste": 9964, // 1987 director Peter Jackson
   "the-exorcist": 9552, // 1973 director William Friedkin
 "the-texas-chain-saw-massacre": 30497, // 1974 director Tobe Hooper
 "jaws": 578, // 1975 director Steven Spielberg
@@ -201,9 +201,9 @@ export const rawSlugToIdMap: Record<string, number> = {
 "shrunken-heads": 79975, // 1994 director Richard Elfman
 "in-the-mouth-of-madness": 2654, // 1994 director John Carpenter
 "species": 9348, // 1995 director Roger Donaldson
-
 "night-of-the-living-dead-1990": 19185, //1990 director Tom Savini
 "night-of-the-living-dead": 10331, // 1968 director George A. Romero
+
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
