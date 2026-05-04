@@ -174,10 +174,10 @@ enum ContributionStatus {
 }
 
 enum ContributionSection {
-  SYNOPSIS
-  FUN_FACTS
-  PRODUCTION_CONTEXT
-  RECEPTION
+  HORROR_LEGACY
+  COLLECTOR_MARKET
+  MEMORABILIA
+  CULT_STATUS
   OTHER
 }
 
@@ -185,20 +185,6 @@ enum UserRole {
   USER
   MODERATOR
   ADMIN
-}
-
-enum ContributionType {
-  FAN_FACT
-  BEHIND_THE_SCENES
-  PRODUCTION_DETAIL
-  PERSONAL_STORY
-}
-
-enum ContributionSource {
-  INTERVIEW
-  ARTICLE
-  PERSONAL
-  UNKNOWN
 }
 
 model Contribution {
@@ -209,8 +195,6 @@ model Contribution {
   userId    String
 
   section   ContributionSection
-  type      ContributionType    @default(FAN_FACT) // ✅ NEW
-  source    ContributionSource  @default(UNKNOWN) // ✅ NEW
 
   title     String?
   body      String // main text content

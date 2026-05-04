@@ -56,11 +56,11 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
   const contributions = await getMovieContributions(movie.id.toString(), userId);
 
   const grouped: Record<ContributionSection, ContributionWithUser[]> = {
-    SYNOPSIS: [],
-    FUN_FACTS: [],
-    PRODUCTION_CONTEXT: [],
-    RECEPTION: [],
-    OTHER: [],
+  HORROR_LEGACY: [],
+  COLLECTOR_MARKET: [],
+  MEMORABILIA: [],
+  CULT_STATUS: [],
+  OTHER: [],
   };
 
   contributions.forEach(c => grouped[c.section].push(c));

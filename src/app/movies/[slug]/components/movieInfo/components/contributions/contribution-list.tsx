@@ -6,19 +6,19 @@ import { useState } from "react";
 import Image from "next/image";
 import styles from "./contribution-list.module.css";
 
-// Generates a Contribution type that includes the related User object (not returned by Prisma by default)
 type ContributionWithUser = Prisma.ContributionGetPayload<{
   include: { user: true };
 }>;
+
 interface ContributionListProps {
   grouped: Record<ContributionSection, ContributionWithUser[]>;
 }
 
 const sectionTitles: Record<ContributionSection, string> = {
-  SYNOPSIS: "Synopsis",
-  FUN_FACTS: "Fun Facts",
-  PRODUCTION_CONTEXT: "Production Context",
-  RECEPTION: "Reception",
+  HORROR_LEGACY: "Horror Legacy",
+  COLLECTOR_MARKET: "Collector Market",
+  MEMORABILIA: "Memorabilia",
+  CULT_STATUS: "Cult Status",
   OTHER: "Other",
 };
 
@@ -47,73 +47,75 @@ export default function ContributionList({ grouped }: ContributionListProps) {
       });
     }
   };
+
   const hasContributions = Object.values(grouped).some((items) => items.length > 0);
+
   return (
     <div className={styles.contributionWrapper}>
-    <div>
-       {hasContributions && (
-      <h2 className="heading-secondary">User Contributions</h2>
-    )}
+      <div>
+        {hasContributions && (
+          <h2 className="heading-secondary">User Contributions</h2>
+        )}
 
-      {Object.entries(grouped).map(([section, items]) => {
-        if (!items.length) return null;
+        {Object.entries(grouped).map(([section, items]) => {
+          if (!items.length) return null;
 
-        return (
-          <div key={section}>
-            <h3 className={styles.contributionSectionTitle}>
-              {sectionTitles[section as ContributionSection]}
-            </h3>
+          return (
+            <div key={section}>
+              <h3 className={styles.contributionSectionTitle}>
+                {sectionTitles[section as ContributionSection]}
+              </h3>
 
-            <div className={styles.contributionSection}>
-              {items.map((contribution) => (
-                <Card key={contribution.id} className={styles.contributionCard}>
-                  <Card.Body className={styles.contributionCardBody}>
-                    {contribution.title && (
-                      <Card.Title className={styles.contributionCardTitle}>
-                        {contribution.title}
-                      </Card.Title>
-                    )}
+              <div className={styles.contributionSection}>
+                {items.map((contribution) => (
+                  <Card key={contribution.id} className={styles.contributionCard}>
+                    <Card.Body className={styles.contributionCardBody}>
+                      {contribution.title && (
+                        <Card.Title className={styles.contributionCardTitle}>
+                          {contribution.title}
+                        </Card.Title>
+                      )}
 
-                    <Card.Text className={styles.contributionCardText}>
-                      {contribution.body}
-                    </Card.Text>
+                      <Card.Text className={styles.contributionCardText}>
+                        {contribution.body}
+                      </Card.Text>
 
-                    <div className="d-flex justify-content-between align-items-center">
-                      <small className={styles.contributionUserInfo}>
-                        {contribution.user?.image && (
-                          <Image
-                            src={contribution.user.image}
-                            width={16}
-                            height={16}
-                            alt={contribution.user.name || "User avatar"}
-                            style={{ borderRadius: "50%" }}
-                          />
-                        )}
-                        By {contribution.user?.name}
-                      </small>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <small className={styles.contributionUserInfo}>
+                          {contribution.user?.image && (
+                            <Image
+                              src={contribution.user.image}
+                              width={16}
+                              height={16}
+                              alt={contribution.user.name || "User avatar"}
+                              style={{ borderRadius: "50%" }}
+                            />
+                          )}
+                          By {contribution.user?.name}
+                        </small>
 
-                      <Button
-                        size="sm"
-                        variant={votedIds.has(contribution.id) ? "success" : "outline-primary"}
-                        disabled={votedIds.has(contribution.id)}
-                        className={styles.contributionUpvoteBtn}
-                        onClick={() =>
-                          handleUpvote(contribution.id, section as ContributionSection)
-                        }
-                      >
-                        {votedIds.has(contribution.id)
-                          ? "▲ Voted"
-                          : `▲ ${contribution.upvotes}`}
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              ))}
+                        <Button
+                          size="sm"
+                          variant={votedIds.has(contribution.id) ? "success" : "outline-primary"}
+                          disabled={votedIds.has(contribution.id)}
+                          className={styles.contributionUpvoteBtn}
+                          onClick={() =>
+                            handleUpvote(contribution.id, section as ContributionSection)
+                          }
+                        >
+                          {votedIds.has(contribution.id)
+                            ? "▲ Voted"
+                            : `▲ ${contribution.upvotes}`}
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
