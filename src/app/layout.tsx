@@ -46,10 +46,7 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-  },
-  alternates: {
-    canonical: "https://retrohorrorhub.com",
-  },
+  }
 };
 
 export default function RootLayout({

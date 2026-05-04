@@ -34,7 +34,7 @@ export default function ContributionForm({ movieId }: Props) {
       setBody("");
     } catch (err) {
       setStatus("error");
-      setMessage("Something went wrong.");
+      setMessage("Something went wrong. Make sure you're logged in and try again.");
     }
   }
 
