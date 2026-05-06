@@ -204,6 +204,8 @@ export const rawSlugToIdMap: Record<string, number> = {
 "night-of-the-living-dead-1990": 19185, //1990 director Tom Savini
 "night-of-the-living-dead": 10331, // 1968 director George A. Romero
 
+"shocker": 12521,
+"street-trash": 22172,
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};

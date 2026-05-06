@@ -146,7 +146,7 @@ function extractSequelNumber(title: string): number | null {
     if (new RegExp(`\\b${roman}\\b`).test(lower)) return val;
   }
 
-   // Any arabic digit 2–8 anywhere in the title
+  // Any arabic digit 2–8 anywhere in the title
   const anyMatch = lower.match(/\b([2-8])\b/);
   if (anyMatch) return parseInt(anyMatch[1]);
 
@@ -326,9 +326,9 @@ function getTitleRelevanceScore(itemTitle: string, movieTitle: string): number {
 
   /* const matchCount = movieWords.filter(w => itemLower.includes(w)).length; */
   const matchCount = movieWords.filter(w => {
-  const regex = new RegExp(`\\b${w}\\b`, "i");
-  return regex.test(itemTitle);
-}).length;
+    const regex = new RegExp(`\\b${w}\\b`, "i");
+    return regex.test(itemTitle);
+  }).length;
   const ratio = matchCount / movieWords.length;
 
   if (ratio >= 0.8) return 3;
@@ -389,9 +389,11 @@ function scoreItem(item: EbayItemSummary, movieTitle: string, movieYear: string)
  * false positives (Reese's Pieces ads, Being John Malkovich, KISS posters)
  * would rank above legitimate results.
  */
-function isBadItem(title: string, movieTitle: string, movieYear: string): boolean {
+function isBadItem(title: string, movieTitle: string, movieYear: string, price?: number): boolean {
   const lower = title.toLowerCase();
 
+  if (lower.includes("poster") && lower.includes("print") && !lower.includes("misprint")) return true;
+  if (lower.includes("borderless")) return true;
   if (lower.includes("fan art")) return true;
   if (lower.includes("art print")) return true;
   if (lower.includes("anniversary")) return true;
@@ -399,17 +401,29 @@ function isBadItem(title: string, movieTitle: string, movieYear: string): boolea
   if (lower.includes("digital code")) return true;
   if (lower.includes("digital download")) return true;
   if (lower.includes("print on demand")) return true;
-  if (lower.includes("poster print")) return true;
-if (lower.includes("print poster")) return true;
-if (lower.includes("wall decor")) return true;
-if (lower.includes("mondo")) return true;
+  if (lower.includes("wall decor")) return true;
+  if (lower.includes("mondo")) return true;
+
+  const hasAuthenticity =
+    lower.includes("original") ||
+    lower.includes("orig") ||
+    lower.includes("vintage") ||
+    lower.includes("rare") ||
+    lower.includes("one sheet") ||
+    lower.includes("one-sheet") ||
+    lower.includes("daybill") ||
+    lower.includes("fotobusta");
+
+  if (!hasAuthenticity && lower.includes("poster")) {
+    if (/\b(11\s*x\s*17|24\s*x\s*36|18\s*x\s*24|12\s*x\s*18)\b/i.test(lower)) return true;
+  }
 
   // Hard year filter
   const years = [...lower.matchAll(/\b(19[5-9]\d|20[0-2]\d)\b/g)].map(m => parseInt(m[1]));
   const target = parseInt(movieYear);
   if (years.length > 0 && Math.min(...years.map(y => Math.abs(y - target))) > 12) return true;
 
-   // Hard franchise sequel filter
+  // Hard franchise sequel filter
   const targetSequel = extractSequelNumber(movieTitle);
   const franchiseBase = getFranchiseBase(movieTitle).toLowerCase().replace(/^(a|an|the)\s+/, "");
   const franchiseWords = franchiseBase.split(" ").filter(w => w.length > 3);
@@ -431,7 +445,9 @@ if (lower.includes("mondo")) return true;
     const hasRequiredKeyword = requiredKeywords.some(kw => lower.includes(kw));
     if (!hasRequiredKeyword) return true;
   }
-
+  // Cheap poster with no authenticity signals = almost certainly a reprint
+  const isPrint = detectItemType(lower) === "print";
+  if (isPrint && !hasAuthenticity && price !== undefined && price < 30) return true;
   return false;
 }
 
@@ -487,7 +503,7 @@ export async function getCuratedEbayItems(
     return getStaleCache(movieId);
   }
   let results: EbaySearchResponse[];
-try {
+  try {
     results = await Promise.all(
       queries.map(async (q) => {
         const result = await getEbayItems(q, accessToken);
@@ -496,12 +512,12 @@ try {
       })
     );
   } catch (err) {
-  /* try {
-    results = await Promise.all(
-      queries.map(q => getEbayItems(q, accessToken))
-      
-    );
-  } catch (err) { */
+    /* try {
+      results = await Promise.all(
+        queries.map(q => getEbayItems(q, accessToken))
+        
+      );
+    } catch (err) { */
     console.error("🚨🚨 EBAY API FETCH FAILED — USING STALE CACHE", err);
     return getStaleCache(movieId);
   }
@@ -515,11 +531,11 @@ try {
 
   // Deduplicate
   const unique = dedupeItems(availableItems);
-console.log(`📦 Raw merged: ${merged.length}`);
-console.log(`✅ After dedup: ${unique.length}`);
+  console.log(`📦 Raw merged: ${merged.length}`);
+  console.log(`✅ After dedup: ${unique.length}`);
   // Hard filter → score → soft filter
   const scored = unique
-    .filter(item => !isBadItem(item.title, movieTitle, year))
+    .filter(item => !isBadItem(item.title, movieTitle, year, parseFloat(item.price.value)))
     .map(item => ({ item, score: scoreItem(item, movieTitle, year) }))
     .sort((a, b) => b.score - a.score);
 
@@ -556,37 +572,37 @@ console.log(`✅ After dedup: ${unique.length}`);
   const MAX_ITEMS = 30;
 
   let midTierCount = 0;
-const MID_TIER_LIMIT = 5;
+  const MID_TIER_LIMIT = 5;
 
-for (const { item, score } of dedupedScored) {
-  if (score < MIN_SCORE) continue;
+  for (const { item, score } of dedupedScored) {
+    if (score < MIN_SCORE) continue;
 
-  if (curated.length >= 15) {
-    if (score >= HIGH_SCORE) {
-      // good → always allow
-    } else {
-      if (midTierCount >= MID_TIER_LIMIT) continue;
-      midTierCount++;
+    if (curated.length >= 15) {
+      if (score >= HIGH_SCORE) {
+        // good → always allow
+      } else {
+        if (midTierCount >= MID_TIER_LIMIT) continue;
+        midTierCount++;
+      }
+    }
+
+    if (curated.length >= MAX_ITEMS) break;
+
+    const type = detectItemType(item.title.toLowerCase());
+
+    if (type === "unknown" && score >= 8) {
+      curated.push(item);
+      continue;
+    }
+
+    if ((typeCounts[type] || 0) < (typeLimits[type] || 1)) {
+      curated.push(item);
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
     }
   }
 
-  if (curated.length >= MAX_ITEMS) break;
-
-  const type = detectItemType(item.title.toLowerCase());
-
-  if (type === "unknown" && score >= 8) {
-    curated.push(item);
-    continue;
-  }
-
-  if ((typeCounts[type] || 0) < (typeLimits[type] || 1)) {
-    curated.push(item);
-    typeCounts[type] = (typeCounts[type] || 0) + 1;
-  }
-}
-
   const final = shuffle(curated);
-console.log(`🏆 Final curated: ${final.length}`);
+  console.log(`🏆 Final curated: ${final.length}`);
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
     where: { movieId },
