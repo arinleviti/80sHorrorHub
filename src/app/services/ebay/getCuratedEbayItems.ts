@@ -73,7 +73,7 @@ type ItemType =
 
 function detectItemType(title: string): ItemType {
   title = title.toLowerCase();
-  if (title.includes("vhs") || title.includes("laserdisc") || title.includes("betamax")) return "physical_media";
+  if (title.includes("vhs") || title.includes("laserdisc") || title.includes("beta") || title.includes("laser disc")) return "physical_media";
   if (title.includes("press kit") || title.includes("pressbook") || title.includes("press book") || title.includes("movie program") || title.includes("film program")) return "press_kit";
   if (title.includes("press photo") || title.includes("press photograph")) return "promo";
   if (
