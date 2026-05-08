@@ -34,10 +34,12 @@ interface RedditSearchResponse {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const SUBREDDITS = ["horror", "80shorror", "movies"];
+const SUBREDDITS = ["horror", "80sHorrorMovies", "horrorcollecting", "PhysicalMediaMatters"];
 const JUNK_WORDS = /meme|shitpost|gif|funny|bot|disney/i;
 const CACHE_TTL = 60 * 60; // 1 hour
 const USER_AGENT = "HeroLaCasadelBurger/1.0";
+
+
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +73,73 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   return score;
 };
 
-// ─── Fetch ────────────────────────────────────────────────────────────────────
+
+
+// ─── Cache ────────────────────────────────────────────────────────────────────
+
+type CacheEntry = { data: RedditSearchResponse; expires: number };
+const cache = new Map<string, CacheEntry>();
+
+const getCache = (key: string): RedditSearchResponse | null => {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (Date.now() > hit.expires) { cache.delete(key); return null; }
+  return hit.data;
+};
+
+const setCache = (key: string, data: RedditSearchResponse) => {
+  cache.set(key, { data, expires: Date.now() + CACHE_TTL * 1000 });
+};
+
+// ─── Fetch helpers ────────────────────────────────────────────────────────────
+
+const fetchViaProxy = async (proxyUrl: string): Promise<RedditSearchResponse | null> => {
+  try {
+    const res = await fetch(proxyUrl);
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text.startsWith("{")) return null;
+    return JSON.parse(text) as RedditSearchResponse;
+  } catch {
+    return null;
+  }
+};
+
+// Proxy chain — tried in order until one succeeds.
+// All wrap the raw Reddit URL so each proxy hits Reddit independently.
+const PROXY_CHAIN = [
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
+  (url: string) => `https://yacdn.org/serve/${url}`,
+];
+
+const fetchWithFallback = async (
+  redditUrl: string,
+  key: string
+): Promise<RedditChild[]> => {
+  const cached = getCache(key);
+  if (cached) return cached.data.children;
+
+  for (const buildProxy of PROXY_CHAIN) {
+    const proxyUrl = buildProxy(redditUrl);
+    const json = await fetchViaProxy(proxyUrl);
+    if (json) {
+      setCache(key, json);
+      return json.data.children;
+    }
+    console.warn("[Reddit] proxy failed:", proxyUrl.split("?")[0]);
+  }
+
+  console.error("[Reddit] all proxies failed for:", redditUrl);
+  return [];
+};
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export async function fetchRedditPosts(
   movie: MovieForReddit,
@@ -85,93 +153,26 @@ export async function fetchRedditPosts(
 
   try {
     const requests = SUBREDDITS.map(async (subreddit) => {
-      const url = `https://www.reddit.com/r/${subreddit}/search.json?${new URLSearchParams(
-        {
-          q: movie.title,
-          restrict_sr: "1",
-          sort: "relevance",
-          limit: "15",
-        }
-      )}`;
+      const url =
+        `https://www.reddit.com/r/${subreddit}/search.json?` +
+        new URLSearchParams({ q: movie.title, restrict_sr: "1", sort: "relevance", limit: "15" });
 
-      console.log(`[Reddit] querying r/${subreddit} -> ${url}`);
+      console.log(`[Reddit] querying r/${subreddit}`);
 
-      try {
-        const res = await fetch(url, {
-          headers: { "User-Agent": USER_AGENT },
-          next: { revalidate: CACHE_TTL },
-        });
+      const cacheKey = `${subreddit}:${movie.title}`;
+      const children = await fetchWithFallback(url, cacheKey);
 
-        // Rate limited
-        if (res.status === 429) {
-          const retryAfter = res.headers.get("Retry-After");
-          console.error(
-            `[Reddit] RATE LIMITED on r/${subreddit}. Retry-After: ${retryAfter ?? "unknown"}s`
-          );
-          return [] as RedditChild[];
-        }
-
-        // Auth/forbidden
-        if (res.status === 403) {
-          console.error(
-            `[Reddit] FORBIDDEN (403) on r/${subreddit} — Reddit may be blocking the request. Check User-Agent.`
-          );
-          return [] as RedditChild[];
-        }
-
-        // Subreddit doesn't exist or is banned
-        if (res.status === 404) {
-          console.error(`[Reddit] NOT FOUND (404) — r/${subreddit} may not exist or is banned.`);
-          return [] as RedditChild[];
-        }
-
-        if (!res.ok) {
-          console.error(
-            `[Reddit] Unexpected HTTP ${res.status} ${res.statusText} for r/${subreddit}`
-          );
-          return [] as RedditChild[];
-        }
-
-        let json: RedditSearchResponse;
-        try {
-          json = await res.json();
-        } catch (parseErr) {
-          console.error(
-            `[Reddit] Failed to parse JSON from r/${subreddit}:`,
-            parseErr instanceof Error ? parseErr.message : parseErr
-          );
-          return [] as RedditChild[];
-        }
-
-        // Unexpected response shape
-        if (!json?.data?.children) {
-          console.error(
-            `[Reddit] Unexpected response shape from r/${subreddit}:`,
-            JSON.stringify(json).slice(0, 200)
-          );
-          return [] as RedditChild[];
-        }
-
-        const children = json.data.children;
-
-        if (children.length === 0) {
-          console.warn(`[Reddit] r/${subreddit} returned 0 results for "${movie.title}"`);
-        } else {
-          console.log(`[Reddit] SUCCESS r/${subreddit} -> ${children.length} results`);
-        }
-
-        return children;
-      } catch (err) {
-        // Network-level failure (DNS, timeout, etc.)
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[Reddit] Network failure for r/${subreddit}: ${msg}`);
-        return [] as RedditChild[];
+      if (children.length === 0) {
+        console.warn(`[Reddit] r/${subreddit} returned 0 results for "${movie.title}"`);
+      } else {
+        console.log(`[Reddit] SUCCESS r/${subreddit} -> ${children.length} results`);
       }
+
+      return children;
     });
 
     const results = await Promise.allSettled(requests);
 
-    // Log any unexpected promise rejections (shouldn't happen but just in case)
     results.forEach((r, i) => {
       if (r.status === "rejected") {
         console.error(`[Reddit] Promise rejected for r/${SUBREDDITS[i]}:`, r.reason);
@@ -206,7 +207,7 @@ export async function fetchRedditPosts(
     if (filtered.length === 0) {
       console.warn(
         `[Reddit] Scoring filtered out all ${allPosts.length} posts for "${movie.title}". ` +
-        `Top titles: ${allPosts.slice(0, 3).map(p => `"${p.title}"`).join(", ")}`
+        `Top titles: ${allPosts.slice(0, 3).map((p) => `"${p.title}"`).join(", ")}`
       );
       return [];
     }
@@ -223,7 +224,6 @@ export async function fetchRedditPosts(
       raw: allChildren.length,
       posts: allPosts.length,
       scored: filtered.length,
-      duplicatesRemoved: filtered.length - unique.length,
       returned: returned.length,
       topPost: returned[0]?.title ?? "none",
     });
