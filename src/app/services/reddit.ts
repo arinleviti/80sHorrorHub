@@ -36,8 +36,8 @@ interface RedditSearchResponse {
 
 const SUBREDDITS = ["horror", "80sHorrorMovies", "horrorcollecting", "PhysicalMediaMatters"];
 const JUNK_WORDS = /meme|shitpost|gif|funny|bot|disney/i;
-const CACHE_TTL = 60 * 60; // 1 hour
-const USER_AGENT = "HeroLaCasadelBurger/1.0";
+const CACHE_TTL_1H = 60 * 60; // 1 hour
+const CACHE_TTL_12H = 60 * 60 * 12; // 12 hours
 
 
 
@@ -88,7 +88,7 @@ const getCache = (key: string): RedditSearchResponse | null => {
 };
 
 const setCache = (key: string, data: RedditSearchResponse) => {
-  cache.set(key, { data, expires: Date.now() + CACHE_TTL * 1000 });
+  cache.set(key, { data, expires: Date.now() + CACHE_TTL_12H * 1000 });
 };
 
 // ─── Fetch helpers ────────────────────────────────────────────────────────────

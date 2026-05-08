@@ -29,6 +29,19 @@ export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
   // Add more as you encounter noisy titles
 };
 
+// ─── High-Value Bonus Signals ──────────────────────────────────────────────────
+//
+// Keywords that indicate a genuinely rare, one-of-a-kind item (screen-used props,
+// signed costumes, production wardrobe, etc.). Used exclusively in the bonus pass
+// that APPENDS items after the main curation — never affects existing results.
+//
+export const HIGH_VALUE_SIGNALS = new Set([
+  "signed", "autograph", "screen used", "screen worn", "production used",
+  "hero prop", "film prop", "movie prop", "worn by", "wardrobe", "costume",
+  "hand prop", "prop used", "grail", "holy grail", "one of a kind",
+  "display piece", "from the set", "production item",
+]);
+
 // ─── Query Builder ─────────────────────────────────────────────────────────────
 /* 
 export function buildEbayQueries(movieTitle: string, year: string): string[] {
@@ -602,14 +615,45 @@ export async function getCuratedEbayItems(
   }
 
   const final = shuffle(curated);
-  console.log(`🏆 Final curated: ${final.length}`);
+
+  // ─── Bonus Pass: High-Value Unknowns ────────────────────────────────────────
+  // Catches signed/screen-used/prop/wardrobe items that score too low for the
+  // main curation loop but are genuinely rare and valuable.
+  //
+  // Rules:
+  //   • Item must NOT already be in `final` (checked by affiliate URL)
+  //   • Item must have typed as "unknown" by detectItemType
+  //   • Listed price must be ≥ $500
+  //   • Title must contain at least one HIGH_VALUE_SIGNALS keyword
+  //   • Capped at 3 bonus items
+  //   • Appended AFTER `final` — never displaces anything already collected
+  // ────────────────────────────────────────────────────────────────────────────
+  const collectedUrls = new Set(final.map(i => i.itemAffiliateWebUrl));
+
+  const bonusItems = dedupedScored
+    .filter(({ item }) => {
+      if (collectedUrls.has(item.itemAffiliateWebUrl)) return false;
+      const type = detectItemType(item.title.toLowerCase());
+      if (type !== "unknown") return false;
+      const price = parseFloat(item.price.value);
+      if (price < 500) return false;
+      const lower = item.title.toLowerCase();
+      return [...HIGH_VALUE_SIGNALS].some(kw => lower.includes(kw));
+    })
+    .slice(0, 3)
+    .map(({ item }) => item);
+
+  const finalWithBonus = [...final, ...bonusItems];
+
+  console.log(`🏆 Final curated: ${final.length} | 💎 Bonus high-value: ${bonusItems.length}`);
+
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
     where: { movieId },
     create: {
       movieId,
       items: {
-        create: final.map(i => ({
+        create: finalWithBonus.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
@@ -623,7 +667,7 @@ export async function getCuratedEbayItems(
       updatedAt: new Date(),
       items: {
         deleteMany: {},
-        create: final.map(i => ({
+        create: finalWithBonus.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
@@ -635,7 +679,7 @@ export async function getCuratedEbayItems(
     },
   });
 
-  return final;
+  return finalWithBonus;
 }
 
 // ─────────────────────────────────────────────
