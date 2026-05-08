@@ -36,10 +36,11 @@ interface RedditSearchResponse {
 
 const SUBREDDITS = ["horror", "80sHorrorMovies", "horrorcollecting", "PhysicalMediaMatters"];
 const JUNK_WORDS = /meme|shitpost|gif|funny|bot|disney/i;
-const CACHE_TTL_1H = 60 * 60; // 1 hour
-const CACHE_TTL_12H = 60 * 60 * 12; // 12 hours
-
-
+const SEASONAL_CONTEXT = /\bfor halloween\b|\bon halloween\b|\bthis halloween\b|\bhappy halloween\b|\bwatching.*halloween\b|\bhome for halloween\b/i;
+const PROXY_TIMEOUT_MS = 3_000;
+const SUBREDDIT_TIMEOUT_MS = 5_000;
+const GLOBAL_TIMEOUT_MS = 8_000;
+const CACHE_TTL_12H = 60 * 60 * 12;
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 
@@ -52,28 +53,36 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
 
   if (JUNK_WORDS.test(titleLower)) return -100;
   if (post.upvotes < 2) return -100;
+  if (SEASONAL_CONTEXT.test(titleLower)) return -100;
+
+  const fuzzyMovie = fuzzy(movie.title);
+  const fuzzyPost = fuzzy(post.title);
+  if (!fuzzyPost.includes(fuzzyMovie)) return -100;
+
+  // Require at least one cast member or character mention
+  const topActors = movie.castMembers?.slice(0, 5).map((c) => c.actor.name.toLowerCase()) ?? [];
+  const topChars = movie.castMembers?.slice(0, 5).map((c) => c.character.toLowerCase()) ?? [];
+  const hasActorMention = topActors.some((a) => titleLower.includes(a));
+  const hasCharMention = topChars.some((c) => titleLower.includes(c));
 
   let score = 0;
 
-  if (fuzzy(post.title).includes(fuzzy(movie.title))) score += 3;
-  if (movieYear && titleLower.includes(movieYear)) score += 2;
+  const escaped = movie.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const boundaryMatch = new RegExp(`\\b${escaped}\\b`, "i").test(post.title);
+  score += boundaryMatch ? 3 : 1;
 
-  if (movie.castMembers) {
-    const topActors = movie.castMembers
-      .slice(0, 5)
-      .map((c) => c.actor.name.toLowerCase());
-    if (topActors.some((a) => titleLower.includes(a))) score += 2;
+  const afterTitle = post.title.replace(new RegExp(escaped, "i"), "").trim();
+  if (/^[A-Z][a-z]/.test(afterTitle)) score -= 3;
 
-    const topChars = movie.castMembers
-      .slice(0, 5)
-      .map((c) => c.character.toLowerCase());
-    if (topChars.some((c) => titleLower.includes(c))) score += 2;
-  }
+  const yearInPost = titleLower.match(/\((\d{4})\)/);
+  if (yearInPost && movieYear && yearInPost[1] !== movieYear) score -= 3;
+  if (movieYear && titleLower.includes(movieYear)) score += 3;
+
+  if (hasActorMention) score += 2;
+  if (hasCharMention) score += 2;
 
   return score;
 };
-
-
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
@@ -93,21 +102,8 @@ const setCache = (key: string, data: RedditSearchResponse) => {
 
 // ─── Fetch helpers ────────────────────────────────────────────────────────────
 
-const fetchViaProxy = async (proxyUrl: string): Promise<RedditSearchResponse | null> => {
-  try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) return null;
-    const text = await res.text();
-    if (!text.startsWith("{")) return null;
-    return JSON.parse(text) as RedditSearchResponse;
-  } catch {
-    return null;
-  }
-};
-
-// Proxy chain — tried in order until one succeeds.
-// All wrap the raw Reddit URL so each proxy hits Reddit independently.
 const PROXY_CHAIN = [
+  (url: string) => `https://orange-truth-50d2.arin-leviti.workers.dev/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
@@ -118,10 +114,24 @@ const PROXY_CHAIN = [
   (url: string) => `https://yacdn.org/serve/${url}`,
 ];
 
-const fetchWithFallback = async (
-  redditUrl: string,
-  key: string
-): Promise<RedditChild[]> => {
+const fetchViaProxy = async (proxyUrl: string): Promise<RedditSearchResponse | null> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(proxyUrl, { signal: controller.signal });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text.startsWith("{")) return null;
+    return JSON.parse(text) as RedditSearchResponse;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const fetchWithFallback = async (redditUrl: string, key: string): Promise<RedditChild[]> => {
   const cached = getCache(key);
   if (cached) return cached.data.children;
 
@@ -139,101 +149,97 @@ const fetchWithFallback = async (
   return [];
 };
 
+const fetchSubreddit = async (subreddit: string, movie: MovieForReddit): Promise<RedditChild[]> => {
+  const url =
+    `https://www.reddit.com/r/${subreddit}/search.json?` +
+    new URLSearchParams({ q: movie.title, restrict_sr: "1", sort: "relevance", limit: "15" });
+
+  const timeout = new Promise<RedditChild[]>((resolve) =>
+    setTimeout(() => {
+      console.warn(`[Reddit] r/${subreddit} timed out after ${SUBREDDIT_TIMEOUT_MS}ms`);
+      resolve([]);
+    }, SUBREDDIT_TIMEOUT_MS)
+  );
+
+  return Promise.race([
+    fetchWithFallback(url, `${subreddit}:${movie.title}`),
+    timeout,
+  ]);
+};
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export async function fetchRedditPosts(
   movie: MovieForReddit,
   limit = 5
 ): Promise<RedditPost[]> {
-  console.log("[Reddit] fetchRedditPosts START", {
-    title: movie.title,
-    limit,
-    subreddits: SUBREDDITS,
-  });
+  const globalTimeout = new Promise<RedditPost[]>((resolve) =>
+    setTimeout(() => {
+      console.warn(`[Reddit] global timeout (${GLOBAL_TIMEOUT_MS}ms) reached for "${movie.title}"`);
+      resolve([]);
+    }, GLOBAL_TIMEOUT_MS)
+  );
+
+  return Promise.race([_fetchRedditPosts(movie, limit), globalTimeout]);
+}
+
+async function _fetchRedditPosts(
+  movie: MovieForReddit,
+  limit = 5
+): Promise<RedditPost[]> {
+  console.log("[Reddit] START", { title: movie.title, subreddits: SUBREDDITS });
 
   try {
-    const requests = SUBREDDITS.map(async (subreddit) => {
-      const url =
-        `https://www.reddit.com/r/${subreddit}/search.json?` +
-        new URLSearchParams({ q: movie.title, restrict_sr: "1", sort: "relevance", limit: "15" });
-
-      console.log(`[Reddit] querying r/${subreddit}`);
-
-      const cacheKey = `${subreddit}:${movie.title}`;
-      const children = await fetchWithFallback(url, cacheKey);
-
-      if (children.length === 0) {
-        console.warn(`[Reddit] r/${subreddit} returned 0 results for "${movie.title}"`);
-      } else {
-        console.log(`[Reddit] SUCCESS r/${subreddit} -> ${children.length} results`);
-      }
-
-      return children;
-    });
-
-    const results = await Promise.allSettled(requests);
-
-    results.forEach((r, i) => {
-      if (r.status === "rejected") {
-        console.error(`[Reddit] Promise rejected for r/${SUBREDDITS[i]}:`, r.reason);
-      }
-    });
-
-    const allChildren: RedditChild[] = results.flatMap((r) =>
-      r.status === "fulfilled" ? r.value : []
+    const results = await Promise.allSettled(
+      SUBREDDITS.map((subreddit) => fetchSubreddit(subreddit, movie))
     );
+
+    const allChildren: RedditChild[] = results.flatMap((r, i) => {
+      if (r.status === "rejected") {
+        console.error(`[Reddit] r/${SUBREDDITS[i]} rejected:`, r.reason);
+        return [];
+      }
+      if (r.value.length === 0) {
+        console.warn(`[Reddit] r/${SUBREDDITS[i]} → 0 results for "${movie.title}"`);
+      } else {
+        console.log(`[Reddit] r/${SUBREDDITS[i]} → ${r.value.length} results`);
+      }
+      return r.value;
+    });
 
     if (allChildren.length === 0) {
-      console.warn(`[Reddit] All subreddits returned empty. Movie: "${movie.title}"`);
+      console.warn(`[Reddit] all subreddits empty for "${movie.title}"`);
       return [];
     }
 
-    const allPosts: RedditPost[] = allChildren.map((child) => ({
-      id: child.data.id,
-      title: child.data.title,
-      author: child.data.author,
-      subreddit: child.data.subreddit,
-      upvotes: child.data.ups || 0,
-      url: `https://reddit.com${child.data.permalink}`,
-    }));
+    const scored = allChildren
+      .map((child) => {
+        const post: RedditPost = {
+          id: child.data.id,
+          title: child.data.title,
+          author: child.data.author,
+          subreddit: child.data.subreddit,
+          upvotes: child.data.ups || 0,
+          url: `https://reddit.com${child.data.permalink}`,
+        };
+        return { post, score: scorePost(post, movie) };
+      })
+      .filter(({ score }) => score >= 3);
 
-    const withScores = allPosts.map((post) => ({
-      post,
-      score: scorePost(post, movie),
-    }));
-
-    const filtered = withScores.filter(({ score }) => score > 0);
-
-    if (filtered.length === 0) {
-      console.warn(
-        `[Reddit] Scoring filtered out all ${allPosts.length} posts for "${movie.title}". ` +
-        `Top titles: ${allPosts.slice(0, 3).map((p) => `"${p.title}"`).join(", ")}`
-      );
+    if (scored.length === 0) {
+      console.warn(`[Reddit] scoring filtered all ${allChildren.length} posts for "${movie.title}"`);
       return [];
     }
 
-    const unique = Array.from(
-      new Map(filtered.map((s) => [s.post.id, s])).values()
-    );
-
+    const unique = Array.from(new Map(scored.map((s) => [s.post.id, s])).values());
     unique.sort((a, b) => b.score - a.score || b.post.upvotes - a.post.upvotes);
 
     const returned = unique.slice(0, limit).map((u) => u.post);
-
-    console.log("[Reddit] FINAL", {
-      raw: allChildren.length,
-      posts: allPosts.length,
-      scored: filtered.length,
-      returned: returned.length,
-      topPost: returned[0]?.title ?? "none",
-    });
+    console.log("[Reddit] DONE", { raw: allChildren.length, scored: scored.length, returned: returned.length, top: returned[0]?.title ?? "none" });
 
     return returned;
   } catch (err) {
-    console.error(
-      "[Reddit] Unhandled global failure:",
-      err instanceof Error ? err.stack : err
-    );
+    console.error("[Reddit] unhandled failure:", err instanceof Error ? err.stack : err);
     return [];
   }
 }
