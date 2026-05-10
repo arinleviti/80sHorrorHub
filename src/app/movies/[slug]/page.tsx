@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
   const movie = await getMovie(movieId);
   console.log("generateMetadata movie:", movie.title, movie.poster_path);
   return {
-    title: `Explore live, up-to-date collectibles for ${movie.title} (${movie.release_date?.slice(0, 4)}), including rare VHS tapes, vinyl soundtracks from Discogs, posters, and horror memorabilia sourced from eBay. Discover curated items and collector insights.`,
+    title: `${movie.title} (${movie.release_date?.slice(0, 4)}) – Top Collectibles for Sale Now | Retro Horror Hub`,
     description: movie.overview,
     alternates: {
     canonical: `https://retrohorrorhub.com/movies/${slug}`,
