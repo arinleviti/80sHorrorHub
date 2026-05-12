@@ -11,6 +11,7 @@ export interface MovieForReddit {
   title: string;
   releaseDate?: string | null;
   castMembers?: { actor: { name: string }; character: string }[];
+  crew?: { name: string; job: string }[];
 }
 
 // ─── Internal types ───────────────────────────────────────────────────────────
@@ -36,7 +37,8 @@ interface RedditSearchResponse {
 
 const SUBREDDITS = ["horror", "80sHorrorMovies", "horrorcollecting", "PhysicalMediaMatters"];
 const JUNK_WORDS = /meme|shitpost|gif|funny|bot|disney/i;
-const SEASONAL_CONTEXT = /\bfor halloween\b|\bon halloween\b|\bthis halloween\b|\bhappy halloween\b|\bwatching.*halloween\b|\bhome for halloween\b/i;
+const SEASONAL_CONTEXT = /\bfor halloween\b|\bon halloween\b|\bhappy halloween\b|\bhome for halloween\b/i;
+const NEWS_WORDS = /\bordered at\b|\bwill premiere\b|\bwants to reboot\b|\bsues\s\w/i;
 const PROXY_TIMEOUT_MS = 3_000;
 const SUBREDDIT_TIMEOUT_MS = 5_000;
 const GLOBAL_TIMEOUT_MS = 8_000;
@@ -47,16 +49,21 @@ const CACHE_TTL_12H = 60 * 60 * 12;
 const fuzzy = (str: string): string =>
   str.toLowerCase().replace(/[^a-z0-9]/g, "");
 
+const headlineOf = (title: string): string =>
+  title.split(/\bPlot:/i)[0].trim().slice(0, 120);
+
 const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
-  const titleLower = post.title.toLowerCase();
+  const headline = headlineOf(post.title);
+  const titleLower = headline.toLowerCase();
   const movieYear = movie.releaseDate?.slice(0, 4);
 
   if (JUNK_WORDS.test(titleLower)) return -100;
   if (post.upvotes < 2) return -100;
   if (SEASONAL_CONTEXT.test(titleLower)) return -100;
+  if (NEWS_WORDS.test(post.title)) return -100;
 
   const fuzzyMovie = fuzzy(movie.title);
-  const fuzzyPost = fuzzy(post.title);
+  const fuzzyPost = fuzzy(headline);
   if (!fuzzyPost.includes(fuzzyMovie)) return -100;
 
   // Require at least one cast member or character mention
@@ -64,22 +71,26 @@ const scorePost = (post: RedditPost, movie: MovieForReddit): number => {
   const topChars = movie.castMembers?.slice(0, 5).map((c) => c.character.toLowerCase()) ?? [];
   const hasActorMention = topActors.some((a) => titleLower.includes(a));
   const hasCharMention = topChars.some((c) => titleLower.includes(c));
+  const crewNames = movie.crew?.map((c) => c.name.toLowerCase()) ?? [];
+  const hasCrewMention = crewNames.some((n) => titleLower.includes(n));
 
   let score = 0;
 
   const escaped = movie.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const boundaryMatch = new RegExp(`\\b${escaped}\\b`, "i").test(post.title);
+  const boundaryMatch = new RegExp(`\\b${escaped}\\b`, "i").test(headline);
   score += boundaryMatch ? 3 : 1;
 
-  const afterTitle = post.title.replace(new RegExp(escaped, "i"), "").trim();
+  const afterTitle = headline.replace(new RegExp(escaped, "i"), "").trim();
   if (/^[A-Z][a-z]/.test(afterTitle)) score -= 3;
+  if (/^(II|III|IV|V|VI|2|3|4|5|6)\b/i.test(afterTitle)) return -100;
 
   const yearInPost = titleLower.match(/\((\d{4})\)/);
-  if (yearInPost && movieYear && yearInPost[1] !== movieYear) score -= 3;
+  if (yearInPost && movieYear && yearInPost[1] !== movieYear) return -100;
   if (movieYear && titleLower.includes(movieYear)) score += 3;
 
   if (hasActorMention) score += 2;
   if (hasCharMention) score += 2;
+  if (hasCrewMention) score += 2;
 
   return score;
 };
