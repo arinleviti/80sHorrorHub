@@ -1,7 +1,6 @@
-'use client';
 
+import { getHomepageMovies } from '@/app/services/homepageMovies';
 import Styles from './page.module.css';
-import { useEffect, useState } from 'react';
 import MovieCarousel from './home-carousel/carousel';
 import LoadingBlock from './LoadingBlock/loading-block';
 
@@ -17,39 +16,29 @@ export type DBMovie = {
   popularity: number;
 };
 
-export default function Home() {
-  const [mapped, setMovies] = useState<DBMovie[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function Home() {
+  const data = await getHomepageMovies();
 
-  useEffect(() => {
-    fetch('/api/homepageMovies')
-      .then(res => res.json())
-      .then((data: DBMovie[]) => {
-        const formatted = data.map(m => ({
-          id: m.id,
-          tmdbId: m.tmdbId,
-          title: m.title,
-          overview: m.overview,
-          releaseDate: m.releaseDate,
-          posterPath: m.posterPath,
-          imagekitPosterPath: m.imagekitPosterPath,
-          slug: m.slug ?? m.title.toLowerCase().replace(/\s+/g, '-'),
-          popularity: m.popularity,
-        }));
-
-        setMovies(formatted);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const formatted = data.map(m => ({
+    id: m.id,
+    tmdbId: m.tmdbId,
+    title: m.title,
+    overview: m.overview,
+    releaseDate: m.releaseDate,
+    posterPath: m.posterPath,
+    imagekitPosterPath: m.imagekitPosterPath,
+    slug: m.slug ?? m.title.toLowerCase().replace(/\s+/g, '-'),
+    popularity: m.popularity,
+  }));
 
   return (
     <div className={Styles.container}>
       <h1 className={Styles.title}>RETRO HORROR HUB</h1>
 
-      {loading ? (
+      {formatted.length === 0 ? (
         <LoadingBlock height={300} />
       ) : (
-        <MovieCarousel moviesArray={mapped} />
+        <MovieCarousel moviesArray={formatted} />
       )}
     </div>
   );

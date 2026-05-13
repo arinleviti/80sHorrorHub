@@ -206,6 +206,7 @@ export const rawSlugToIdMap: Record<string, number> = {
 
 "shocker": 12521,
 "street-trash": 22172,
+"halloween-5-the-revenge-of-michael-myers": 11361,
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
