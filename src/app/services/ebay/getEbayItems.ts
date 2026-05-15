@@ -138,6 +138,7 @@ export async function getEbayItems(
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
+      "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
       "X-EBAY-C-ENDUSERCTX": `affiliateCampaignId=${process.env.EBAY_CAMPAIGN_ID},contextualLocation=country=US,zip=10001`
     }
   });
