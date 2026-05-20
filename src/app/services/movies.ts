@@ -244,13 +244,13 @@ export const rawSlugToIdMap: Record<string, number> = {
 
 "night-shadows": 40026, // 1984
 "the-new-york-ripper": 30874, // 1982
-"dont-open-till-christmas": 84422, // 1984
+"don't-open-till-christmas": 84422, // 1984
 "cemetery-of-terror": 85002, // 1985
-"cats-eye": 10552, // 1985 *
+"cat's-eye": 10552, // 1985 *
 "phenomena": 29161, // 1985
 "the-doctor-and-the-devils": 80368, // 1985
 "transylvania-6-5000": 25133, // 1985
-"guinea-pig:-devils-experiment": 18334, // 1985
+"guinea-pig:-devil's-experiment": 18334, // 1985
 "terrorvision": 24194, // 1986 *
 
 "rats:-night-of-terror": 83223, // 1984
@@ -277,7 +277,7 @@ export const rawSlugToIdMap: Record<string, number> = {
 
 "the-serpent-and-the-rainbow": 11503, // 1988
 "sleepaway-camp-II:-unhappy-campers": 34311, // 1988
-"dont-panic": 84387, // 1989
+"don't-panic": 84387, // 1989
 "lady-in-white": 49365, // 1988
 "dream-demon": 49343, // 1988
 "monkey-shines": 29787, // 1988
