@@ -207,6 +207,80 @@ export const rawSlugToIdMap: Record<string, number> = {
 "shocker": 12521,
 "street-trash": 22172,
 "halloween-5-the-revenge-of-michael-myers": 11361,
+
+//new batch 20/05/2026
+"death-ship": 31703, // 1980
+"the-children": 84107, // 1980
+"prom-night": 36599, // 1980
+"he-knows-you're-alone": 65262, // 1980
+"without-warning": 44932, // 1980 *
+"the-boogey-man": 40220, // 1980
+"christmas-evil": 27230, // 1980
+"fear-no-evil": 91817, // 1981
+"blood-beach": 37843, // 1980
+"the-hand": 42149, // 1981 *
+
+"bloody-birthday": 55538, // 1981
+"happy-birthday-to-me": 37936, // 1981
+"hell-night": 28377, // 1981
+"the-unseen": 40241, // 1980
+"the-prowler": 44247, // 1981 *
+"mystics-in-bali": 71821, // 1981
+"butcher-baker-nightmare-maker": 67740, // 1982
+"madman": 47957, // 1982
+"next-of-kin": 84993, // 1982
+"amityville-II:-the-possession": 16235, // 1982 *
+
+"the-house-on-sorority-row": 40229, // 1983
+"xtro": 25834, // 1982
+"curtains": 67087, // 1983
+"night-of-the-zombies": 29072, // 1981
+"possession": 21484, // 1981 *
+"the-devil-fetus": 93532, // 1983
+"eyes-of-fire": 72349, // 1983
+"boarding-house": 40464, // 1982
+"the-mutilator": 40451, // 1985
+"the-last-horror-film": 57901, // 1982 *
+
+"night-shadows": 40026, // 1984
+"the-new-york-ripper": 30874, // 1982
+"dont-open-till-christmas": 84422, // 1984
+"cemetery-of-terror": 85002, // 1985
+"cats-eye": 10552, // 1985 *
+"phenomena": 29161, // 1985
+"the-doctor-and-the-devils": 80368, // 1985
+"transylvania-6-5000": 25133, // 1985
+"guinea-pig:-devils-experiment": 18334, // 1985
+"terrorvision": 24194, // 1986 *
+
+"rats:-night-of-terror": 83223, // 1984
+"the-hitcher": 9542, // 1986
+"critters": 3980, // 1986
+"manhunter": 11454, // 1986
+"deadly-friend": 33278, // 1986 *
+"trick-or-treat": 25438, // 1986
+"slaughter-high": 27886, // 1986
+"class-of-nuke-em-high": 26554, // 1986
+"the-zero-boys": 109213, // 1986
+"witchboard": 17994, // 1986 *
+
+"nightmare-at-shadow-woods": 28264, // 1987
+"the-gate": 6917, // 1987
+"rock-n-roll-nightmare": 36762, // 1987
+"jaws:-the-revenge": 580, // 1987
+"creepozoids": 28223, // 1987 *
+"zombie-nightmare": 31385, // 1987
+"the-video-dead": 26677, // 1987
+"slumber-party-massacre-II": 27764, // 1987
+"return-of-the-living-dead-part-II": 24929, // 1988
+"sorority-babes-in-the-slimeball-bowl-o-rama": 27390, // 1988 *
+
+"the-serpent-and-the-rainbow": 11503, // 1988
+"sleepaway-camp-II:-unhappy-campers": 34311, // 1988
+"dont-panic": 84387, // 1989
+"lady-in-white": 49365, // 1988
+"dream-demon": 49343, // 1988
+"monkey-shines": 29787, // 1988
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
