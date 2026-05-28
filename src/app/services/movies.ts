@@ -236,9 +236,9 @@ export const rawSlugToIdMap: Record<string, number> = {
 "curtains": 67087, // 1983
 "night-of-the-zombies": 29072, // 1981
 "possession": 21484, // 1981 *
-"the-devil-fetus": 93532, // 1983
+"devil-fetus": 93532, // 1983
 "eyes-of-fire": 72349, // 1983
-"boarding-house": 40464, // 1982
+"boardinghouse": 40464, // 1982
 "the-mutilator": 40451, // 1985
 "the-last-horror-film": 57901, // 1982 *
 
@@ -281,6 +281,7 @@ export const rawSlugToIdMap: Record<string, number> = {
 "lady-in-white": 49365, // 1988
 "dream-demon": 49343, // 1988
 "monkey-shines": 29787, // 1988
+"silent-night-deadly-night-iii-better-watch-out": 42709, // 1989
 };
 // Precompute normalized map
 export const slugToIdMap: Record<string, number> = {};
