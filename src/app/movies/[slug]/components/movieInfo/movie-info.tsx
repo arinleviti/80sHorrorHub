@@ -11,8 +11,6 @@ import ContributionForm from "./components/contribution/contributionForm";
 import { getMovieContributions } from "@/app/services/contributions";
 import { ContributionSection } from "@prisma/client";
 import ContributionList from "./components/contributions/contribution-list";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import RedditSection from "./components/RedditFeed/reddit-section";
 import { Prisma } from "@prisma/client";
 import ShareButtons from "./shareButtons/share-buttons";
@@ -50,10 +48,8 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
   /* const aiDescription = await fetchAIDescription(movie.id); */
   const collectorDescription = await fetchCollectorDescription(movie.id);
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
 
-  const contributions = await getMovieContributions(movie.id.toString(), userId);
+  const contributions = await getMovieContributions(movie.id.toString());
 
   const grouped: Record<ContributionSection, ContributionWithUser[]> = {
   HORROR_LEGACY: [],
