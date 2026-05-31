@@ -77,6 +77,7 @@ async function fetchFromTMDB<T>(endpoint: string): Promise<T> {
       Authorization: `Bearer ${process.env.TMDB_BEARER_TOKEN}`,
       accept: "application/json",
     },
+    next: { revalidate: 86400 }, // cache for 24 hours
   });
 
   if (!res.ok) throw new Error("TMDB fetch failed");
