@@ -3,7 +3,7 @@ import { Merriweather, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./navbar/navbar";
-import Providers from "./providers";
+/* import Providers from "./providers"; */
 import Footer from "./footer/footer";
 import AnalyticsTracker from "./AnalyticsTracker/analyticsTracker";
 import Script from "next/script";
@@ -82,12 +82,12 @@ export default function RootLayout({
 
       </head>
       <body className={`${merriweather.variable} ${bebasNeue.variable}`}>
-        <Providers>
+
           <Navbar />
           <AnalyticsTracker />
           {children}
           <Footer />
-        </Providers>
+  
 
         {/* 1. GA consent defaults — beforeInteractive so it fires before GA loads */}
         <Script id="gtag-consent-default" strategy="beforeInteractive">

@@ -140,7 +140,8 @@ export async function getEbayItems(
       "Content-Type": "application/json",
       "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
       "X-EBAY-C-ENDUSERCTX": `affiliateCampaignId=${process.env.EBAY_CAMPAIGN_ID},contextualLocation=country=US,zip=10001`
-    }
+    },
+    next: { revalidate: 3600 } // cache for 1 hour
   });
 
   if (!res.ok) {

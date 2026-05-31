@@ -206,6 +206,7 @@ Do not include any extra text or explanation.`,
         max_tokens: 150,
         temperature: 0.7
       }),
+      next: { revalidate: 3600 } // cache for 1 hour
     }
   );
   const result = await response.json();

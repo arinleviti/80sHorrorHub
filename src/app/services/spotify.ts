@@ -251,7 +251,8 @@ async function fetchSpotifyToken(): Promise<string | null> {
           "Basic " +
           Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
       },
-      body: "grant_type=client_credentials"
+      body: "grant_type=client_credentials",
+      next: { revalidate: 3600 } // cache for 1 hour
     });
 
     if (!res.ok) return null;
@@ -279,7 +280,8 @@ async function searchOnce(
   });
 
   const res = await fetch(`${SEARCH_URL}?${params}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
+    next: { revalidate: 3600 } // cache for 1 hour
   });
 
   if (!res.ok) return null;
