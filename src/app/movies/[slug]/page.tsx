@@ -10,7 +10,7 @@ interface MoviePageProps {
     slug: string;
   }>;
 }
-
+export const revalidate = 3600; // revalidate every hour
 export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
   const { slug } = await params;
   const movieId = slugToIdMap[slug];
