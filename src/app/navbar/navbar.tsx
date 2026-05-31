@@ -8,6 +8,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import Fuse from "fuse.js";
 import { moviesArray } from "@/app/services/movies";
+import { SessionProvider } from "next-auth/react";
 
 const fuse = new Fuse(moviesArray, {
   keys: ["slug", "title"],
@@ -359,4 +360,10 @@ const NavbarRHH = () => {
   );
 };
 
-export default NavbarRHH;
+export default function NavbarWrapper() {
+  return (
+    <SessionProvider>
+      <NavbarRHH />
+    </SessionProvider>
+  );
+}
