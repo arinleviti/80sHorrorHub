@@ -11,7 +11,7 @@ import ContributionForm from "./components/contribution/contributionForm";
 import { getMovieContributions } from "@/app/services/contributions";
 import { ContributionSection } from "@prisma/client";
 import ContributionList from "./components/contributions/contribution-list";
-import RedditSection from "./components/RedditFeed/reddit-section";
+/* import RedditSection from "./components/RedditFeed/reddit-section"; */
 import { Prisma } from "@prisma/client";
 import ShareButtons from "./shareButtons/share-buttons";
 import BackToTop from "./components/BackToTop/back-to-top";
@@ -140,9 +140,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
           <Row className="mb-3"><Col><Suspense fallback={<LoadingBlock height={150} />}>
             <StreamingSection movie={movie} />
           </Suspense></Col></Row>
-          <Row><Col><Suspense fallback={<LoadingBlock height={150} />}>
+          {/* <Row><Col><Suspense fallback={<LoadingBlock height={150} />}>
             <RedditSection movie={movie} />
-          </Suspense></Col></Row>
+          </Suspense></Col></Row> */}
 
           <Row className="mb-3">
             <Col>

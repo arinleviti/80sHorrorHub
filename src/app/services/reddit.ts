@@ -115,14 +115,7 @@ const setCache = (key: string, data: RedditSearchResponse) => {
 
 const PROXY_CHAIN = [
   (url: string) => `https://orange-truth-50d2.arin-leviti.workers.dev/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
-  (url: string) => `https://yacdn.org/serve/${url}`,
+  
 ];
 
 const fetchViaProxy = async (proxyUrl: string): Promise<RedditSearchResponse | null> => {
