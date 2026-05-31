@@ -156,7 +156,9 @@ async function fetchFromDiscogQuery(query: string): Promise<RawResponse> {
 
   const response = await fetch(
     `https://api.discogs.com/database/search?${params.toString()}`,
-    { headers: { "User-Agent": "VintageHorror/1.0" } }
+    { headers: { "User-Agent": "VintageHorror/1.0" },
+    next: { revalidate: 3600 } // cache for 1 hour
+    }
   );
 
   if (!response.ok) {

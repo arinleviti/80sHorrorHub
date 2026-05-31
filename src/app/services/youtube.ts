@@ -142,7 +142,7 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
     const q = `${movieTitle} ${year} ${top2Actors} (trailer OR scene OR "behind the scenes")`;
 
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=50&key=${API_KEY}`;
-    const searchRes = await fetch(searchUrl);
+    const searchRes = await fetch(searchUrl, { next: { revalidate: 3600 } }); // cache for 1 hour
     const searchData: YouTubeSearchResponse = await searchRes.json();
 
     const baseVideos: YouTubeVideo[] = (searchData.items || []).map(item => ({
@@ -155,7 +155,7 @@ export async function getYouTubeVideos(movieTitle: string, year: string, actorNa
 
     const ids = baseVideos.map(v => v.youtubeId).join(",");
     const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails&id=${ids}&key=${API_KEY}`;
-    const statsRes = await fetch(statsUrl);
+    const statsRes = await fetch(statsUrl, { next: { revalidate: 3600 } }); // cache for 1 hour
     const statsData: YouTubeStatsResponse = await statsRes.json();
 
     const statsMap = new Map<string, { views: number; duration: number }>(
