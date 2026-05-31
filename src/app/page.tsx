@@ -3,7 +3,7 @@ import { getHomepageMovies } from '@/app/services/homepageMovies';
 import Styles from './page.module.css';
 import MovieCarousel from './home-carousel/carousel';
 import LoadingBlock from './LoadingBlock/loading-block';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // recheck every hour
 
 export type DBMovie = {
   id: string;
