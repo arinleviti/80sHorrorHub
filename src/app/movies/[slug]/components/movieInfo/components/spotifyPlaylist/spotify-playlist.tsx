@@ -29,8 +29,7 @@ export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
           />
         ) : (
           <div
-            className={styles.spotifyFacade}
-            onClick={() => setActivated(true)}
+            className={styles.spotifyFacade}           
           >
             {playlist.imageUrl && (
               <Image 
@@ -41,7 +40,9 @@ export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
   style={{ width: "100%", height: "auto" }}
 />
             )}
-            <button className={styles.playButton}>▶ Play on Spotify</button>
+            <button 
+            onClick={() => setActivated(true)}
+            className={styles.playButton}>▶ Play on Spotify</button>
           </div>
         )}
       </div>
