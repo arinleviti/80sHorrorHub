@@ -77,7 +77,12 @@ export async function getHFSuggestions(movieId: string, title: string, year: str
     //Inside content, the model has written what looks like JSON
     //To JavaScript/TypeScript, it’s just a normal string containing brackets, braces, quotes, and commas.
     //That’s why you need JSON.parse(rawText) — to turn the string into a usable JavaScript array of objects.
-    const rawText = apiResponse.choices[0].message.content.trim();
+    const rawText = apiResponse.choices[0].message.content
+  .trim()
+  .replace(/^```json\s*/i, '')
+  .replace(/^```\s*/i, '')
+  .replace(/```\s*$/i, '')
+  .trim();
 
     // ✅ ADDED: normalize year to string to avoid invalid type issues
     try {
