@@ -33,3 +33,24 @@
 .spotifyIframe {
   display: block;
 }
+
+.playButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem auto 0;
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-family: 'Eighties Horror', sans-serif;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.playButton:hover {
+  color: var(--color-accent);
+}

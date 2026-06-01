@@ -78,6 +78,7 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
                 alt={movie.title}
                 width={600}
                 height={900}
+                priority  // ← add this
                 className="img-fluid rounded shadow"
               />
 
@@ -94,9 +95,9 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
 
             {/* RIGHT CONTENT (SPOTIFY) */}
             <Col xs={12} md={3} lg={3} className="d-flex justify-content-center align-items-start">
-              
+              <Suspense fallback={<LoadingBlock height={380} />}>
                 <SpotifySection movie={movie} credits={credits} />
-              
+              </Suspense>
             </Col>
           </Row>
         </Container>
