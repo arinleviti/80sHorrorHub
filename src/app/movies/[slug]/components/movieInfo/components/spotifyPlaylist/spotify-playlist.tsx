@@ -37,6 +37,7 @@ export function SpotifyEmbed({ playlist }: SpotifyEmbedProps) {
   alt={playlist.name}
   width={300}
   height={300}
+  sizes="300px"
   style={{ width: "100%", height: "auto" }}
 />
             )}
