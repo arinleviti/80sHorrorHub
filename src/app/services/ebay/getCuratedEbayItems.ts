@@ -19,7 +19,7 @@ export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
 export const MOVIE_BLOCKED_KEYWORDS: Record<string, string[]> = {
   "the hand": ["popeye", "star wars", "yoda", "transformers", "motu", "masters of the universe", "dukes of hazzard", "lone ranger", "clawful", "diaclone"],
   "nightmare": ["freddy", "krueger", "elm street", "wes craven", "new nightmare"],
-  "alligator": ["albino", "alligator people", "great alligator", "koko taylor", "alligator records", "barbara bach", "matt dillon", "beverly garland"],
+  "alligator": ["albino", "alligator people", "great alligator", "koko taylor", "alligator records", "barbara bach", "matt dillon", "beverly garland", "ghostbusters", "flintstones", "transformers", "skullcruncher", "outdoor trail", "winston"],
   "demons": ["road runner", "ford", "rc airplane", "balsa", "palmer", "hellraiser", "pinhead", "car kit", "airplane"],
   "pieces": ["missing pieces", "star wars", "kenner", "castle grayskull", "masters of the universe", "firefox", "eastwood", "hellraiser", "pinhead"],
   "inferno": ["transformers", "hasbro", "g1", "autobot", "firetruck", "takara", "towering inferno", "steve mcqueen", "ray liotta", "james remar"],
@@ -65,6 +65,7 @@ export function buildEbayQueries(movieTitle: string, year: string): string[] {
     `${movieTitle} ${year} daybill`,
     `${movieTitle} ${year} movie action figure`,
     `${movieTitle} screamin model kit`,
+    `${movieTitle} ${year} fangoria`,
   ];
 }
 // ─── Type Detection ────────────────────────────────────────────────────────────
@@ -80,7 +81,8 @@ type ItemType =
   | "junk"
   | "press_kit"
   | "lobby_card"
-  | "model_kit"     
+  | "model_kit" 
+  | "magazine"    
   | "unknown";
 
 function detectItemType(title: string): ItemType {
@@ -97,7 +99,6 @@ function detectItemType(title: string): ItemType {
   if (
     title.includes("poster") ||
     title.includes("magazine") ||
-    title.includes("fangoria") ||
     title.includes("daybill")
   ) return "print";
   if (title.includes("promo") || title.includes("screener")) return "promo";
@@ -112,6 +113,7 @@ function detectItemType(title: string): ItemType {
   title.includes("screamin") ||
   title.includes("billiken")
 ) return "model_kit";
+if (title.includes("fangoria")) return "magazine";
   if (title.includes("digital")) return "junk";
   return "unknown";
 }
@@ -128,6 +130,7 @@ function getBaseScore(type: ItemType): number {
     case "apparel": return 2;
     case "model_kit": return 5;
     case "home_media": return -2;
+    case "magazine": return 4;
     case "junk": return -3;
     default: return 1;
   }
@@ -423,6 +426,8 @@ function isBadItem(title: string, movieTitle: string, movieYear: string, price?:
   if (lower.includes("print on demand")) return true;
   if (lower.includes("wall decor")) return true;
   if (lower.includes("mondo")) return true;
+  if (lower.includes("shout factory")) return true;
+  if (lower.includes("3d print")) return true;
 
   const hasAuthenticity =
     lower.includes("original") ||
@@ -505,7 +510,7 @@ export async function getCuratedEbayItems(
   let useCache = false;
   if (cached) {
     const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
-    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_12H) {
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_10M) {
       useCache = true;
     }
   }
@@ -563,7 +568,7 @@ export async function getCuratedEbayItems(
   const scored = unique
     .filter(item => {
     const type = detectItemType(item.title.toLowerCase());
-    if (type === "model_kit") return true; // skip isBadItem for model kits entirely
+    if (type === "model_kit" || type === "magazine") return true; // skip isBadItem for model kits entirely
     return !isBadItem(item.title, movieTitle, year, parseFloat(item.price.value));
   })
     .map(item => ({ item, score: scoreItem(item, movieTitle, year) }))
@@ -589,6 +594,7 @@ export async function getCuratedEbayItems(
     prop: 3,
     model_kit: 0,
     home_media: 0,
+    magazine:0,
     junk: 0,
     unknown: 4,
   };
@@ -672,12 +678,15 @@ export async function getCuratedEbayItems(
 ); */
 // ─── Bonus Pass: Model Kits & Trading Cards ──────────────────────────────────
 const collectedUrlsAfterBonus = new Set(finalWithBonus.map(i => i.itemAffiliateWebUrl));
-
+const limits: Record<string, number> = {
+  model_kit: 4,
+  magazine: 2,
+};
 const collectibleBonus = dedupedScored
   .filter(({ item }) => {
     if (collectedUrlsAfterBonus.has(item.itemAffiliateWebUrl)) return false;
     const type = detectItemType(item.title.toLowerCase());
-    if (type !== "model_kit") return false;
+    if (type !== "model_kit" && type !== "magazine") return false;
     // For model kits, re-check franchise filter with scale ratios stripped
     const cleanedTitle = item.title.replace(/\b1\/[0-9]+\b/gi, "");
     if (isBadItem(cleanedTitle, movieTitle, year, parseFloat(item.price.value))) return false;
@@ -685,8 +694,9 @@ const collectibleBonus = dedupedScored
   })
   .reduce(
     (acc, { item }) => {
-      const type = detectItemType(item.title.toLowerCase()) as "model_kit";
-      if ((acc.counts[type] || 0) < 4) {
+      const type = detectItemType(item.title.toLowerCase()) as "model_kit" | "magazine";
+      const limit = limits[type] ?? 2;
+      if ((acc.counts[type] || 0) < limit) {
         acc.items.push(item);
         acc.counts[type] = (acc.counts[type] || 0) + 1;
       }
