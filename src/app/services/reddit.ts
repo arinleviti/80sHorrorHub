@@ -39,9 +39,9 @@ const SUBREDDITS = ["horror", "80sHorrorMovies", "horrorcollecting", "PhysicalMe
 const JUNK_WORDS = /meme|shitpost|gif|funny|bot|disney/i;
 const SEASONAL_CONTEXT = /\bfor halloween\b|\bon halloween\b|\bhappy halloween\b|\bhome for halloween\b/i;
 const NEWS_WORDS = /\bordered at\b|\bwill premiere\b|\bwants to reboot\b|\bsues\s\w/i;
-const PROXY_TIMEOUT_MS = 500;
-const SUBREDDIT_TIMEOUT_MS = 1000;
-const GLOBAL_TIMEOUT_MS = 1500;
+const PROXY_TIMEOUT_MS = 3000;
+const SUBREDDIT_TIMEOUT_MS = 5000;
+const GLOBAL_TIMEOUT_MS = 8000;
 const CACHE_TTL_12H = 60 * 60 * 12;
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────

@@ -505,7 +505,7 @@ export async function getCuratedEbayItems(
   let useCache = false;
   if (cached) {
     const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
-    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_10M) {
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_12H) {
       useCache = true;
     }
   }
