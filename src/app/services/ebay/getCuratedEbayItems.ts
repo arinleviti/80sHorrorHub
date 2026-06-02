@@ -67,6 +67,7 @@ export function buildEbayQueries(movieTitle: string, year: string): string[] {
     `${movieTitle} ${year} fotobusta`,
     `${movieTitle} ${year} daybill`,
     `${movieTitle} ${year} movie action figure`,
+    `${movieTitle} screamin model kit`,
   ];
 }
 // ─── Type Detection ────────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ type ItemType =
   | "junk"
   | "press_kit"
   | "lobby_card"
+  | "model_kit"     
   | "unknown";
 
 function detectItemType(title: string): ItemType {
@@ -106,6 +108,13 @@ function detectItemType(title: string): ItemType {
   if (title.includes("shirt") || title.includes("jacket") || title.includes("tee")) return "apparel";
   if (title.includes("prop") || title.includes("mask")) return "prop";
   if (title.includes("dvd") || title.includes("blu-ray")) return "home_media";
+  if (
+  title.includes("model kit") ||
+  title.includes("vinyl kit") ||
+  title.includes("vinyl model") ||
+  title.includes("screamin") ||
+  title.includes("billiken")
+) return "model_kit";
   if (title.includes("digital")) return "junk";
   return "unknown";
 }
@@ -120,6 +129,7 @@ function getBaseScore(type: ItemType): number {
     case "prop": return 3;
     case "toy":
     case "apparel": return 2;
+    case "model_kit": return 5;
     case "home_media": return -2;
     case "junk": return -3;
     default: return 1;
@@ -492,7 +502,7 @@ export async function getCuratedEbayItems(
   let useCache = false;
   if (cached) {
     const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
-    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_12H) {
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_10M) {
       useCache = true;
     }
   }
@@ -548,7 +558,11 @@ export async function getCuratedEbayItems(
   console.log(`✅ After dedup: ${unique.length}`);
   // Hard filter → score → soft filter
   const scored = unique
-    .filter(item => !isBadItem(item.title, movieTitle, year, parseFloat(item.price.value)))
+    .filter(item => {
+    const type = detectItemType(item.title.toLowerCase());
+    if (type === "model_kit") return true; // skip isBadItem for model kits entirely
+    return !isBadItem(item.title, movieTitle, year, parseFloat(item.price.value));
+  })
     .map(item => ({ item, score: scoreItem(item, movieTitle, year) }))
     .sort((a, b) => b.score - a.score);
 
@@ -570,6 +584,7 @@ export async function getCuratedEbayItems(
     toy: 3,
     apparel: 3,
     prop: 3,
+    model_kit: 0,
     home_media: 0,
     junk: 0,
     unknown: 4,
@@ -643,9 +658,43 @@ export async function getCuratedEbayItems(
     .slice(0, 3)
     .map(({ item }) => item);
 
-  const finalWithBonus = [...final, ...bonusItems];
+ const finalWithBonus = [...final, ...bonusItems];
 
-  console.log(`🏆 Final curated: ${final.length} | 💎 Bonus high-value: ${bonusItems.length}`);
+/*  console.log("🔍 Model kit candidates:", dedupedScored
+  .filter(({ item, score }) => {
+    const type = detectItemType(item.title.toLowerCase());
+    return type === "model_kit";
+  })
+  .map(({ item, score }) => `[${score}] ${item.title}`)
+); */
+// ─── Bonus Pass: Model Kits & Trading Cards ──────────────────────────────────
+const collectedUrlsAfterBonus = new Set(finalWithBonus.map(i => i.itemAffiliateWebUrl));
+
+const collectibleBonus = dedupedScored
+  .filter(({ item }) => {
+    if (collectedUrlsAfterBonus.has(item.itemAffiliateWebUrl)) return false;
+    const type = detectItemType(item.title.toLowerCase());
+    if (type !== "model_kit") return false;
+    // For model kits, re-check franchise filter with scale ratios stripped
+    const cleanedTitle = item.title.replace(/\b1\/[0-9]+\b/gi, "");
+    if (isBadItem(cleanedTitle, movieTitle, year, parseFloat(item.price.value))) return false;
+    return true;
+  })
+  .reduce(
+    (acc, { item }) => {
+      const type = detectItemType(item.title.toLowerCase()) as "model_kit";
+      if ((acc.counts[type] || 0) < 4) {
+        acc.items.push(item);
+        acc.counts[type] = (acc.counts[type] || 0) + 1;
+      }
+      return acc;
+    },
+    { items: [] as EbayItemSummary[], counts: {} as Record<string, number> }
+  ).items;
+
+const finalWithCollectibles = [...finalWithBonus, ...collectibleBonus];
+
+console.log(`🏆 Final curated: ${final.length} | 💎 Bonus high-value: ${bonusItems.length} | 🎲 Collectibles: ${collectibleBonus.length}`);
 
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
@@ -653,7 +702,7 @@ export async function getCuratedEbayItems(
     create: {
       movieId,
       items: {
-        create: finalWithBonus.map(i => ({
+        create: finalWithCollectibles.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
@@ -667,7 +716,7 @@ export async function getCuratedEbayItems(
       updatedAt: new Date(),
       items: {
         deleteMany: {},
-        create: finalWithBonus.map(i => ({
+        create: finalWithCollectibles.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
@@ -679,7 +728,7 @@ export async function getCuratedEbayItems(
     },
   });
 
-  return finalWithBonus;
+  return finalWithCollectibles;
 }
 
 // ─────────────────────────────────────────────
