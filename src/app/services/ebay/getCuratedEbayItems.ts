@@ -510,7 +510,7 @@ export async function getCuratedEbayItems(
   let useCache = false;
   if (cached) {
     const hasExpiredItem = cached.items.some(i => i.listingEndDate && i.listingEndDate <= now);
-    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_10M) {
+    if (!hasExpiredItem && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS_12H) {
       useCache = true;
     }
   }
@@ -687,9 +687,12 @@ const collectibleBonus = dedupedScored
     if (collectedUrlsAfterBonus.has(item.itemAffiliateWebUrl)) return false;
     const type = detectItemType(item.title.toLowerCase());
     if (type !== "model_kit" && type !== "magazine") return false;
-    // For model kits, re-check franchise filter with scale ratios stripped
-    const cleanedTitle = item.title.replace(/\b1\/[0-9]+\b/gi, "");
-    if (isBadItem(cleanedTitle, movieTitle, year, parseFloat(item.price.value))) return false;
+    // model_kit: skip isBadItem entirely — franchise filter kills legitimate kits
+    // magazine: apply isBadItem + price floor
+    if (type === "magazine") {
+      if (isBadItem(item.title, movieTitle, year, parseFloat(item.price.value))) return false;
+      if (parseFloat(item.price.value) < 5) return false;
+    }
     return true;
   })
   .reduce(
