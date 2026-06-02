@@ -49,7 +49,7 @@ export const rawSlugToIdMap: Record<string, number> = {
   "creepshow": 16281, 
   "friday-the-13th-part-III": 9728, 
   "parasite": 48311, 
-  "the-huger": 11654, 
+  "the-hunger": 11654, 
   "psycho-II": 10576, 
   "cujo": 10489, 
   "amityville-3D": 27214,  

@@ -11,24 +11,21 @@ import { prisma } from "../prisma";
 // Keys are lowercase movie titles exactly as stored in your DB.
 //
 export const MOVIE_REQUIRED_KEYWORDS: Record<string, string[]> = {
-  /* "the being": ["horror", "slasher", "film", "vhs", "dvd", "rare", "lobby"],
-  "pieces": ["horror", "slasher", "vestron", "vhs", "dvd", "htf", "cult", "film", "juan piquer simon", "Juan Piquer Simón", "lobby"],
-  "the hunger": ["horror", "bowie", "deneuve", "vhs", "dvd", "sarandon", "film", "lobby"],
-  "parasite": ["demi moore", "3-d", "3d", "vhs", "dvd", "horror", "lobby"],
-  "demons": ["argento", "bava", "lamberto", "horror", "vhs", "dvd", "dario", "lobby"],
-  "prey": ["horror", "film",  "1978", "1977", "lobby"],
-  "the stuff": ["larry cohen",  "film", "horror", "vhs", "dvd", "lobby"],
-  "inferno": ["dario argento", "horror", "giallo", "vhs", "dvd",  "film", "lobby"],
-  "dolls": ["horror", "film", "vhs", "dvd", "stuart gordon", "cult", "lobby"],
-  "society": ["brian yuzna", "horror", "film","movie"],
-  "mothers-day": ["charles kaufman", "horror", "film", "vhs", "dvd", "cult", "troma", "rare", "cult", "1980", "lobby"],
-  "alligator": ["poster", "vhs", "lobby", "press", "laserdisc"],
-  "graduation day": ["horror", "film", "vhs", "dvd", "cult", "Herb Freed", "lobby"],
-  "house": ["horror", "film", "vhs", "dvd", "cult", "Steve Miner", "lobby"],
-  "shocker": ["horror", "film", "vhs", "dvd", "cult", "lobby", "Wes Craven", "poster", "lobby"] */
+  "nightmare": ["scavolini", "continental video", "1981", "baird"],
+  "society": ["yuzna"],
+  "house": ["steve miner", "new world", "roger cobb", "william katt", "george wendt", "sean cunningham"],
   // Add more as you encounter noisy titles
 };
-
+export const MOVIE_BLOCKED_KEYWORDS: Record<string, string[]> = {
+  "the hand": ["popeye", "star wars", "yoda", "transformers", "motu", "masters of the universe", "dukes of hazzard", "lone ranger", "clawful", "diaclone"],
+  "nightmare": ["freddy", "krueger", "elm street", "wes craven", "new nightmare"],
+  "alligator": ["albino", "alligator people", "great alligator", "koko taylor", "alligator records", "barbara bach", "matt dillon", "beverly garland"],
+  "demons": ["road runner", "ford", "rc airplane", "balsa", "palmer", "hellraiser", "pinhead", "car kit", "airplane"],
+  "pieces": ["missing pieces", "star wars", "kenner", "castle grayskull", "masters of the universe", "firefox", "eastwood", "hellraiser", "pinhead"],
+  "inferno": ["transformers", "hasbro", "g1", "autobot", "firetruck", "takara", "towering inferno", "steve mcqueen", "ray liotta", "james remar"],
+  "mother's day": ["mother's boys", "jamie lee curtis", "soviet", "socialism", "propaganda", "family circus", "bill keane", "plate set", "stancraft", "jan hagara"],
+  // Add more as you encounter noisy titles
+};
 // ─── High-Value Bonus Signals ──────────────────────────────────────────────────
 //
 // Keywords that indicate a genuinely rare, one-of-a-kind item (screen-used props,
@@ -467,6 +464,12 @@ function isBadItem(title: string, movieTitle: string, movieYear: string, price?:
   if (requiredKeywords?.length) {
     const hasRequiredKeyword = requiredKeywords.some(kw => lower.includes(kw));
     if (!hasRequiredKeyword) return true;
+  }
+  // Per-movie blocked keyword filter
+  const blockedKeywords = MOVIE_BLOCKED_KEYWORDS[movieTitle.toLowerCase()];
+  if (blockedKeywords?.length) {
+    const hasBlockedKeyword = blockedKeywords.some(kw => lower.includes(kw));
+    if (hasBlockedKeyword) return true;
   }
   // Cheap poster with no authenticity signals = almost certainly a reprint
   const isPrint = detectItemType(lower) === "print";
