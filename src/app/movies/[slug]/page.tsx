@@ -10,7 +10,7 @@ interface MoviePageProps {
     slug: string;
   }>;
 }
-export const dynamic = 'force-static';
+export const revalidate = 3600; // This is a next.js 13 feature that allows us to specify how often the page should be revalidated. Setting it to 3600 means the page will be revalidated every hour, ensuring that we serve fresh data without needing to rebuild the entire site.
 export async function generateMetadata({ params }: MoviePageProps): Promise<Metadata> {
   const { slug } = await params;
   const movieId = slugToIdMap[slug];
