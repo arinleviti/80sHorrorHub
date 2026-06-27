@@ -2,26 +2,24 @@ import * as StreamingAvailability from "streaming-availability";
 import { prisma } from "@/app/services/prisma";
 const TWO_WEEKS_MS = 1000 * 60 * 60 * 24 * 14;
 
-// Type for the streaming option we return per country
 interface CountryStreamingOption {
-  type: string;       // subscription, rent, buy
-  quality?: string | null;   // HD, SD
-  link?: string | null;      // optional URL
-  serviceName?: string | null; // e.g., "Prime Video", "Netflix"
+  type: string;
+  quality?: string | null;
+  link?: string | null;
+  serviceName?: string | null;
 }
 
-// Type for the function return if successful
 interface StreamingAvailabilityResult {
   title: string;
   releaseYear: number;
   streamingOptions: CountryStreamingOption[];
 }
 
-// Type for the function return if there’s an error
 export type GetStreamingAvailabilityReturn = StreamingAvailabilityResult | { error: string };
-function isCountryStreamingOption(obj:unknown): obj is CountryStreamingOption {
-   if (typeof obj !== "object" || obj === null) return false;
-   const o = obj as Record<string, unknown>;
+
+function isCountryStreamingOption(obj: unknown): obj is CountryStreamingOption {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
   return (
     typeof o.type === "string" &&
     (typeof o.quality === "string" || o.quality === undefined || o.quality === null) &&
@@ -35,21 +33,18 @@ export async function getStreamingAvailability(
   country: string,
   year?: number
 ): Promise<GetStreamingAvailabilityReturn> {
+  const releaseYear = year ?? 0;
 
+  // Cache check — keyed on the INPUT values, every time
   const cached = await prisma.streamingQuery.findUnique({
-    where:  {
-    title_releaseYear_country: {
-      title,
-      releaseYear: year ?? 0, // must provide releaseYear
-      country,
+    where: {
+      title_releaseYear_country: { title, releaseYear, country },
     },
-  },
-  include: { options: true },
-});
- if (cached && Date.now() - cached.updatedAt.getTime() < TWO_WEEKS_MS) {
-    // return cached data
+    include: { options: true },
+  });
+
+  if (cached && Date.now() - cached.updatedAt.getTime() < TWO_WEEKS_MS) {
     console.log("Using cached streaming data for:", title, year, country);
-    // Validate cached options
     const validOptions = cached.options.filter(isCountryStreamingOption);
     if (validOptions.length !== cached.options.length) {
       console.warn("Some cached streaming options were invalid and have been filtered out.");
@@ -60,6 +55,7 @@ export async function getStreamingAvailability(
       streamingOptions: validOptions,
     };
   }
+
   const RAPID_API_KEY = process.env.STREAMING_AVAILABILITY;
   const client = new StreamingAvailability.Client(
     new StreamingAvailability.Configuration({ apiKey: RAPID_API_KEY })
@@ -67,9 +63,28 @@ export async function getStreamingAvailability(
 
   // Step 1: Search shows by title
   const searchResults = await client.showsApi.searchShowsByTitle({ title, country });
-  if (!searchResults || searchResults.length === 0) return { error: "No results found" };
 
-  // Step 2: Pick the first match (or filter by year)
+  if (!searchResults || searchResults.length === 0) {
+    // FIX: cache the "not streaming anywhere" outcome too, under the
+    // same input key — otherwise this exact (title, year, country)
+    // re-hits the API on every single page view, forever.
+    await prisma.streamingQuery.upsert({
+      where: { title_releaseYear_country: { title, releaseYear, country } },
+      update: {
+        updatedAt: new Date(),
+        options: { deleteMany: {} },
+      },
+      create: {
+        title,
+        releaseYear,
+        country,
+        options: { create: [] },
+      },
+    });
+    return { title, releaseYear, streamingOptions: [] };
+  }
+
+  // Step 2: Pick the best match (prefer exact year match)
   const firstMatch = year
     ? searchResults.find((s) => s.releaseYear === year) || searchResults[0]
     : searchResults[0];
@@ -77,67 +92,54 @@ export async function getStreamingAvailability(
   // Step 3: Get full show details
   const details = await client.showsApi.getShow({
     id: firstMatch.imdbId || firstMatch.tmdbId!,
-    country
+    country,
   });
 
   // Step 4: Map streaming options for the selected country
-  const streamingOptions: CountryStreamingOption[] = (details.streamingOptions?.[country] || []).map(opt => ({
-    type: opt.type,
-    quality: opt.quality,
-    link: opt.link,
-    serviceName: opt.service?.name
-  }));
-  const prismaOptions = streamingOptions.map(opt => ({
+  const streamingOptions: CountryStreamingOption[] = (details.streamingOptions?.[country] || []).map(
+    (opt) => ({
+      type: opt.type,
+      quality: opt.quality,
+      link: opt.link,
+      serviceName: opt.service?.name,
+    })
+  );
+
+  const prismaOptions = streamingOptions.map((opt) => ({
     type: opt.type,
     quality: opt.quality || null,
     link: opt.link || null,
-    serviceName: opt.serviceName || null
+    serviceName: opt.serviceName || null,
   }));
-/* console.log('Streaming options:', streamingOptions); */
-await prisma.streamingQuery.upsert({
-  where: {
-    title_releaseYear_country: {
-      title: details.title,
-      releaseYear: details.releaseYear || 0,
+
+  // FIX: upsert keyed on the INPUT title/year, not details.title/details.releaseYear.
+  // This is the change that makes the next read() actually find this row
+  // instead of silently re-fetching from the API every time.
+  await prisma.streamingQuery.upsert({
+    where: {
+      title_releaseYear_country: { title, releaseYear, country },
+    },
+    update: {
+      updatedAt: new Date(),
+      options: {
+        deleteMany: {},
+        create: prismaOptions,
+      },
+    },
+    create: {
+      title,
+      releaseYear,
       country,
+      options: { create: prismaOptions },
     },
-  },
-  update: {
-    updatedAt: new Date(), // ✅ force bump the timestamp
-    options: {
-      deleteMany: {},
-      create: prismaOptions.map(opt => ({
-        type: opt.type,
-        quality: opt.quality ?? null,
-        link: opt.link ?? null,
-        serviceName: opt.serviceName ?? null,
-      })),
-    },
-  },
-  create: {
-    title: details.title,
-    releaseYear: details.releaseYear || 0,
-    country,
-    options: {
-      create: prismaOptions.map(opt => ({
-        type: opt.type,
-        quality: opt.quality ?? null,
-        link: opt.link ?? null,
-        serviceName: opt.serviceName ?? null,
-      })),
-    },
-  },
-});
- console.log(`[DB] Upserted streaming data for "${details.title}"`);
-  // Step 5: Return result
+  });
+
+  console.log(`[DB] Upserted streaming data for "${title}" (${releaseYear}, ${country})`);
+
+  // Step 5: Return result — using `details` for the richer display values
   return {
     title: details.title,
-    releaseYear: details.releaseYear || 0,
-    streamingOptions
+    releaseYear: details.releaseYear || releaseYear,
+    streamingOptions,
   };
-  
 }
-
-
-
-
