@@ -18,15 +18,16 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
 
   const movie = await getMovie(movieId);
   console.log("generateMetadata movie:", movie.title, movie.poster_path);
+  const description = `Live listings: rare VHS, vinyl, posters & collectibles for ${movie.title}, available now. ${movie.overview}`;
   return {
     title: `${movie.title} (${movie.release_date?.slice(0, 4)}) – Top Collectibles for Sale Now | Retro Horror Hub`,
-    description: movie.overview,
+    description,
     alternates: {
       canonical: `https://retrohorrorhub.com/movies/${slug}`,
     },
     openGraph: {
       title: movie.title,
-      description: movie.overview,
+      description,
       images: movie.imagekitPosterPath
         ? [movie.imagekitPosterPath]
         : movie.poster_path
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: MoviePageProps): Promise<Meta
     twitter: {
       card: "summary_large_image",
       title: movie.title,
-      description: movie.overview,
+      description,
       images: movie.imagekitPosterPath
         ? [movie.imagekitPosterPath]
         : movie.poster_path
