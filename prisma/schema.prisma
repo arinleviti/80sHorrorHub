@@ -49,6 +49,7 @@ model EbayItem {
   imageUrl      String
   itemUrl       String
   listingEndDate DateTime?  // <- NEW: store eBay item's end/expiry date
+  category      String?   // NEW: display category, nullable for backward compat
   query         EbayQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
   queryId       String
 }

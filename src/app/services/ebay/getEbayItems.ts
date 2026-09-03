@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import axios from "axios";
 import qs from "qs";
+import { DisplayCategory } from "./ebayCategories";
 
 interface RawEbayPrice {
   value: string;
@@ -47,6 +48,16 @@ export interface EbaySearchResponse {
   itemSummaries: EbayItemSummary[];
 }
 
+export interface EbayItemSummary {
+  title: string;
+  price: EbayItemPrice;
+  image: EbayItemImage;
+  itemAffiliateWebUrl: string;
+  listing?: {
+    endDate?: string;
+  };
+  category?: DisplayCategory; // NEW — filled in by getCuratedEbayItems
+}
 /**
  * Maps the raw API response to our internal EbayItemSummary type
  */

@@ -119,39 +119,46 @@ export default async function MovieInfo({ movie, config, credits }: MovieInfoPro
         <Col><ContributionList grouped={grouped} /></Col>
       </Row>
 
-      {/* 🎥 Videos */}
+      {/* 🛒 eBay Collector's Picks */}
       <Row className="mb-5">
-        <Col><Suspense fallback={<LoadingBlock height={300} />}>
-          <YouTubeSection movie={movie} credits={credits} />
-        </Suspense></Col>
+        <Col>
+          <Suspense fallback={<LoadingBlock height={400} />}>
+            <EbaySection movie={movie} />
+          </Suspense>
+        </Col>
       </Row>
 
-      {/* 💿 Merchandise & Streaming + Reddit */}
-      <Row className="mb-3">
-        <Col md={6}>
-          <Row><Col className="pb-3 pb-md-0"><Suspense fallback={<LoadingBlock height={400} />}>
-            <EbaySection movie={movie} />
-          </Suspense></Col></Row>
-        </Col>
-
-        <Col md={6}>
-          <Row className="mb-3"><Col><Suspense fallback={<LoadingBlock height={200} />}>
+      {/* 💿 Discogs & Streaming/HF, side by side */}
+      <Row className="mb-5">
+        <Col md={6} className="mb-3 mb-md-0">
+          <Suspense fallback={<LoadingBlock height={200} />}>
             <DiscogsSection movie={movie} musicPeople={musicPeople} />
-          </Suspense></Col></Row>
-          <Row className="mb-3"><Col><Suspense fallback={<LoadingBlock height={150} />}>
-            <StreamingSection movie={movie} />
-          </Suspense></Col></Row>
-          {/* <Row><Col><Suspense fallback={<LoadingBlock height={150} />}>
-            <RedditSection movie={movie} />
-          </Suspense></Col></Row> */}
-
+          </Suspense>
+        </Col>
+        <Col md={6}>
           <Row className="mb-3">
+            <Col>
+              <Suspense fallback={<LoadingBlock height={150} />}>
+                <StreamingSection movie={movie} />
+              </Suspense>
+            </Col>
+          </Row>
+          <Row>
             <Col>
               <Suspense fallback={<LoadingBlock height={150} />}>
                 <HFSection movie={movie} />
               </Suspense>
             </Col>
           </Row>
+        </Col>
+      </Row>
+
+      {/* 🎥 Videos (bottom) */}
+      <Row className="mb-3">
+        <Col>
+          <Suspense fallback={<LoadingBlock height={300} />}>
+            <YouTubeSection movie={movie} credits={credits} />
+          </Suspense>
         </Col>
         <ShareButtons title={`${movie.title} — Retro Horror Hub`} />
       </Row>

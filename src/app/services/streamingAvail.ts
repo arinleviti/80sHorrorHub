@@ -1,6 +1,6 @@
 import * as StreamingAvailability from "streaming-availability";
 import { prisma } from "@/app/services/prisma";
-const TWO_WEEKS_MS = 1000 * 60 * 60 * 24 * 14;
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 interface CountryStreamingOption {
   type: string;
@@ -43,7 +43,7 @@ export async function getStreamingAvailability(
     include: { options: true },
   });
 
-  if (cached && Date.now() - cached.updatedAt.getTime() < TWO_WEEKS_MS) {
+  if (cached && Date.now() - cached.updatedAt.getTime() < CACHE_TTL_MS) {
     console.log("Using cached streaming data for:", title, year, country);
     const validOptions = cached.options.filter(isCountryStreamingOption);
     if (validOptions.length !== cached.options.length) {
@@ -61,11 +61,17 @@ export async function getStreamingAvailability(
     new StreamingAvailability.Configuration({ apiKey: RAPID_API_KEY })
   );
 
-  // Step 1: Search shows by title
-  const searchResults = await client.showsApi.searchShowsByTitle({ title, country });
+  let searchResults;
+  try {
+    // Step 1: Search shows by title
+    searchResults = await client.showsApi.searchShowsByTitle({ title, country });
+  } catch (err) {
+    console.error(`🚨 Streaming API search failed for "${title}":`, err);
+    return getStaleOrEmpty(title, releaseYear, country);
+  }
 
   if (!searchResults || searchResults.length === 0) {
-    // FIX: cache the "not streaming anywhere" outcome too, under the
+    // Cache the "not streaming anywhere" outcome too, under the
     // same input key — otherwise this exact (title, year, country)
     // re-hits the API on every single page view, forever.
     await prisma.streamingQuery.upsert({
@@ -89,11 +95,17 @@ export async function getStreamingAvailability(
     ? searchResults.find((s) => s.releaseYear === year) || searchResults[0]
     : searchResults[0];
 
-  // Step 3: Get full show details
-  const details = await client.showsApi.getShow({
-    id: firstMatch.imdbId || firstMatch.tmdbId!,
-    country,
-  });
+  let details;
+  try {
+    // Step 3: Get full show details
+    details = await client.showsApi.getShow({
+      id: firstMatch.imdbId || firstMatch.tmdbId!,
+      country,
+    });
+  } catch (err) {
+    console.error(`🚨 Streaming API getShow failed for "${title}":`, err);
+    return getStaleOrEmpty(title, releaseYear, country);
+  }
 
   // Step 4: Map streaming options for the selected country
   const streamingOptions: CountryStreamingOption[] = (details.streamingOptions?.[country] || []).map(
@@ -112,9 +124,8 @@ export async function getStreamingAvailability(
     serviceName: opt.serviceName || null,
   }));
 
-  // FIX: upsert keyed on the INPUT title/year, not details.title/details.releaseYear.
-  // This is the change that makes the next read() actually find this row
-  // instead of silently re-fetching from the API every time.
+  // Upsert keyed on the INPUT title/year, not details.title/details.releaseYear —
+  // this is what makes the next read() actually find this row.
   await prisma.streamingQuery.upsert({
     where: {
       title_releaseYear_country: { title, releaseYear, country },
@@ -142,4 +153,34 @@ export async function getStreamingAvailability(
     releaseYear: details.releaseYear || releaseYear,
     streamingOptions,
   };
+}
+
+// ─────────────────────────────────────────────
+// 🚨 STALE CACHE / EMPTY FALLBACK
+// ─────────────────────────────────────────────
+// On API failure (rate limit, network error, etc.), prefer serving
+// stale cached data over crashing the page. If there's no cache at
+// all, return an empty result rather than throwing.
+async function getStaleOrEmpty(
+  title: string,
+  releaseYear: number,
+  country: string
+): Promise<StreamingAvailabilityResult> {
+  const cached = await prisma.streamingQuery.findUnique({
+    where: { title_releaseYear_country: { title, releaseYear, country } },
+    include: { options: true },
+  });
+
+  if (cached) {
+    console.warn(`🚨 Using STALE streaming cache for "${title}" (API failure mode)`);
+    const validOptions = cached.options.filter(isCountryStreamingOption);
+    return {
+      title: cached.title,
+      releaseYear: cached.releaseYear,
+      streamingOptions: validOptions,
+    };
+  }
+
+  console.warn(`🚨 No streaming cache available for "${title}" — returning empty`);
+  return { title, releaseYear, streamingOptions: [] };
 }
