@@ -34,7 +34,7 @@ const showModal = selectedVideo !== null;
 
       <Row className="g-2 justify-content-center">
   {videos.map((v) => (
-    <Col key={v.youtubeId} xs={6} sm={6} md={4} lg={3}>
+    <Col key={v.youtubeId} xs={4} sm={4} md={3} lg={2}>
       <div className={styles.videoCard} onClick={() => setSelectedVideo(v)} style={{ cursor: "pointer" }}>
         {v.thumbnail ? (
           <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%" }}>
@@ -42,7 +42,7 @@ const showModal = selectedVideo !== null;
               src={v.thumbnail}
               alt={v.title}
               fill
-              sizes="(max-width: 576px) 50vw, (max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
+              sizes="(max-width: 576px) 33vw, (max-width: 768px) 25vw, (max-width: 992px) 25vw, 16vw"
               style={{ objectFit: "cover", borderRadius: "0.25rem" }}
             />
           </div>

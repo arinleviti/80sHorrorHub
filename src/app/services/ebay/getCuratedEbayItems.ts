@@ -1,5 +1,6 @@
 import { getEbayItems, EbayItemSummary, EbaySearchResponse, getEbayAccessToken } from "./getEbayItems";
 import { prisma } from "../prisma";
+import { getDisplayCategory, DisplayCategory } from "./ebayCategories";
 
 // ─── Per-movie Override Config ─────────────────────────────────────────────────
 //
@@ -522,6 +523,7 @@ export async function getCuratedEbayItems(
       price: { value: i.priceValue, currency: i.priceCurrency },
       image: { imageUrl: i.imageUrl },
       itemAffiliateWebUrl: i.itemUrl,
+      category: (i.category as DisplayCategory | null) ?? getDisplayCategory(detectItemType(i.title.toLowerCase())),
     }));
   }
 
@@ -712,19 +714,25 @@ const finalWithCollectibles = [...finalWithBonus, ...collectibleBonus];
 
 console.log(`🏆 Final curated: ${final.length} | 💎 Bonus high-value: ${bonusItems.length} | 🎲 Collectibles: ${collectibleBonus.length}`);
 
+  const categorized: EbayItemSummary[] = finalWithCollectibles.map(item => ({
+    ...item,
+    category: getDisplayCategory(detectItemType(item.title.toLowerCase())),
+  }));
+
   // 3️⃣ Upsert into DB
   await prisma.ebayQuery.upsert({
     where: { movieId },
-    create: {
+        create: {
       movieId,
       items: {
-        create: finalWithCollectibles.map(i => ({
+        create: categorized.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
           imageUrl: i.image.imageUrl,
           itemUrl: i.itemAffiliateWebUrl,
           listingEndDate: i.listing?.endDate ? new Date(i.listing.endDate) : null,
+          category: i.category,
         })),
       },
     },
@@ -732,19 +740,20 @@ console.log(`🏆 Final curated: ${final.length} | 💎 Bonus high-value: ${bonu
       updatedAt: new Date(),
       items: {
         deleteMany: {},
-        create: finalWithCollectibles.map(i => ({
+        create: categorized.map(i => ({
           title: i.title,
           priceValue: i.price.value,
           priceCurrency: i.price.currency,
           imageUrl: i.image.imageUrl,
           itemUrl: i.itemAffiliateWebUrl,
           listingEndDate: i.listing?.endDate ? new Date(i.listing.endDate) : null,
+          category: i.category,
         })),
       },
     },
   });
 
-  return finalWithCollectibles;
+  return categorized;
 }
 
 // ─────────────────────────────────────────────
@@ -769,5 +778,6 @@ async function getStaleCache(movieId: string) {
     price: { value: i.priceValue, currency: i.priceCurrency },
     image: { imageUrl: i.imageUrl },
     itemAffiliateWebUrl: i.itemUrl,
+    category: (i.category as DisplayCategory | null) ?? getDisplayCategory(detectItemType(i.title.toLowerCase())),
   }));
 }

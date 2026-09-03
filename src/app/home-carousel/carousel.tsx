@@ -42,7 +42,7 @@ export default function MovieCarousel({ moviesArray }: CarouselProps) {
         modules={[Navigation, EffectCoverflow]}
         effect="coverflow"
         grabCursor={true}
-        initialSlide={Math.floor(slides.length / 2)}
+        initialSlide={4}
         centeredSlides={true}
         slidesPerView={3}
         breakpoints={{
