@@ -43,7 +43,7 @@ const EbayItemsList: React.FC<EbayItemsListProps> = ({ ebayItems }) => {
         {visibleCategories.map((cat) => (
           <div key={cat} className={styles.categoryRow}>
             <h3 className={styles.categoryTitle}>{cat}</h3>
-            <Row xs={2} sm={3} md={4} lg={5} className="g-3">
+            <Row xs={3} sm={4} md={6} lg={7} className="g-3">
               {grouped.get(cat)!.map((item) => (
                 <Col key={item.itemAffiliateWebUrl}>
                 <a

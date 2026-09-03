@@ -1,35 +1,33 @@
 import { prisma } from "@/app/services/prisma";
 
+const FEATURED_TMDB_IDS: number[] = [
+  11797, // The Shining
+];
+
 export async function getHomepageMovies() {
   const where = { posterPath: { not: null } };
 
-  const total = await prisma.movie.count({ where });
-
-  if (total === 0) return [];
-
-  const randomSkip = Math.floor(Math.random() * total);
-
-  const firstBatch = await prisma.movie.findMany({
-    where,
-    take: 40,
-    skip: randomSkip,
-    orderBy: { id: "asc" },
-  });
-
-  let movies = firstBatch;
-
-  if (firstBatch.length < 40) {
-    const remaining = 40 - firstBatch.length;
-
-    const secondBatch = await prisma.movie.findMany({
-      where,
-      take: remaining,
-      skip: 0,
-      orderBy: { id: "asc" },
+  let featured: Awaited<ReturnType<typeof prisma.movie.findMany>> = [];
+  if (FEATURED_TMDB_IDS.length > 0) {
+    const found = await prisma.movie.findMany({
+      where: { ...where, tmdbId: { in: FEATURED_TMDB_IDS } },
     });
-
-    movies = [...firstBatch, ...secondBatch];
+    const byId = new Map(found.map(m => [m.tmdbId, m]));
+    featured = FEATURED_TMDB_IDS.map(id => byId.get(id)).filter(
+      (m): m is NonNullable<typeof m> => Boolean(m)
+    );
   }
 
-  return movies;
+  const remainingSlots = 40 - featured.length;
+  const featuredIds = featured.map(m => m.tmdbId);
+
+  const rest = remainingSlots > 0
+    ? await prisma.movie.findMany({
+        where: { ...where, tmdbId: { notIn: featuredIds } },
+        take: remainingSlots,
+        orderBy: { id: "asc" },
+      })
+    : [];
+
+  return [...featured, ...rest];
 }
