@@ -163,6 +163,13 @@ export default function RootLayout({
           `}
         </Script>
 
+        {/* 4. Cloudflare Web Analytics — cookieless, so it runs regardless of the consent banner */}
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "53e491fa2e024063afdfbec087d7b5fd"}'
+          strategy="afterInteractive"
+        />
+
       </body>
     </html>
   );

@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     
 
       <h1>Privacy Policy</h1>
-      <p><strong>Last updated:</strong> April 2026</p>
+      <p><strong>Last updated:</strong> November 2026</p>
 
       <h2 className="mt-4">1. Who We Are</h2>
       <p>
@@ -75,6 +75,14 @@ export default function PrivacyPage() {
       <h3 className="mt-3">Analytics</h3>
       <ul>
         <li>Analytics tools to understand usage and improve the platform</li>
+        <li>
+          Google Analytics — only if you accept analytics cookies in the cookie banner
+        </li>
+        <li>
+          Cloudflare Web Analytics — cookieless, privacy-first statistics (page views,
+          referrers, country, browser and device type). It does not use cookies, does not
+          store your IP address, and does not track you across websites.
+        </li>
       </ul>
 
       <p>
