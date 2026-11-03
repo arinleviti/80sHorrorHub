@@ -46,11 +46,20 @@ const EbayItemsList: React.FC<EbayItemsListProps> = ({ ebayItems }) => {
             <Row xs={3} sm={4} md={6} lg={7} className="g-3">
               {grouped.get(cat)!.map((item) => (
                 <Col key={item.itemAffiliateWebUrl}>
-                <a
+                  <a
                     href={item.itemAffiliateWebUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.itemCard}
+                    onClick={() => {
+                      window.gtag?.("event", "ebay_item_click", {
+                        item_title: item.title,
+                        item_category: cat,           // e.g. "VHS", "Posters"
+                        price: item.price?.value,
+                        currency: item.price?.currency,
+                        page_path: window.location.pathname, // which movie page
+                      });
+                    }}
                   >
                     {item.image?.imageUrl && (
                       <div className={styles.imageWrapper}>
