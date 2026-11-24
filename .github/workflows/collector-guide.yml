@@ -1,0 +1,72 @@
+# Collector's Guide (beta) pipeline: snapshot changed eBay caches, compute facts, write + check guides.
+# Most hourly runs find no changed cache and finish in seconds without calling Claude.
+#
+# Needs repository secrets: DATABASE_URL, DIRECT_URL, ANTHROPIC_API_KEY
+# (Settings → Secrets and variables → Actions).
+name: Collector's Guide
+
+on:
+  # Hourly, at an off-peak minute. GitHub only runs schedules from the default branch (main).
+  schedule:
+    - cron: "17 * * * *"
+
+  # "Run workflow" button in the Actions tab (once this file is on main).
+  workflow_dispatch:
+    inputs:
+      film:
+        description: "Only this film (slug), e.g. the-thing — leave empty for all"
+        required: false
+        default: ""
+      force:
+        description: "Regenerate guides even if the eBay cache is unchanged"
+        type: boolean
+        default: false
+
+  # Test run on test-branch whenever this file changes there: regenerates one guide end to end.
+  push:
+    branches: [test-branch]
+    paths: [".github/workflows/collector-guide.yml"]
+
+permissions:
+  contents: read
+
+# Never let two runs write guides for the same film at once.
+concurrency:
+  group: collector-guide
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVENT: ${{ github.event_name }}
+          FILM: ${{ inputs.film }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          ARGS=()
+          if [ "$EVENT" = "push" ]; then
+            ARGS=(--force --film the-thing)
+          else
+            [ -n "$FILM" ] && ARGS+=(--film "$FILM")
+            [ "$FORCE" = "true" ] && ARGS+=(--force)
+          fi
+          npm run collectorGuide -- "${ARGS[@]}"
