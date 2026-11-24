@@ -317,3 +317,50 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+// ─── Collector's Guide (beta) ──────────────────────────────────────────────────
+// Self-contained: no relations to existing models, so existing tables are never altered.
+// Movies are referenced by plain movieId/slug strings. Old rows are pruned by the pipeline.
+
+model EbaySnapshot {
+  id              String   @id @default(cuid())
+  movieId         String
+  slug            String
+  sourceUpdatedAt DateTime // EbayQuery.updatedAt this snapshot was copied from
+  listings        Json     // [{ listingId, title, category, priceValue, priceCurrency, url }]
+  createdAt       DateTime @default(now())
+
+  @@index([movieId, createdAt])
+  @@map("ebay_snapshots")
+}
+
+model CollectorGuide {
+  id          String   @id @default(cuid())
+  movieId     String
+  slug        String
+  content     Json     // guide sections as returned by the writer
+  status      String   // "published" | "flagged"
+  judgeScores Json?
+  snapshotId  String   // EbaySnapshot the guide was written from
+  createdAt   DateTime @default(now())
+
+  @@index([slug, status, createdAt])
+  @@map("collector_guides")
+}
+
+model GuideRun {
+  id              String   @id @default(cuid())
+  runId           String   // groups the attempts of one pipeline run
+  movieId         String
+  slug            String
+  attempt         Int
+  draft           Json
+  factCheckPassed Boolean
+  factCheckIssues Json?
+  judgeScores     Json?
+  judgeReasons    Json?
+  passed          Boolean
+  createdAt       DateTime @default(now())
+
+  @@index([movieId, createdAt])
+  @@map("guide_runs")
+}
