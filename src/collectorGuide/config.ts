@@ -16,8 +16,11 @@ export const GUIDE_MODEL = "claude-haiku-5-5";
 // Rewrite loop: first attempt + up to 2 rewrites, then the guide is flagged for manual review.
 export const MAX_REWRITES = 2;
 
-// Total length of the three sections together.
-export const GUIDE_WORDS = { min: 600, max: 1000 };
+// Total length of the two sections together.
+export const GUIDE_WORDS = { min: 500, max: 900 };
+
+// Each section must be split into at least this many paragraphs (blank-line separated).
+export const MIN_PARAGRAPHS_PER_SECTION = 3;
 
 // Judge pass rule: no criterion below MIN_SCORE and an average of at least MIN_AVERAGE (scores are 1–5).
 export const JUDGE_MIN_SCORE = 3;

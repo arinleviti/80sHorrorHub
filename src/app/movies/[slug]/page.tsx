@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import styles from './movies.module.css';
 import MovieInfo from './components/movieInfo/movie-info';
+import CollectorGuideBeta from './components/collectorGuideBeta/collector-guide-beta';
 import { slugToIdMap } from '@/app/services/movies';
 
 import { getMovie, getConfiguration } from '@/app/services/tmdb';
@@ -89,6 +90,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
         />
 
         <MovieInfo movie={movie} config={config} credits={credits} />
+        <CollectorGuideBeta slug={slug} />
       </>
     );
   } catch (err) {

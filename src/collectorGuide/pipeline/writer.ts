@@ -5,9 +5,8 @@ import type { MarketFacts, SnapshotListing } from "../types";
 import { askStructured } from "./claude";
 
 export const GuideSchema = z.object({
-  film: z.string().describe("Section 1: the film from a collector's point of view"),
-  whatToCollect: z.string().describe("Section 2: what to collect"),
-  market: z.string().describe("Section 3: what's on the market now"),
+  whatToCollect: z.string().describe("Section 1: what to collect"),
+  market: z.string().describe("Section 2: what's on the market now"),
 });
 export type GuideContent = z.infer<typeof GuideSchema>;
 
@@ -30,16 +29,15 @@ export type WriterFeedback = {
 
 const SYSTEM = `You write the Collector's Guide for one 1970s–80s horror film on Retro Horror Hub, a site for horror memorabilia collectors.
 
-Always write from a collector's point of view: what makes items from this film desirable, what to look for, and what the current listings mean for someone buying.
+Readers have seen the film and know it well. Never summarise the plot or explain why the film matters; go straight to the collecting. Always write from a collector's point of view: what to look for and what the current listings mean for someone buying. The film background is there only to explain why a particular item is desirable.
 
-Return three sections. Each has one job; never repeat a point made in another section.
-1. film (about 150–200 words) — why this film's memorabilia is desirable: what about the film (its imagery, effects, reputation, era) makes physical items from it worth owning. Use only the film background. No prices, no listings, no buying advice, and no general plot or production history unless it explains why the items are collectible.
-2. whatToCollect (about 200–300 words) — the item types worth collecting for this film and, for each, what distinguishes a desirable example (e.g. original release vs later reissue, signed vs unsigned, complete vs partial set), using listing titles from the input as examples. No prices here.
-3. market (about 250–400 words) — the numbers: what is listed right now, the price range and average per category, the cheapest way in, the standout high-end pieces, and changes since the previous check. Give the collector a clear take: which tier is the realistic entry point and where the money goes at the top end.
+Return two sections. Each has one job; never repeat a point made in the other.
+1. whatToCollect (about 250–400 words) — the item types worth collecting for this film and, for each, what distinguishes a desirable example (e.g. original release vs later reissue, signed vs unsigned, complete vs partial set), using listing titles from the input as examples. No prices here.
+2. market (about 250–450 words) — the numbers: what is listed right now, the price range and average per category, the cheapest way in, the standout high-end pieces, and changes since the previous check. Give the collector a clear take: which tier is the realistic entry point and where the money goes at the top end.
 
-Open each section with its most interesting point, not a general statement.
+Open each section with its most interesting point, not a general statement. Split each section into 3–5 short paragraphs of 2–4 sentences each, separated by a blank line (two newline characters).
 
-The three sections together must be ${GUIDE_WORDS.min}–${GUIDE_WORDS.max} words.
+The two sections together must be ${GUIDE_WORDS.min}–${GUIDE_WORDS.max} words.
 
 Rules for facts:
 - Use only the information in the input. Do not add film trivia, prices, counts, dates or claims that are not there.

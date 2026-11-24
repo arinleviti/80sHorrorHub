@@ -1,6 +1,6 @@
 // Fact check in code (no LLM): every price, percentage, count and trend in the draft
 // must come from the computed facts or the film background the writer was given.
-import { GUIDE_WORDS } from "../config";
+import { GUIDE_WORDS, MIN_PARAGRAPHS_PER_SECTION } from "../config";
 import type { MarketFacts, SnapshotListing } from "../types";
 import type { FilmBackground, GuideContent } from "./writer";
 
@@ -34,6 +34,13 @@ function parseMoney(match: RegExpMatchArray): number {
   if (suffix === "k" || suffix === "thousand") return value * 1_000;
   if (suffix === "m" || suffix === "million") return value * 1_000_000;
   return value;
+}
+
+// The sentence around a match, quoted in feedback so the rewrite knows exactly what to change.
+function sentenceAt(text: string, index: number): string {
+  const start = Math.max(text.lastIndexOf(". ", index) + 2, text.lastIndexOf("\n", index) + 1, 0);
+  const end = text.indexOf(".", index);
+  return text.slice(start, end === -1 ? undefined : end + 1).trim();
 }
 
 // Accepts exact values and the whole-dollar rounding the writer is allowed to use.
@@ -74,7 +81,7 @@ export function factCheck(
   background: FilmBackground
 ): FactCheckResult {
   const issues: string[] = [];
-  const text = [draft.film, draft.whatToCollect, draft.market].join("\n\n");
+  const text = [draft.whatToCollect, draft.market].join("\n\n");
   const allowed = allowedValues(facts, listings, background);
 
   for (const m of text.matchAll(MONEY)) {
@@ -95,7 +102,9 @@ export function factCheck(
 
   for (const { pattern, reason } of BANNED_PHRASES) {
     const hit = text.match(pattern);
-    if (hit) issues.push(`"${hit[0]}" is not allowed: ${reason}.`);
+    if (hit) {
+      issues.push(`"${hit[0]}" is not allowed (${reason}). Rewrite this sentence without it: "${sentenceAt(text, hit.index!)}"`);
+    }
   }
 
   // Market section only: words like "falling" are fine when describing the film itself.
@@ -110,7 +119,12 @@ export function factCheck(
   }
 
   for (const [section, body] of Object.entries(draft)) {
-    if (!body.trim()) issues.push(`The "${section}" section is empty.`);
+    const paragraphs = body.split(/\n\s*\n/).filter((p) => p.trim()).length;
+    if (paragraphs < MIN_PARAGRAPHS_PER_SECTION) {
+      issues.push(
+        `The "${section}" section has ${paragraphs} paragraph(s); split it into at least ${MIN_PARAGRAPHS_PER_SECTION}, separated by a blank line.`
+      );
+    }
   }
 
   return { passed: issues.length === 0, issues };
