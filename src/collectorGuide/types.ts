@@ -1,12 +1,13 @@
 // One eBay listing as stored in ebay_snapshots.listings.
 // (A type alias, not an interface, so Prisma accepts it as JSON.)
+// No URL: the long affiliate links were most of a snapshot's size and nothing needs them.
+// Snapshots saved before this change still carry a `url` field, which is simply ignored.
 export type SnapshotListing = {
   listingId: string; // eBay item number, taken from the listing URL
   title: string;
   category: string;
   price: number;
   currency: string;
-  url: string;
 };
 
 // A set of listings at a point in time (a saved snapshot, or the current cache).
@@ -21,7 +22,7 @@ export type CategoryStats = {
   avgPrice: number;
   minPrice: number;
   maxPrice: number;
-  cheapest: { title: string; price: number; url: string };
+  cheapest: { title: string; price: number };
 };
 
 // Labels come from fixed rules in facts.ts — the LLM never decides them.

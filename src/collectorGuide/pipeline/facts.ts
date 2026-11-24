@@ -46,7 +46,7 @@ function categoryStats(listings: SnapshotListing[]): CategoryStats[] {
         avgPrice: average(items),
         minPrice: Math.min(...prices),
         maxPrice: Math.max(...prices),
-        cheapest: { title: cheapest.title, price: cheapest.price, url: cheapest.url },
+        cheapest: { title: cheapest.title, price: cheapest.price },
       };
     })
     .sort((a, b) => b.count - a.count);

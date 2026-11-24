@@ -60,10 +60,7 @@ function marketInput(facts: MarketFacts, listings: SnapshotListing[]) {
   return {
     currency: facts.currency,
     totalListings: facts.totalListings,
-    categories: facts.categories.map(({ cheapest, ...stats }) => ({
-      ...stats,
-      cheapest: { title: cheapest.title, price: cheapest.price },
-    })),
+    categories: facts.categories,
     mostExpensiveListings: [...listings].sort((a, b) => b.price - a.price).slice(0, 5).map(strip),
     trackedSince: facts.trackedSince,
     week: facts.week,

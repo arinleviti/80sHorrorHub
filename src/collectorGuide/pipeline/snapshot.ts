@@ -25,7 +25,6 @@ function toListing(item: EbayItem): SnapshotListing {
     category: item.category ?? "Other",
     price: parseFloat(item.priceValue),
     currency: item.priceCurrency,
-    url: item.itemUrl,
   };
 }
 
