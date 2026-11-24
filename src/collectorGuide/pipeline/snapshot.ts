@@ -3,7 +3,7 @@
 import type { EbayItem, EbaySnapshot, Prisma } from "@prisma/client";
 import { prisma } from "../../app/services/prisma";
 import { slugToIdMap } from "../../app/services/movies";
-import type { SnapshotListing } from "../types";
+import type { ListingSet, SnapshotListing } from "../types";
 
 export type FilmCache = {
   movieId: string;
@@ -66,16 +66,20 @@ export async function getLatestSnapshot(movieId: string): Promise<EbaySnapshot |
   });
 }
 
-// The snapshot saved just before `snapshot`, used when regenerating a guide from existing data.
-export async function getSnapshotBefore(snapshot: EbaySnapshot): Promise<EbaySnapshot | null> {
-  return prisma.ebaySnapshot.findFirst({
-    where: { movieId: snapshot.movieId, createdAt: { lt: snapshot.createdAt } },
-    orderBy: { createdAt: "desc" },
+// All kept snapshots of one film, oldest first — the history trends are computed from.
+export async function getSnapshots(movieId: string): Promise<EbaySnapshot[]> {
+  return prisma.ebaySnapshot.findMany({
+    where: { movieId },
+    orderBy: { createdAt: "asc" },
   });
 }
 
 export function snapshotListings(snapshot: EbaySnapshot): SnapshotListing[] {
   return snapshot.listings as unknown as SnapshotListing[];
+}
+
+export function toListingSet(snapshot: EbaySnapshot): ListingSet {
+  return { takenAt: snapshot.createdAt, listings: snapshotListings(snapshot) };
 }
 
 export async function saveSnapshot(cache: FilmCache): Promise<EbaySnapshot> {
@@ -89,18 +93,18 @@ export async function saveSnapshot(cache: FilmCache): Promise<EbaySnapshot> {
   });
 }
 
-// Deletes all but the newest `keep` snapshots of one film. Returns how many were deleted.
-export async function pruneSnapshots(movieId: string, keep: number): Promise<number> {
-  const old = await prisma.ebaySnapshot.findMany({
-    where: { movieId },
-    orderBy: { createdAt: "desc" },
-    skip: keep,
-    select: { id: true },
-  });
-  if (old.length === 0) return 0;
+// Deletes one film's snapshots older than `retentionDays`, always keeping its newest one
+// (it is what the next run compares against). Returns how many were deleted.
+export async function pruneSnapshots(movieId: string, retentionDays: number): Promise<number> {
+  const newest = await getLatestSnapshot(movieId);
+  if (!newest) return 0;
 
   const { count } = await prisma.ebaySnapshot.deleteMany({
-    where: { id: { in: old.map((s) => s.id) } },
+    where: {
+      movieId,
+      id: { not: newest.id },
+      createdAt: { lt: new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000) },
+    },
   });
   return count;
 }

@@ -15,18 +15,27 @@ const BANNED_PHRASES: { pattern: RegExp; reason: string }[] = [
   { pattern: /\bflying off\b/i, reason: SALES_CLAIM },
   { pattern: /\bhigh demand\b/i, reason: "the data shows listings, not demand" },
   { pattern: /\binvestment\b/i, reason: "the guide must not give investment advice" },
-  { pattern: /\bsnapshots?\b|\bactivity label\b|\binput data\b/i, reason: "internal pipeline terms must not reach readers" },
+  { pattern: /\bsnapshots?\b|\bbaseline\b|\binput data\b/i, reason: "internal pipeline terms must not reach readers" },
 ];
 
-// Trend language only allowed when the activity label says something actually moved.
-const TREND_WORDS = /\b(surg\w*|soar\w*|spik\w*|skyrocket\w*|plummet\w*|crash\w*|boom\w*|heating up|cooling off|rising|climbing|falling|dropping)\b/i;
-const CALM_ACTIVITY = new Set(["first snapshot", "no change", "no meaningful change"]);
+// Upward language needs a category whose direction is "higher", downward language one that is "lower".
+const UP_WORDS = /\b(surg\w*|soar\w*|spik\w*|skyrocket\w*|boom\w*|heating up|rising|climbing)\b/i;
+const DOWN_WORDS = /\b(plummet\w*|crash\w*|cooling off|falling|dropping|sliding)\b/i;
+
+// Talking about a period with no comparison behind it (window is null).
+const PERIOD_PHRASES = {
+  week: /\b(?:past|last|this|previous) week\b|\bweek[- ]on[- ]week\b|\bseven days\b/i,
+  month: /\b(?:past|last|this|previous) month\b|\bmonth[- ]on[- ]month\b|\bthirty days\b/i,
+};
 
 const MONEY = /\$\s?(\d[\d,]*(?:\.\d+)?)(\s?(?:k|thousand|million|m)\b)?/gi;
 const PERCENT = /(\d+(?:\.\d+)?)\s?%/g;
 // Counts are plural ("12 listings"); the lookbehind skips prices ("$395"), issue numbers ("#19"),
 // sizes ("27 x 41") and decimals, which can sit right before the word "listing".
-const COUNT = /(?<![$#\d.,]|[x×]\s?)\b(\d+)\s+(?:new\s+|current\s+|active\s+|more\s+)?(?:listings|items|lots)\b/gi;
+const COUNT = /(?<![$#\d.,]|[x×]\s?)\b(\d+)\s+(?:current\s+|active\s+|more\s+)?(?:listings|items|lots)\b/gi;
+const NEW_COUNT = /(?<![$#\d.,]|[x×]\s?)\b(\d+)\s+new\s+(?:listings|items|lots)\b/gi;
+const DAYS = /(?<![$#\d.,])\b(\d+)\s+days?\b/gi;
+const WEEKS = /(?<![$#\d.,])\b(\d+)\s+weeks?\b/gi;
 
 function parseMoney(match: RegExpMatchArray): number {
   const value = parseFloat(match[1].replace(/,/g, ""));
@@ -38,40 +47,57 @@ function parseMoney(match: RegExpMatchArray): number {
 
 // The sentence around a match, quoted in feedback so the rewrite knows exactly what to change.
 function sentenceAt(text: string, index: number): string {
-  const start = Math.max(text.lastIndexOf(". ", index) + 2, text.lastIndexOf("\n", index) + 1, 0);
+  const lastStop = text.lastIndexOf(". ", index);
+  const start = Math.max(lastStop === -1 ? 0 : lastStop + 2, text.lastIndexOf("\n", index) + 1);
   const end = text.indexOf(".", index);
   return text.slice(start, end === -1 ? undefined : end + 1).trim();
 }
 
-// Accepts exact values and the whole-dollar rounding the writer is allowed to use.
+// Accepts exact values and whole dollars, rounded or cut off ($140.60 → $141 or $140).
 function matchesAny(value: number, allowed: number[], tolerance: number): boolean {
-  return allowed.some((a) => Math.abs(a - value) <= tolerance || Math.round(a) === value);
+  return allowed.some((a) => Math.abs(a - value) <= tolerance || Math.round(a) === value || Math.floor(a) === value);
 }
 
 function allowedValues(facts: MarketFacts, listings: SnapshotListing[], background: FilmBackground) {
   const backgroundText = Object.values(background).filter(Boolean).join(" ");
 
+  const windows = [facts.week, facts.month].filter((w) => w !== null);
+
   const money = [
     ...listings.map((l) => l.price),
-    ...facts.goneListings.map((l) => l.price),
-    ...facts.priceChanges.flatMap((c) => [c.from, c.to]),
     ...facts.categories.flatMap((c) => [c.avgPrice, c.minPrice, c.maxPrice]),
+    ...windows.flatMap((w) => [
+      ...w.categoryTrends.flatMap((t) => [t.avgThen, t.avgNow]),
+      ...w.priceChanges.flatMap((c) => [c.from, c.to]),
+    ]),
     ...[...backgroundText.matchAll(MONEY)].map(parseMoney),
   ];
   const percents = [
-    ...facts.priceChanges.map((c) => Math.abs(c.changePct)),
+    ...windows.flatMap((w) => [
+      w.turnoverPct,
+      ...w.categoryTrends.map((t) => Math.abs(t.changePct)),
+      ...w.priceChanges.map((c) => Math.abs(c.changePct)),
+    ]),
     ...[...backgroundText.matchAll(PERCENT)].map((m) => parseFloat(m[1])),
   ];
   const counts = [
     facts.totalListings,
-    facts.previousTotalListings ?? 0,
-    facts.newListings.length,
-    facts.goneListings.length,
-    facts.priceChanges.length,
-    facts.changedCount,
+    facts.longListed.length,
     ...facts.categories.map((c) => c.count),
+    ...windows.flatMap((w) => [
+      w.totalThen, w.totalNow, w.newCount, w.goneCount, w.stillListedCount, w.priceChanges.length,
+      ...w.categoryTrends.flatMap((t) => [t.countThen, t.countNow]),
+    ]),
   ];
-  return { money, percents, counts };
+  const days = [
+    facts.historyDays,
+    ...windows.flatMap((w) => [w.days, w.baselineAgeDays]),
+    ...facts.longListed.map((l) => l.ageDays),
+  ];
+  // "3 weeks" is fine for 21–27 days; rounding up ("4 weeks" for 25 days) would overstate it.
+  const weeks = days.map((d) => Math.floor(d / 7)).filter((w) => w > 0);
+  const newCounts = windows.map((w) => w.newCount);
+  return { money, percents, counts, newCounts, days, weeks };
 }
 
 export function factCheck(
@@ -99,6 +125,21 @@ export function factCheck(
       issues.push(`The count "${m[0]}" does not match any count in the input data.`);
     }
   }
+  for (const m of text.matchAll(NEW_COUNT)) {
+    if (!allowed.newCounts.includes(parseInt(m[1], 10))) {
+      issues.push(`"${m[0]}" does not match the number of new listings for the past week or month.`);
+    }
+  }
+  for (const m of text.matchAll(DAYS)) {
+    if (!allowed.days.includes(parseInt(m[1], 10))) {
+      issues.push(`"${m[0]}" does not match any period or listing age in the input data.`);
+    }
+  }
+  for (const m of text.matchAll(WEEKS)) {
+    if (!allowed.weeks.includes(parseInt(m[1], 10))) {
+      issues.push(`"${m[0]}" does not match any period or listing age in the input data (round weeks down).`);
+    }
+  }
 
   for (const { pattern, reason } of BANNED_PHRASES) {
     const hit = text.match(pattern);
@@ -108,9 +149,20 @@ export function factCheck(
   }
 
   // Market section only: words like "falling" are fine when describing the film itself.
-  if (CALM_ACTIVITY.has(facts.activity)) {
-    const hit = draft.market.match(TREND_WORDS);
-    if (hit) issues.push(`"${hit[0]}" describes a trend, but the activity label is "${facts.activity}".`);
+  const trends = [facts.week, facts.month].flatMap((w) => w?.categoryTrends ?? []);
+  for (const [words, direction] of [[UP_WORDS, "higher"], [DOWN_WORDS, "lower"]] as const) {
+    const hit = trends.some((t) => t.direction === direction) ? null : draft.market.match(words);
+    if (hit) {
+      issues.push(
+        `"${hit[0]}" describes a price trend, but no category's prices are ${direction} over the past week or month. Rewrite: "${sentenceAt(draft.market, hit.index!)}"`
+      );
+    }
+  }
+  for (const key of ["week", "month"] as const) {
+    const hit = facts[key] ? null : draft.market.match(PERIOD_PHRASES[key]);
+    if (hit) {
+      issues.push(`"${hit[0]}" describes a change, but there is no ${key} of history yet. Rewrite: "${sentenceAt(draft.market, hit.index!)}"`);
+    }
   }
 
   const words = text.split(/\s+/).filter(Boolean).length;

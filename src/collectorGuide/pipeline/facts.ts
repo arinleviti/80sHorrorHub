@@ -1,36 +1,49 @@
-// Compares two snapshots and computes every market fact the guide may use.
+// Computes every market fact the guide may use: current prices per category, 7- and 30-day
+// comparisons against older snapshots, and how long listings have been in our selection.
 // Pure code, no database and no LLM, so it is easy to test and fully deterministic.
-import type { Activity, CategoryStats, MarketFacts, PriceChange, SnapshotListing } from "../types";
+import {
+  CATEGORY_TREND_MIN_LISTINGS,
+  CATEGORY_TREND_THRESHOLD_PCT,
+  LONG_LISTED_DAYS,
+  TREND_WINDOWS,
+  TURNOVER_HIGH_PCT,
+  TURNOVER_LOW_PCT,
+} from "../config";
+import type {
+  CategoryStats,
+  CategoryTrend,
+  ListingAge,
+  ListingSet,
+  MarketFacts,
+  PriceChange,
+  SnapshotListing,
+  Turnover,
+  WindowFacts,
+} from "../types";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const pct = (from: number, to: number) => round2(((to - from) / from) * 100);
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
+const ageDays = (from: Date, to: Date) => Math.floor((to.getTime() - from.getTime()) / DAY_MS);
 
-// Movement rules (see the brief): few changes = nothing worth reporting,
-// more than half the selection changed = high activity.
-const MEANINGFUL_CHANGES = 3;
-const HIGH_ACTIVITY_SHARE = 0.5;
-
-function labelActivity(changedCount: number, baseline: number, isFirst: boolean): Activity {
-  if (isFirst) return "first snapshot";
-  if (changedCount === 0) return "no change";
-  if (changedCount < MEANINGFUL_CHANGES) return "no meaningful change";
-  if (changedCount / baseline > HIGH_ACTIVITY_SHARE) return "high activity";
-  return "moderate activity";
+function groupByCategory(listings: SnapshotListing[]): Map<string, SnapshotListing[]> {
+  const groups = new Map<string, SnapshotListing[]>();
+  for (const l of listings) groups.set(l.category, [...(groups.get(l.category) ?? []), l]);
+  return groups;
 }
 
-function categoryStats(listings: SnapshotListing[]): CategoryStats[] {
-  const groups = new Map<string, SnapshotListing[]>();
-  for (const l of listings) {
-    groups.set(l.category, [...(groups.get(l.category) ?? []), l]);
-  }
+const average = (items: SnapshotListing[]) => round2(items.reduce((a, b) => a + b.price, 0) / items.length);
 
-  return [...groups.entries()]
+function categoryStats(listings: SnapshotListing[]): CategoryStats[] {
+  return [...groupByCategory(listings).entries()]
     .map(([category, items]) => {
       const prices = items.map((i) => i.price);
       const cheapest = items.reduce((a, b) => (b.price < a.price ? b : a));
       return {
         category,
         count: items.length,
-        avgPrice: round2(prices.reduce((a, b) => a + b, 0) / prices.length),
+        avgPrice: average(items),
         minPrice: Math.min(...prices),
         maxPrice: Math.max(...prices),
         cheapest: { title: cheapest.title, price: cheapest.price, url: cheapest.url },
@@ -39,43 +52,110 @@ function categoryStats(listings: SnapshotListing[]): CategoryStats[] {
     .sort((a, b) => b.count - a.count);
 }
 
-export function computeFacts(
-  previous: SnapshotListing[] | null,
-  current: SnapshotListing[]
-): MarketFacts {
-  const prevById = new Map((previous ?? []).map((l) => [l.listingId, l]));
-  const currIds = new Set(current.map((l) => l.listingId));
+function labelTurnover(turnoverPct: number): Turnover {
+  if (turnoverPct > TURNOVER_HIGH_PCT) return "high turnover";
+  if (turnoverPct < TURNOVER_LOW_PCT) return "low turnover";
+  return "moderate turnover";
+}
 
-  const newListings = previous ? current.filter((l) => !prevById.has(l.listingId)) : [];
-  const goneListings = (previous ?? []).filter((l) => !currIds.has(l.listingId));
+function categoryTrends(then: SnapshotListing[], now: SnapshotListing[]): CategoryTrend[] {
+  const thenGroups = groupByCategory(then);
+  const trends: CategoryTrend[] = [];
+  for (const [category, nowItems] of groupByCategory(now)) {
+    const thenItems = thenGroups.get(category) ?? [];
+    // Small categories swing on a single listing, so they are not compared.
+    if (thenItems.length < CATEGORY_TREND_MIN_LISTINGS || nowItems.length < CATEGORY_TREND_MIN_LISTINGS) continue;
+
+    const avgThen = average(thenItems);
+    const avgNow = average(nowItems);
+    const changePct = pct(avgThen, avgNow);
+    trends.push({
+      category,
+      countThen: thenItems.length,
+      countNow: nowItems.length,
+      avgThen,
+      avgNow,
+      changePct,
+      direction:
+        changePct >= CATEGORY_TREND_THRESHOLD_PCT ? "higher"
+        : changePct <= -CATEGORY_TREND_THRESHOLD_PCT ? "lower"
+        : "stable",
+    });
+  }
+  return trends;
+}
+
+function compareWindow(days: number, baseline: ListingSet, current: ListingSet): WindowFacts {
+  const thenById = new Map(baseline.listings.map((l) => [l.listingId, l]));
+  const nowIds = new Set(current.listings.map((l) => l.listingId));
+
+  const newCount = current.listings.filter((l) => !thenById.has(l.listingId)).length;
+  const goneCount = baseline.listings.filter((l) => !nowIds.has(l.listingId)).length;
+  const turnoverPct = current.listings.length ? round2((newCount / current.listings.length) * 100) : 0;
 
   const priceChanges: PriceChange[] = [];
-  for (const l of current) {
-    const before = prevById.get(l.listingId);
+  for (const l of current.listings) {
+    const before = thenById.get(l.listingId);
     if (before && before.price !== l.price) {
-      priceChanges.push({
-        listingId: l.listingId,
-        title: l.title,
-        category: l.category,
-        from: before.price,
-        to: l.price,
-        changePct: round2(((l.price - before.price) / before.price) * 100),
-      });
+      priceChanges.push({ title: l.title, category: l.category, from: before.price, to: l.price, changePct: pct(before.price, l.price) });
     }
   }
 
-  const changedCount = newListings.length + goneListings.length + priceChanges.length;
-  const baseline = Math.max(previous?.length ?? 0, current.length, 1);
+  return {
+    days,
+    baselineDate: isoDate(baseline.takenAt),
+    baselineAgeDays: ageDays(baseline.takenAt, current.takenAt),
+    totalThen: baseline.listings.length,
+    totalNow: current.listings.length,
+    newCount,
+    goneCount,
+    stillListedCount: current.listings.length - newCount,
+    turnoverPct,
+    turnover: labelTurnover(turnoverPct),
+    categoryTrends: categoryTrends(baseline.listings, current.listings),
+    priceChanges,
+  };
+}
+
+// First time each current listing appeared in the kept history (or now, if it is new).
+function longListed(history: ListingSet[], current: ListingSet): ListingAge[] {
+  const firstSeen = new Map<string, Date>();
+  for (const snap of history) {
+    for (const l of snap.listings) {
+      const seen = firstSeen.get(l.listingId);
+      if (!seen || snap.takenAt < seen) firstSeen.set(l.listingId, snap.takenAt);
+    }
+  }
+
+  return current.listings
+    .map((l) => {
+      const seen = firstSeen.get(l.listingId) ?? current.takenAt;
+      return { title: l.title, category: l.category, price: l.price, firstSeen: isoDate(seen), ageDays: ageDays(seen, current.takenAt) };
+    })
+    .filter((l) => l.ageDays >= LONG_LISTED_DAYS)
+    .sort((a, b) => b.ageDays - a.ageDays || b.price - a.price)
+    .slice(0, 5);
+}
+
+// `history` = the film's earlier snapshots (any order), not including `current`.
+export function computeFacts(history: ListingSet[], current: ListingSet): MarketFacts {
+  const sorted = [...history].sort((a, b) => a.takenAt.getTime() - b.takenAt.getTime());
+  const oldest = sorted[0]?.takenAt ?? current.takenAt;
+
+  // Each window uses the newest snapshot that is old enough; none = not enough history yet.
+  const windows = TREND_WINDOWS.map(({ days, minAgeDays }) => {
+    const baseline = [...sorted].reverse().find((s) => ageDays(s.takenAt, current.takenAt) >= minAgeDays);
+    return baseline ? compareWindow(days, baseline, current) : null;
+  });
 
   return {
-    currency: current[0]?.currency ?? "USD",
-    totalListings: current.length,
-    previousTotalListings: previous ? previous.length : null,
-    newListings,
-    goneListings,
-    priceChanges,
-    categories: categoryStats(current),
-    changedCount,
-    activity: labelActivity(changedCount, baseline, previous === null),
+    currency: current.listings[0]?.currency ?? "USD",
+    totalListings: current.listings.length,
+    categories: categoryStats(current.listings),
+    trackedSince: isoDate(oldest),
+    historyDays: ageDays(oldest, current.takenAt),
+    week: windows[0],
+    month: windows[1],
+    longListed: longListed(sorted, current),
   };
 }

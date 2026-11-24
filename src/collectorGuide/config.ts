@@ -17,7 +17,7 @@ export const GUIDE_MODEL = "claude-haiku-5-5";
 export const MAX_REWRITES = 2;
 
 // Total length of the two sections together.
-export const GUIDE_WORDS = { min: 500, max: 900 };
+export const GUIDE_WORDS = { min: 450, max: 900 };
 
 // Each section must be split into at least this many paragraphs (blank-line separated).
 export const MIN_PARAGRAPHS_PER_SECTION = 3;
@@ -26,7 +26,27 @@ export const MIN_PARAGRAPHS_PER_SECTION = 3;
 export const JUDGE_MIN_SCORE = 3;
 export const JUDGE_MIN_AVERAGE = 3.0;
 
-// Retention for the guide's own tables (pruned at the end of each run).
-export const SNAPSHOTS_KEPT_PER_FILM = 20;
+// ─── Trends (all computed in code) ───────────────────────────────────────────
+// Snapshots only happen when the eBay cache refreshes, so they are irregular: each window
+// compares against the newest snapshot that is at least `minAgeDays` old.
+export const TREND_WINDOWS = [
+  { key: "week", days: 7, minAgeDays: 6 },
+  { key: "month", days: 30, minAgeDays: 25 },
+] as const;
+
+// A category's average price counts as "higher"/"lower" beyond this change, and only
+// when it has at least CATEGORY_TREND_MIN_LISTINGS listings at both ends of the window.
+export const CATEGORY_TREND_THRESHOLD_PCT = 10;
+export const CATEGORY_TREND_MIN_LISTINGS = 3;
+
+// Share of current listings that are new since the window's baseline.
+export const TURNOVER_HIGH_PCT = 50;
+export const TURNOVER_LOW_PCT = 20;
+
+// Listings in our selection for at least this long are reported as long-listed.
+export const LONG_LISTED_DAYS = 14;
+
+// ─── Retention for the guide's own tables (pruned at the end of each run) ────
+export const SNAPSHOT_RETENTION_DAYS = 90; // the newest snapshot per film is always kept
 export const GUIDES_KEPT_PER_FILM = 10; // the latest published guide is always kept on top of these
 export const RUN_LOG_RETENTION_DAYS = 90;

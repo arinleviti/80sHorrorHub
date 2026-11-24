@@ -4,20 +4,32 @@
 // npm run collectorGuide -- --force           → regenerate guides from the latest snapshot even if the cache is unchanged
 // npm run collectorGuide -- --film the-thing  → only this film (combine with any flag above)
 import { prisma } from "../src/app/services/prisma";
-import { COLLECTOR_GUIDE_SLUGS, SNAPSHOTS_KEPT_PER_FILM } from "../src/collectorGuide/config";
+import { COLLECTOR_GUIDE_SLUGS, SNAPSHOT_RETENTION_DAYS } from "../src/collectorGuide/config";
 import {
-  getLatestSnapshot,
-  getSnapshotBefore,
+  getSnapshots,
   pruneSnapshots,
   readEbayCache,
   saveSnapshot,
-  snapshotListings,
+  toListingSet,
 } from "../src/collectorGuide/pipeline/snapshot";
 import { computeFacts } from "../src/collectorGuide/pipeline/facts";
 import { readFilmBackground } from "../src/collectorGuide/pipeline/background";
 import { generateGuide, pruneGuidesAndRuns } from "../src/collectorGuide/pipeline/guide";
+import type { MarketFacts, WindowFacts } from "../src/collectorGuide/types";
 
 type Options = { dryRun: boolean; snapshotOnly: boolean; force: boolean };
+
+const describeWindow = (label: string, w: WindowFacts | null) =>
+  w ? `${label}: ${w.newCount} new, ${w.goneCount} gone vs ${w.baselineDate} (${w.turnover})` : `${label}: not enough history`;
+
+function summary(facts: MarketFacts) {
+  return [
+    `${facts.totalListings} listings, tracked since ${facts.trackedSince}`,
+    describeWindow("week", facts.week),
+    describeWindow("month", facts.month),
+    `${facts.longListed.length} long-listed`,
+  ].join(" | ");
+}
 
 async function runFilm(slug: string, opts: Options) {
   const cache = await readEbayCache(slug);
@@ -27,7 +39,8 @@ async function runFilm(slug: string, opts: Options) {
   }
 
   // The cache's timestamp only moves when the site refetched from eBay, so equal = nothing new.
-  const latest = await getLatestSnapshot(cache.movieId);
+  const history = await getSnapshots(cache.movieId);
+  const latest = history.at(-1);
   const changed = !latest || latest.sourceUpdatedAt.getTime() !== cache.sourceUpdatedAt.getTime();
 
   if (!changed && !opts.force) {
@@ -35,12 +48,14 @@ async function runFilm(slug: string, opts: Options) {
     return;
   }
 
-  // Compare against the previous snapshot: the latest one when there is new data,
-  // or the one before it when --force regenerates from the latest snapshot.
-  const previous = changed ? latest : await getSnapshotBefore(latest!);
-  const currentListings = changed ? cache.listings : snapshotListings(latest!);
-  const facts = computeFacts(previous ? snapshotListings(previous) : null, currentListings);
-  console.log(`📊 ${slug}: ${facts.totalListings} listings, ${facts.changedCount} changes → ${facts.activity}`);
+  // New data is compared with every kept snapshot; --force regenerates from the latest
+  // snapshot and compares it with the ones before it.
+  const current = changed
+    ? { takenAt: new Date(), listings: cache.listings }
+    : toListingSet(latest!);
+  const earlier = changed ? history : history.slice(0, -1);
+  const facts = computeFacts(earlier.map(toListingSet), current);
+  console.log(`📊 ${slug}: ${summary(facts)}`);
 
   if (opts.dryRun) {
     console.log(JSON.stringify(facts, null, 2));
@@ -51,7 +66,7 @@ async function runFilm(slug: string, opts: Options) {
   let snapshot = latest!;
   if (changed) {
     snapshot = await saveSnapshot(cache);
-    const pruned = await pruneSnapshots(cache.movieId, SNAPSHOTS_KEPT_PER_FILM);
+    const pruned = await pruneSnapshots(cache.movieId, SNAPSHOT_RETENTION_DAYS);
     console.log(`💾 ${slug}: saved snapshot ${snapshot.id}${pruned ? `, pruned ${pruned} old` : ""}`);
   }
   if (opts.snapshotOnly) return;

@@ -13,17 +13,25 @@ export default async function CollectorGuideBeta({ slug }: CollectorGuideBetaPro
   if (!COLLECTOR_GUIDE_SLUGS.includes(slug)) return null;
 
   try {
-    const guide = await prisma.collectorGuide.findFirst({
-      where: { slug, status: "published" },
-      orderBy: { createdAt: "desc" },
-      select: { content: true, createdAt: true },
-    });
+    const [guide, firstSnapshot] = await Promise.all([
+      prisma.collectorGuide.findFirst({
+        where: { slug, status: "published" },
+        orderBy: { createdAt: "desc" },
+        select: { content: true, createdAt: true },
+      }),
+      prisma.ebaySnapshot.findFirst({
+        where: { slug },
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      }),
+    ]);
     if (!guide) return null;
 
     return (
       <CollectorGuideBetaClient
         content={guide.content as GuideContent}
         updatedAt={guide.createdAt.toISOString()}
+        trackedSince={(firstSnapshot?.createdAt ?? guide.createdAt).toISOString()}
       />
     );
   } catch (err) {
