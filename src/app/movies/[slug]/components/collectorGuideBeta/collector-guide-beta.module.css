@@ -1,0 +1,90 @@
+/* Floating trigger, bottom-left so it never overlaps the Back to Top button (bottom-right). */
+.trigger {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-family: var(--font-menu);
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.trigger:hover {
+  box-shadow: 0 0 15px var(--color-primary), 0 0 30px var(--color-secondary);
+}
+
+.badge {
+  background: var(--color-secondary);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+.panel {
+  background: var(--color-background) !important;
+  color: var(--color-text) !important;
+  width: min(560px, 100vw) !important;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-title);
+  color: var(--color-secondary);
+  font-size: var(--font-size-h2);
+}
+
+.note {
+  font-size: 0.8rem;
+  text-align: left;
+  color: var(--color-accent);
+  border-left: 2px solid var(--color-secondary);
+  padding-left: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.section {
+  margin-bottom: 2.25rem;
+}
+
+.section .paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-title);
+  color: var(--color-secondary);
+  font-size: var(--font-size-h3);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.paragraph {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  margin-bottom: 1.4rem; /* clearly more than a line, so paragraphs read as separate blocks */
+  text-align: left; /* the site justifies body text, which spaces words badly in a narrow panel */
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 576px) {
+  .trigger {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.9rem;
+  }
+}
