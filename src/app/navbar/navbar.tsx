@@ -171,7 +171,7 @@ const NavbarRHH = () => {
           <div className={styles.topRow}>
             <Link href="/" className={styles.logoLink}>
               <Image
-                src="/static_imgs/RHH_def_beta.webp"
+                src="/static_imgs/RHH_logo.webp"
                 alt="RHH Logo"
                 width={100}
                 height={100}

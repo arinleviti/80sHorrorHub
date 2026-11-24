@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: "Retro Horror Hub",                       // ← capital N in siteName
     images: [
       {
-        url: "https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp", // ← must be absolute
+        url: "https://retrohorrorhub.com/static_imgs/RHH_logo.webp", // ← must be absolute
         width: 300,
         height: 300,
         alt: "Retro Horror Hub",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },                                                    // ← comma, not semicolon
   twitter: {
     card: "summary_large_image",
-    images: ["https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp"],
+    images: ["https://retrohorrorhub.com/static_imgs/RHH_logo.webp"],
   },
   robots: {
     index: true,
@@ -73,7 +73,7 @@ export default function RootLayout({
                 "name": "Retro Horror Hub",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://retrohorrorhub.com/static_imgs/RHH_def_beta.webp"
+                  "url": "https://retrohorrorhub.com/static_imgs/RHH_logo.webp"
                 }
               }
             })
