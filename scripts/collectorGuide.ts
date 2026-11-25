@@ -32,6 +32,7 @@ function summary(facts: MarketFacts) {
 }
 
 async function runFilm(slug: string, opts: Options) {
+  // cache here is the preexisting eBay cache, independent from the AI guide generator.
   const cache = await readEbayCache(slug);
   if (!cache) {
     console.log(`⏭️  ${slug}: no eBay cache yet, skipping`);
@@ -39,6 +40,7 @@ async function runFilm(slug: string, opts: Options) {
   }
 
   // The cache's timestamp only moves when the site refetched from eBay, so equal = nothing new.
+  //getSnapshots() reads from the new table, ebay_snapshots, the one the Collector's Guide created.
   const history = await getSnapshots(cache.movieId);
   const latest = history.at(-1);
   const changed = !latest || latest.sourceUpdatedAt.getTime() !== cache.sourceUpdatedAt.getTime();
