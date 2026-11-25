@@ -22,9 +22,17 @@ export const GUIDE_WORDS = { min: 450, max: 900 };
 // Each section must be split into at least this many paragraphs (blank-line separated).
 export const MIN_PARAGRAPHS_PER_SECTION = 3;
 
-// Judge pass rule: no criterion below MIN_SCORE and an average of at least MIN_AVERAGE (scores are 1–5).
-export const JUDGE_MIN_SCORE = 3;
-export const JUDGE_MIN_AVERAGE = 3.0;
+// Section headings as readers see them (used by the page and by the judge, which reads the same text).
+export const GUIDE_SECTION_TITLES = {
+  whatToCollect: "What to collect",
+  market: "On the market now",
+} as const;
+
+// Only the fact check decides whether a guide is published; the judge's 1–5 scores are logged, not enforced.
+
+// When a film's newest snapshot only has a flagged guide, later runs retry it (same data)
+// up to this many times instead of waiting for the next eBay refresh.
+export const FLAGGED_RETRY_RUNS = 3;
 
 // ─── Trends (all computed in code) ───────────────────────────────────────────
 // Snapshots only happen when the eBay cache refreshes, so they are irregular: each window

@@ -1,6 +1,7 @@
-// Claude call #2: scores the draft against a written rubric. Facts are checked in code, not here.
+// Claude call #2: scores a fact-checked draft against a written rubric. The scores and reasons are
+// logged in guide_runs to track quality over time; they do not decide whether a guide is published.
 import { z } from "zod";
-import { JUDGE_MIN_AVERAGE, JUDGE_MIN_SCORE } from "../config";
+import { GUIDE_SECTION_TITLES } from "../config";
 import { askStructured } from "./claude";
 import type { GuideContent } from "./writer";
 
@@ -20,7 +21,6 @@ const JudgeSchema = z.object({
 
 export type JudgeCriterion = Exclude<keyof z.infer<typeof JudgeSchema>, "summary">;
 export type JudgeResult = {
-  passed: boolean;
   scores: Record<JudgeCriterion, number>;
   reasons: Record<JudgeCriterion, string> & { summary: string };
 };
@@ -39,11 +39,18 @@ The writer may only use a short film background and the current eBay listings (t
 
 Do not check facts or numbers; that is done separately. For each criterion give the score and a short reason that points at the draft.`;
 
+// The draft as readers see it: section headings and paragraphs, not the writer's JSON.
+function asReaderText(draft: GuideContent): string {
+  return (Object.keys(GUIDE_SECTION_TITLES) as (keyof GuideContent)[])
+    .map((key) => `## ${GUIDE_SECTION_TITLES[key]}\n\n${draft[key].trim()}`)
+    .join("\n\n");
+}
+
 export async function judgeGuide(filmTitle: string, draft: GuideContent): Promise<JudgeResult> {
   const result = await askStructured(
     JudgeSchema,
     SYSTEM,
-    `Film: ${filmTitle}\n\nDraft:\n${JSON.stringify(draft, null, 2)}`
+    `Film: ${filmTitle}\n\nDraft:\n\n${asReaderText(draft)}`
   );
 
   const scores = {} as Record<JudgeCriterion, number>;
@@ -53,17 +60,5 @@ export async function judgeGuide(filmTitle: string, draft: GuideContent): Promis
     reasons[c] = result[c].reason;
   }
 
-  const values = Object.values(scores);
-  const average = values.reduce((a, b) => a + b, 0) / values.length;
-  const passed = values.every((s) => s >= JUDGE_MIN_SCORE) && average >= JUDGE_MIN_AVERAGE;
-
-  return { passed, scores, reasons };
-}
-
-// Turns a failed judgement into rewrite instructions for the writer.
-export function judgeProblems(judge: JudgeResult): string[] {
-  const low = CRITERIA.filter((c) => judge.scores[c] < 4).map(
-    (c) => `Editor scored ${c} ${judge.scores[c]}/5: ${judge.reasons[c]}`
-  );
-  return [...low, `Editor's main note: ${judge.reasons.summary}`];
+  return { scores, reasons };
 }

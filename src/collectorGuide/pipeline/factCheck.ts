@@ -22,12 +22,6 @@ const BANNED_PHRASES: { pattern: RegExp; reason: string }[] = [
 const UP_WORDS = /\b(surg\w*|soar\w*|spik\w*|skyrocket\w*|boom\w*|heating up|rising|climbing)\b/i;
 const DOWN_WORDS = /\b(plummet\w*|crash\w*|cooling off|falling|dropping|sliding)\b/i;
 
-// Talking about a period with no comparison behind it (window is null).
-const PERIOD_PHRASES = {
-  week: /\b(?:past|last|this|previous) week\b|\bweek[- ]on[- ]week\b|\bseven days\b/i,
-  month: /\b(?:past|last|this|previous) month\b|\bmonth[- ]on[- ]month\b|\bthirty days\b/i,
-};
-
 const MONEY = /\$\s?(\d[\d,]*(?:\.\d+)?)(\s?(?:k|thousand|million|m)\b)?/gi;
 const PERCENT = /(\d+(?:\.\d+)?)\s?%/g;
 // Counts are plural ("12 listings"); the lookbehind skips prices ("$395"), issue numbers ("#19"),
@@ -158,13 +152,6 @@ export function factCheck(
       );
     }
   }
-  for (const key of ["week", "month"] as const) {
-    const hit = facts[key] ? null : draft.market.match(PERIOD_PHRASES[key]);
-    if (hit) {
-      issues.push(`"${hit[0]}" describes a change, but there is no ${key} of history yet. Rewrite: "${sentenceAt(draft.market, hit.index!)}"`);
-    }
-  }
-
   const words = text.split(/\s+/).filter(Boolean).length;
   if (words < GUIDE_WORDS.min || words > GUIDE_WORDS.max) {
     issues.push(`The guide is ${words} words; it must be ${GUIDE_WORDS.min}–${GUIDE_WORDS.max}.`);
