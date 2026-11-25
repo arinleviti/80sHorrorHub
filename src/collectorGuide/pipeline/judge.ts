@@ -1,6 +1,6 @@
 // Claude call #2: scores the draft against a written rubric. Facts are checked in code, not here.
 import { z } from "zod";
-import { JUDGE_MIN_AVERAGE, JUDGE_MIN_SCORE } from "../config";
+import { GUIDE_SECTION_TITLES, JUDGE_MIN_AVERAGE, JUDGE_MIN_SCORE } from "../config";
 import { askStructured } from "./claude";
 import type { GuideContent } from "./writer";
 
@@ -39,11 +39,18 @@ The writer may only use a short film background and the current eBay listings (t
 
 Do not check facts or numbers; that is done separately. For each criterion give the score and a short reason that points at the draft.`;
 
+// The draft as readers see it: section headings and paragraphs, not the writer's JSON.
+function asReaderText(draft: GuideContent): string {
+  return (Object.keys(GUIDE_SECTION_TITLES) as (keyof GuideContent)[])
+    .map((key) => `## ${GUIDE_SECTION_TITLES[key]}\n\n${draft[key].trim()}`)
+    .join("\n\n");
+}
+
 export async function judgeGuide(filmTitle: string, draft: GuideContent): Promise<JudgeResult> {
   const result = await askStructured(
     JudgeSchema,
     SYSTEM,
-    `Film: ${filmTitle}\n\nDraft:\n${JSON.stringify(draft, null, 2)}`
+    `Film: ${filmTitle}\n\nDraft:\n\n${asReaderText(draft)}`
   );
 
   const scores = {} as Record<JudgeCriterion, number>;

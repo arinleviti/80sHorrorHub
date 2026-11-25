@@ -84,6 +84,18 @@ async function saveGuide(
   });
 }
 
+// How guide generation went for one snapshot: was a guide published, and how many runs ended flagged.
+export async function guideOutcomesForSnapshot(snapshotId: string): Promise<{ published: boolean; flagged: number }> {
+  const guides = await prisma.collectorGuide.findMany({
+    where: { snapshotId },
+    select: { status: true },
+  });
+  return {
+    published: guides.some((g) => g.status === "published"),
+    flagged: guides.filter((g) => g.status === "flagged").length,
+  };
+}
+
 // Keeps the newest guides per film (plus the latest published one) and the recent run log.
 export async function pruneGuidesAndRuns(movieId: string): Promise<{ guides: number; runs: number }> {
   const [recent, latestPublished] = await Promise.all([

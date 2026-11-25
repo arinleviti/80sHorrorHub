@@ -4,7 +4,7 @@
 // npm run collectorGuide -- --force           → regenerate guides from the latest snapshot even if the cache is unchanged
 // npm run collectorGuide -- --film the-thing  → only this film (combine with any flag above)
 import { prisma } from "../src/app/services/prisma";
-import { COLLECTOR_GUIDE_SLUGS, SNAPSHOT_RETENTION_DAYS } from "../src/collectorGuide/config";
+import { COLLECTOR_GUIDE_SLUGS, FLAGGED_RETRY_RUNS, SNAPSHOT_RETENTION_DAYS } from "../src/collectorGuide/config";
 import {
   getSnapshots,
   pruneSnapshots,
@@ -14,7 +14,7 @@ import {
 } from "../src/collectorGuide/pipeline/snapshot";
 import { computeFacts } from "../src/collectorGuide/pipeline/facts";
 import { readFilmBackground } from "../src/collectorGuide/pipeline/background";
-import { generateGuide, pruneGuidesAndRuns } from "../src/collectorGuide/pipeline/guide";
+import { generateGuide, guideOutcomesForSnapshot, pruneGuidesAndRuns } from "../src/collectorGuide/pipeline/guide";
 import type { MarketFacts, WindowFacts } from "../src/collectorGuide/types";
 
 type Options = { dryRun: boolean; snapshotOnly: boolean; force: boolean };
@@ -46,12 +46,18 @@ async function runFilm(slug: string, opts: Options) {
   const changed = !latest || latest.sourceUpdatedAt.getTime() !== cache.sourceUpdatedAt.getTime();
 
   if (!changed && !opts.force) {
-    console.log(`⏭️  ${slug}: eBay cache unchanged since ${cache.sourceUpdatedAt.toISOString()}, skipping`);
-    return;
+    // Same data as last time: only work if its guide was flagged, and retry a limited number of times.
+    const outcome = await guideOutcomesForSnapshot(latest!.id);
+    const retry = !outcome.published && outcome.flagged > 0 && outcome.flagged <= FLAGGED_RETRY_RUNS;
+    if (!retry) {
+      console.log(`⏭️  ${slug}: eBay cache unchanged since ${cache.sourceUpdatedAt.toISOString()}, skipping`);
+      return;
+    }
+    console.log(`🔁 ${slug}: last guide was flagged, retry ${outcome.flagged} of ${FLAGGED_RETRY_RUNS}`);
   }
 
-  // New data is compared with every kept snapshot; --force regenerates from the latest
-  // snapshot and compares it with the ones before it.
+  // New data is compared with every kept snapshot; --force and flagged retries regenerate from
+  // the latest snapshot and compare it with the ones before it.
   const current = changed
     ? { takenAt: new Date(), listings: cache.listings }
     : toListingSet(latest!);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
+import { GUIDE_SECTION_TITLES } from "@/collectorGuide/config";
 import type { GuideContent } from "@/collectorGuide/pipeline/writer";
 import styles from "./collector-guide-beta.module.css";
 
@@ -14,10 +15,10 @@ interface CollectorGuideBetaClientProps {
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-const SECTIONS: { key: keyof GuideContent; title: string }[] = [
-  { key: "whatToCollect", title: "What to collect" },
-  { key: "market", title: "On the market now" },
-];
+const SECTIONS = (Object.keys(GUIDE_SECTION_TITLES) as (keyof GuideContent)[]).map((key) => ({
+  key,
+  title: GUIDE_SECTION_TITLES[key],
+}));
 
 export default function CollectorGuideBetaClient({ content, updatedAt, trackedSince }: CollectorGuideBetaClientProps) {
   const [open, setOpen] = useState(false);
