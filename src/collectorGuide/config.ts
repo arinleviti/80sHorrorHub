@@ -28,9 +28,7 @@ export const GUIDE_SECTION_TITLES = {
   market: "On the market now",
 } as const;
 
-// Judge pass rule: no criterion below MIN_SCORE and an average of at least MIN_AVERAGE (scores are 1–5).
-export const JUDGE_MIN_SCORE = 3;
-export const JUDGE_MIN_AVERAGE = 3.0;
+// Only the fact check decides whether a guide is published; the judge's 1–5 scores are logged, not enforced.
 
 // When a film's newest snapshot only has a flagged guide, later runs retry it (same data)
 // up to this many times instead of waiting for the next eBay refresh.

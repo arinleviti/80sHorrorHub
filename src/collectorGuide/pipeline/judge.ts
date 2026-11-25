@@ -1,6 +1,7 @@
-// Claude call #2: scores the draft against a written rubric. Facts are checked in code, not here.
+// Claude call #2: scores a fact-checked draft against a written rubric. The scores and reasons are
+// logged in guide_runs to track quality over time; they do not decide whether a guide is published.
 import { z } from "zod";
-import { GUIDE_SECTION_TITLES, JUDGE_MIN_AVERAGE, JUDGE_MIN_SCORE } from "../config";
+import { GUIDE_SECTION_TITLES } from "../config";
 import { askStructured } from "./claude";
 import type { GuideContent } from "./writer";
 
@@ -20,7 +21,6 @@ const JudgeSchema = z.object({
 
 export type JudgeCriterion = Exclude<keyof z.infer<typeof JudgeSchema>, "summary">;
 export type JudgeResult = {
-  passed: boolean;
   scores: Record<JudgeCriterion, number>;
   reasons: Record<JudgeCriterion, string> & { summary: string };
 };
@@ -60,17 +60,5 @@ export async function judgeGuide(filmTitle: string, draft: GuideContent): Promis
     reasons[c] = result[c].reason;
   }
 
-  const values = Object.values(scores);
-  const average = values.reduce((a, b) => a + b, 0) / values.length;
-  const passed = values.every((s) => s >= JUDGE_MIN_SCORE) && average >= JUDGE_MIN_AVERAGE;
-
-  return { passed, scores, reasons };
-}
-
-// Turns a failed judgement into rewrite instructions for the writer.
-export function judgeProblems(judge: JudgeResult): string[] {
-  const low = CRITERIA.filter((c) => judge.scores[c] < 4).map(
-    (c) => `Editor scored ${c} ${judge.scores[c]}/5: ${judge.reasons[c]}`
-  );
-  return [...low, `Editor's main note: ${judge.reasons.summary}`];
+  return { scores, reasons };
 }
