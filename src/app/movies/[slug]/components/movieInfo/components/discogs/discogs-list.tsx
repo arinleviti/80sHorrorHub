@@ -6,16 +6,16 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Stack from "react-bootstrap/Stack";
 import styles from "./discogs-list.module.css";
 
-export interface ReturnedResult {
+export interface DiscogsListItem {
   title: string;
   year: number | null;
   format: string[];
   thumb?: string;
-  uri: string;
+  url: string; // absolute discogs.com URL, built on the server
 }
 
 interface DiscogsListProps {
-  results: ReturnedResult[] | null;
+  results: DiscogsListItem[] | null;
 }
 
 export function DiscogsList({ results }: DiscogsListProps) {
@@ -48,7 +48,7 @@ export function DiscogsList({ results }: DiscogsListProps) {
             {/* Info Stack */}
             <Stack gap={1}>
               <a
-                href={`https://www.discogs.com${item.uri}`}
+                href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent fw-bold"
