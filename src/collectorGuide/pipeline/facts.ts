@@ -13,9 +13,11 @@ import type {
   CategoryStats,
   CategoryTrend,
   ListingAge,
+  ListingRef,
   ListingSet,
   MarketFacts,
   PriceChange,
+  Rankings,
   SnapshotListing,
   Turnover,
   WindowFacts,
@@ -38,18 +40,34 @@ const average = (items: SnapshotListing[]) => round2(items.reduce((a, b) => a + 
 function categoryStats(listings: SnapshotListing[]): CategoryStats[] {
   return [...groupByCategory(listings).entries()]
     .map(([category, items]) => {
-      const prices = items.map((i) => i.price);
-      const cheapest = items.reduce((a, b) => (b.price < a.price ? b : a));
+      const byPrice = [...items].sort((a, b) => a.price - b.price);
+      const cheapest = byPrice[0];
+      const mostExpensive = byPrice[byPrice.length - 1];
       return {
         category,
         count: items.length,
         avgPrice: average(items),
-        minPrice: Math.min(...prices),
-        maxPrice: Math.max(...prices),
+        minPrice: cheapest.price,
+        maxPrice: mostExpensive.price,
         cheapest: { title: cheapest.title, price: cheapest.price },
+        mostExpensive: { title: mostExpensive.title, price: mostExpensive.price },
+        listings: byPrice.map(({ title, price }) => ({ title, price })),
       };
     })
     .sort((a, b) => b.count - a.count);
+}
+
+function rankings(listings: SnapshotListing[], categories: CategoryStats[]): Rankings {
+  const ref = ({ title, category, price }: SnapshotListing): ListingRef => ({ title, category, price });
+  const byPrice = [...listings].sort((a, b) => a.price - b.price);
+  return {
+    cheapestListings: byPrice.slice(0, 5).map(ref),
+    mostExpensiveListings: byPrice.slice(-5).reverse().map(ref),
+    categoriesByAverage: [...categories]
+      .sort((a, b) => b.avgPrice - a.avgPrice)
+      .map(({ category, avgPrice }) => ({ category, avgPrice })),
+    categoriesBySize: categories.map(({ category, count }) => ({ category, count })), // already sorted by count
+  };
 }
 
 function labelTurnover(turnoverPct: number): Turnover {
@@ -148,10 +166,13 @@ export function computeFacts(history: ListingSet[], current: ListingSet): Market
     return baseline ? compareWindow(days, baseline, current) : null;
   });
 
+  const categories = categoryStats(current.listings);
+
   return {
     currency: current.listings[0]?.currency ?? "USD",
     totalListings: current.listings.length,
-    categories: categoryStats(current.listings),
+    categories,
+    rankings: rankings(current.listings, categories),
     trackedSince: isoDate(oldest),
     historyDays: ageDays(oldest, current.takenAt),
     week: windows[0],

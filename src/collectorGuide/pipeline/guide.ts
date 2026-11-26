@@ -26,7 +26,7 @@ export async function generateGuide(
 
   for (let attempt = 1; attempt <= MAX_REWRITES + 1; attempt++) {
     console.log(`   ✍️  attempt ${attempt}: writing`);
-    draft = await writeGuide(background, facts, listings, feedback);
+    draft = await writeGuide(background, facts, feedback);
 
     const check = factCheck(draft, facts, listings, background);
     judge = undefined;
