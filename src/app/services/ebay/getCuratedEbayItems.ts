@@ -25,6 +25,12 @@ export const MOVIE_BLOCKED_KEYWORDS: Record<string, string[]> = {
   "pieces": ["missing pieces", "star wars", "kenner", "castle grayskull", "masters of the universe", "firefox", "eastwood", "hellraiser", "pinhead"],
   "inferno": ["transformers", "hasbro", "g1", "autobot", "firetruck", "takara", "towering inferno", "steve mcqueen", "ray liotta", "james remar"],
   "mother's day": ["mother's boys", "jamie lee curtis", "soviet", "socialism", "propaganda", "family circus", "bill keane", "plate set", "stancraft", "jan hagara"],
+  "the thing": ["howard hawks", "from another world", "thing called love", "swamp thing"],
+  "a nightmare on elm street": ["final nightmare"],
+  "friday the 13th": ["jason takes manhattan", "final chapter"],
+  "re-animator": ["bride of"],
+  "the shining": ["thomas the tank", "shining time"],
+  "halloween": ["frankenstein"],
   // Add more as you encounter noisy titles
 };
 // ─── High-Value Bonus Signals ──────────────────────────────────────────────────
