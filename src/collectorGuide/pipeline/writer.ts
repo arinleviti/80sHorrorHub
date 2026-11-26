@@ -1,7 +1,7 @@
 // Claude call #1: writes the guide from the computed facts only.
 import { z } from "zod";
 import { GUIDE_WORDS } from "../config";
-import type { MarketFacts, SnapshotListing } from "../types";
+import type { MarketFacts } from "../types";
 import { askStructured } from "./claude";
 
 export const GuideSchema = z.object({
@@ -42,6 +42,12 @@ The two sections together must be ${GUIDE_WORDS.min}–${GUIDE_WORDS.max} words.
 Rules for facts:
 - Use only the information in the input. Do not add film trivia, prices, counts, dates or claims that are not there.
 - Every price, count and percentage must be copied exactly from the input. You may round a price to the nearest whole dollar (e.g. $94.14 → $94). Never estimate or invent a number.
+- Never compare numbers yourself. Every comparison comes from "rankings" or from a category's "cheapest", "mostExpensive" and "listings":
+  - the cheapest or most expensive listing overall: first entry of "rankings.cheapestListings" / "rankings.mostExpensiveListings"
+  - the top or bottom of a category: that category's "cheapest" / "mostExpensive"
+  - which category is pricier, cheaper, larger or smaller: "rankings.categoriesByAverage" / "rankings.categoriesBySize"; if two have the same value, say they are level
+  - Never write "the lowest anywhere", "the most expensive", "the largest group", "the premium end" or any other ranking that these lists do not state directly.
+- Never claim that a feature in a title (complete, signed, new, sealed, graded, rolled, linen-backed…) makes an item cost more or less. State each listing's price as it is; the reader can compare.
 - Trends come only from "week" and "month", which compare today's selection with our check on "baselineDate". Describe only what they contain:
   - If a window is null, there is not enough history for it yet: say nothing at all about that period, about trends, or about when tracking started. (The page shows the tracking date separately.)
   - "turnover" is the only way to describe how much the selection changed; use "newCount", "goneCount" and "turnoverPct" for numbers.
@@ -55,13 +61,12 @@ Rules for facts:
 
 Write in plain, confident English for enthusiasts. Be specific: name actual listings and prices from the input rather than speaking in generalities.`;
 
-function marketInput(facts: MarketFacts, listings: SnapshotListing[]) {
-  const strip = ({ title, category, price }: SnapshotListing) => ({ title, category, price });
+function marketInput(facts: MarketFacts) {
   return {
     currency: facts.currency,
     totalListings: facts.totalListings,
+    rankings: facts.rankings,
     categories: facts.categories,
-    mostExpensiveListings: [...listings].sort((a, b) => b.price - a.price).slice(0, 5).map(strip),
     trackedSince: facts.trackedSince,
     week: facts.week,
     month: facts.month,
@@ -72,10 +77,9 @@ function marketInput(facts: MarketFacts, listings: SnapshotListing[]) {
 export async function writeGuide(
   background: FilmBackground,
   facts: MarketFacts,
-  listings: SnapshotListing[],
   feedback?: WriterFeedback
 ): Promise<GuideContent> {
-  const input = { film: background, market: marketInput(facts, listings) };
+  const input = { film: background, market: marketInput(facts) };
   let message = `Input:\n${JSON.stringify(input, null, 2)}`;
 
   if (feedback) {

@@ -23,6 +23,18 @@ export type CategoryStats = {
   minPrice: number;
   maxPrice: number;
   cheapest: { title: string; price: number };
+  mostExpensive: { title: string; price: number };
+  listings: { title: string; price: number }[]; // every listing in the category, cheapest first
+};
+
+export type ListingRef = { title: string; category: string; price: number };
+
+// Every comparison the guide may make, computed in code so the writer never compares numbers itself.
+export type Rankings = {
+  cheapestListings: ListingRef[]; // the 5 cheapest overall, cheapest first
+  mostExpensiveListings: ListingRef[]; // the 5 most expensive overall, most expensive first
+  categoriesByAverage: { category: string; avgPrice: number }[]; // highest average first
+  categoriesBySize: { category: string; count: number }[]; // most listings first
 };
 
 // Labels come from fixed rules in facts.ts — the LLM never decides them.
@@ -78,6 +90,7 @@ export type MarketFacts = {
   currency: string;
   totalListings: number;
   categories: CategoryStats[];
+  rankings: Rankings;
   trackedSince: string; // YYYY-MM-DD of the oldest snapshot kept for this film
   historyDays: number;
   week: WindowFacts | null; // null = not enough history yet
